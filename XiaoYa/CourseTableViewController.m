@@ -38,6 +38,7 @@
 @property (nonatomic ,strong)NSMutableArray *classSubViewArray;//classview上七个列向上的子view，用来控制某列所有课程格子的宽度
 @property (nonatomic ,strong)NSMutableArray *allCourses;//存储一周所有课程数据模型的数组
 @property (nonatomic ,strong)NSDate *firstDateOfTerm;
+@property (nonatomic,strong) NSString *displayweek;//需要显示第几周的课程事务
 @end
 
 static BOOL flag = false ;
@@ -98,13 +99,33 @@ static BOOL flag = false ;
     [self timeScrollViewSetting];
     [self classViewSetting];
     [self daysViewSetting:currentDate];
-//    [self classViewSetting];
     [self bottomLineSetting];
     [self weekSheetInit];//最后加，加在最上一层
 
     [self loadLoacalData:@"1"];
+//	_displayweek = [NSString stringWithFormat:@"%ld",(long)curWeek];
     
 }
+
+
+////每次显示都需要重新加载
+//-(void)viewWillAppear:(BOOL)animated
+//{
+//   //刷新表格中的课程数据
+//    //    //清除原有数据
+//    for(UIView *columview in self.classSubViewArray)
+//    {
+//        for(CourseButton *coursebtn in [columview subviews])
+//        {
+//            [coursebtn removeFromSuperview];
+//        }
+//    }
+//    //加载新数据
+//    _displayweek = _navItemTitle.titleLabel.text;
+//    _displayweek = [_displayweek substringWithRange:NSMakeRange(1, _displayweek.length-2)];
+//    [self loadDatafromSQL:_displayweek];
+//    
+//}
 
 - (void)dataBase{
     //-------数据库
@@ -113,6 +134,9 @@ static BOOL flag = false ;
 //    [dbManger executeNonQuery:@"drop table if exists t_201601"];
     NSString *sql = [NSString stringWithFormat:@"CREATE TABLE IF NOT EXISTS t_201601(                                                                                                         id INTEGER PRIMARY KEY AUTOINCREMENT,                                                                        description TEXT NOT NULL,                                                                                                comment TEXT,                                                                                                                                                week INTEGER NOT NULL,                                                                                                weekday INTEGER NOT NULL,                                                                                                date TEXT,                                                                                                                        time TEXT,                                                                                                                        repeat INTEGER,                                                                                                overlap INTEGER);"];
     [dbManger executeNonQuery:sql];
+
+	NSString *sql2 = [NSString stringWithFormat:@"create table if not exists course_table (id integer primary key autoincrement,weeks text not null,weekDay text not null,courseStart text not null,numberOfCourse text not null,courseName text not null,place text not null);"];
+    [dbManger executeNonQuery:sql2];
 }
 
 - (void)popWeekSheet{
@@ -197,17 +221,56 @@ static BOOL flag = false ;
 //    }
 //    [self handleData:self.allCourses];
     
+    NSDate *weekMonday = [DateUtils dateOfWeekMonday:14 firstDateOfTrem:self.firstDateOfTerm];
+    NSArray *data = [DateUtils getDatesOfCurrence:weekMonday];
+    
+    NSCalendar *gregorian = [[NSCalendar alloc] initWithCalendarIdentifier:NSCalendarIdentifierGregorian];
+    NSDateFormatter * dateFormatter = [[NSDateFormatter alloc] init];
+    [dateFormatter setDateFormat:@"yyyyMMdd"];
+    NSDateComponents *compt = [[NSDateComponents alloc] init];
+    NSMutableArray * dateArray = [NSMutableArray arrayWithCapacity:7];
+    for (int i = 0; i < 7; i ++) {
+        [compt setYear:[data[i][0] integerValue]];
+        [compt setMonth:[data[i][1] integerValue]];
+        [compt setDay:[data[i][2] integerValue]];
+        NSDate * tempDate = [gregorian dateFromComponents:compt];
+        NSString *tempDateString = [dateFormatter stringFromDate:tempDate];
+        [dateArray addObject:tempDateString];
+    }    
     self.allCourses =[NSMutableArray array];
     DbManager *dbManger = [DbManager shareInstance];
-    NSString *sql = [NSString stringWithFormat:@"select * from t_201601 where week = 13;"];
+    NSString *sql = [NSString stringWithFormat:@"select * from t_201601 where date = %@ or date = %@ or date = %@ or date = %@ or date = %@ or date = %@ or date = %@ ;",dateArray[0],dateArray[1],dateArray[2],dateArray[3],dateArray[4],dateArray[5],dateArray[6]];
     NSArray *dataQuery = [dbManger executeQuery:sql];
-    for (int j = 0; j < dataQuery.count ; j++) {
-        NSMutableDictionary *course = [NSMutableDictionary dictionaryWithDictionary:dataQuery[j]];
-        BusinessModel *weekCourse = [[BusinessModel alloc] initWithDict:course];//转数据模型
-        [self.allCourses addObject:weekCourse];
+    if (dataQuery.count > 0) {
+        for (int j = 0; j < dataQuery.count ; j++) {
+            NSMutableDictionary *course = [NSMutableDictionary dictionaryWithDictionary:dataQuery[j]];
+            BusinessModel *weekCourse = [[BusinessModel alloc] initWithDict:course];//转数据模型
+            [self.allCourses addObject:weekCourse];
+        }
+        [self handleData:self.allCourses];
     }
-    [self handleData:self.allCourses];
 }
+
+////从数据库加载课程数据
+//-(void)loadDatafromSQL:(NSString *)week
+//{
+//    DbManager *dbManger = [DbManager shareInstance];
+//    [dbManger openDb:@"eventcourse.sqlite"];
+//    
+//    NSString *sql = [NSString stringWithFormat:@"SELECT weeks,weekDay,courseStart,numberOfCourse,courseName,place FROM course_table WHERE weeks is '%@'",week];
+//    NSArray *thisweekcourse = [[NSArray alloc] init];
+//    thisweekcourse = [dbManger executeQuery:sql];
+//    
+//    //NSLog(@"%@",thisweekcourse);
+//    
+//    NSMutableArray *thisweekmodel = [[NSMutableArray alloc] init];
+//    for(int i = 0; i<thisweekcourse.count; i++)
+//    {
+//        CourseModel *tempmodel = [[CourseModel alloc] initWithDict:thisweekcourse[i]];
+//        [thisweekmodel addObject:tempmodel];
+//    }
+//    [self handleData:thisweekmodel];
+//}
 
 - (void)handleData:(NSArray *)courses
 {
@@ -229,7 +292,16 @@ static BOOL flag = false ;
 //添加单个事务格子
 - (void)addBussinessBtn:(BusinessModel *)busModel{
     int rowNum = [busModel.time substringToIndex:1].intValue;//开始时第几节
-    int colNum = busModel.weekday.intValue;//周几
+    NSDateFormatter * dateFormatter = [[NSDateFormatter alloc] init];
+    [dateFormatter setDateFormat:@"yyyyMMdd"];
+    NSDate *curDate = [dateFormatter dateFromString:[NSString stringWithFormat:@"%@",busModel.date]];
+    int colNum = [curDate dayOfWeek];//周几，1表示周日，2表示周一
+    if (colNum == 1) {
+        colNum = 6;
+    }else{
+        colNum = colNum - 2;
+    }
+//    int colNum = busModel.weekday.intValue;//周几
     NSInteger lessonsNum = busModel.time.length / 2;//持续多少节
     
     CourseButton *courseBtn = [[CourseButton alloc]init];   //课程格子btn
@@ -269,12 +341,7 @@ static BOOL flag = false ;
         make.left.equalTo(btnSuperView.mas_left);
         make.width.equalTo(btnSuperView.mas_width);
         make.height.mas_equalTo(timeViewCellHeight * lessonsNum);
-        //处理top的约束，主要是存在“早间”“午间”“晚间”的问题，需要跟pm落实
-        if (rowNum < 5) {
-            make.top.mas_equalTo(rowNum * timeViewCellHeight);
-        }else{
-            make.top.mas_equalTo((rowNum + 1) * timeViewCellHeight);
-        }
+        make.top.mas_equalTo(rowNum * timeViewCellHeight);
     }];
 }
 
@@ -358,6 +425,18 @@ static BOOL flag = false ;
 #pragma mark weekSheetDelegate
 - (void)refreshNavItemTitle:(WeekSheet *)weeksheet content:(NSInteger)weekSheetRow{
     [_navItemTitle setTitle:[NSString stringWithFormat:@"第%ld周",weekSheetRow + 1] forState:UIControlStateNormal];
+
+//    //刷新表格中的课程数据
+//    //清除原有数据
+//    for(UIView *columview in self.classSubViewArray)
+//    {
+//        for(CourseButton *coursebtn in [columview subviews])
+//        {
+//            [coursebtn removeFromSuperview];
+//        }
+//    }
+//    //加载新数据
+//    [self loadDatafromSQL:[NSString stringWithFormat:@"%ld",weekSheetRow + 1]];
     self.weeksheet.hidden = YES;
     NSDate *weekMonday = [DateUtils dateOfWeekMonday:weekSheetRow firstDateOfTrem:self.firstDateOfTerm];
     [self daysViewSetting:weekMonday];

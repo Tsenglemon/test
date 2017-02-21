@@ -25,6 +25,16 @@
 - (void)setModel:(NSArray *)model{
     self.time.text = model[0];
     self.number.text = model[1];
+    __weak typeof(self)weakself = self;
+    if ([self.number.text isEqual: @""]) {
+        [_time mas_updateConstraints:^(MASConstraintMaker *make) {
+            make.centerY.equalTo(weakself.contentView.mas_centerY);
+        }];
+    }else{
+        [_time mas_updateConstraints:^(MASConstraintMaker *make) {
+            make.centerY.equalTo(weakself.contentView.mas_centerY).offset(-8);
+        }];
+    }
 }
 
 
@@ -81,11 +91,11 @@
     
     [_time mas_makeConstraints:^(MASConstraintMaker *make) {
         make.centerX.equalTo(weakself.contentView.mas_left).offset(20);
-        make.bottom.equalTo(weakself.contentView.mas_centerY).offset(-3);
+        make.centerY.equalTo(weakself.contentView.mas_centerY).offset(-8);
     }];
     [_number mas_makeConstraints:^(MASConstraintMaker *make) {
         make.centerX.equalTo(weakself.contentView.mas_left).offset(20);
-        make.top.equalTo(weakself.contentView.mas_centerY).offset(3);
+        make.centerY.equalTo(weakself.contentView.mas_centerY).offset(8);
     }];
     //事件描述
     UILabel *event = [[UILabel alloc]init];

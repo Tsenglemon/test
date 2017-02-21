@@ -223,7 +223,7 @@
     return day;
 }
 
-//第n周周一是几号 参数1：第几周 参数2：本学期第一天是几号
+//第n周周一是几号 参数1：第几周,从0开始  参数2：本学期第一天是几号
 + (NSDate *)dateOfWeekMonday:(NSInteger)week firstDateOfTrem:(NSDate*)termFirstDate{
     NSDate* theDate;
     NSTimeInterval oneDay = 24*60*60*1;  //1天的长度

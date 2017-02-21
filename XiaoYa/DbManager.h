@@ -38,4 +38,10 @@
  *  @return 查询结果
  */
 -(NSArray *)executeQuery:(NSString *)sql;
+
+//开始事务
+- (void)beginTransaction;
+
+//提交事务
+- (void)commitTransaction;
 @end

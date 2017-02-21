@@ -50,7 +50,7 @@
     _courseVc = self.controllersArray[1];
     
     self.navigationItem.rightBarButtonItem = [[UIBarButtonItem alloc]initWithImage:[[UIImage imageNamed:@"confirm"]imageWithRenderingMode:UIImageRenderingModeAlwaysOriginal] style:UIBarButtonItemStyleDone target:self action:@selector(confirm)];
-    self.navigationItem.rightBarButtonItem.enabled = NO;//在编辑框有输入时才允许点击
+    //self.navigationItem.rightBarButtonItem.enabled = NO;//在编辑框有输入时才允许点击
     
     self.navigationItem.leftBarButtonItem = [[UIBarButtonItem alloc]initWithImage:[[UIImage imageNamed:@"cancel"]imageWithRenderingMode:UIImageRenderingModeAlwaysOriginal] style:UIBarButtonItemStyleDone target:self action:@selector(cancel)];
 }
@@ -58,94 +58,148 @@
 //课程和事务公用这两个按钮
 - (void)confirm{
     if (_segCtrl.selectedSegmentIndex == 0) {//如果是事务界面
-        DbManager *dbManger = [DbManager shareInstance];
+        dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
+            DbManager *dbManger = [DbManager shareInstance];
 //        NSString *sql = [NSString stringWithFormat:@"CREATE TABLE IF NOT EXISTS t_201601(id INTEGER PRIMARY KEY AUTOINCREMENT,description TEXT NOT NULL,comment TEXT,week INTEGER NOT NULL,weekday INTEGER NOT NULL,date TEXT,time TEXT,repeat INTEGER,overlap INTEGER);"];
-        NSInteger dateDistance = [DateUtils dateDistanceFromDate:_bsVc.currentDate toDate:self.firstDateOfTerm];
-        NSInteger week = dateDistance / 7;//存入数据库的week从0-n；
-        if (week < 0 || week > 23) {
-            week = -1;
-        }
-        
-        int weekday = [_bsVc.currentDate dayOfWeek];
-        if (weekday == 1) {//存入数据库的weekday从0-6，周一为0
-            weekday = 6;
-        }else {
-            weekday = weekday - 2;
-        }
-        
-        NSDateFormatter * dateFormatter = [[NSDateFormatter alloc] init];
-        [dateFormatter setDateFormat:@"yyyyMMdd"];
-        NSString *currentDateString = [dateFormatter stringFromDate:_bsVc.currentDate];
-        
-        NSInteger timeArrCount = [_bsVc.sections count];
-        for (int i = 0; i <timeArrCount; i ++) {
-            NSMutableArray *section = _bsVc.sections[i];
-            NSInteger count = section.count;
-            NSMutableString *timeStr = [[NSMutableString alloc] initWithCapacity:10];
-            for (int j = 0; j < count; j++) {
-                [timeStr appendFormat:@"%@、",section[j]];
+//        NSInteger dateDistance = [DateUtils dateDistanceFromDate:_bsVc.currentDate toDate:self.firstDateOfTerm];
+//        NSInteger week = dateDistance / 7;//存入数据库的week从0-n；
+//        if (week < 0 || week > 23) {
+//            week = -1;
+//        }
+//        
+//        int weekday = [_bsVc.currentDate dayOfWeek];
+//        if (weekday == 1) {//存入数据库的weekday从0-6，周一为0
+//            weekday = 6;
+//        }else {
+//            weekday = weekday - 2;
+//        }
+            
+            NSDateFormatter * dateFormatter = [[NSDateFormatter alloc] init];
+            [dateFormatter setDateFormat:@"yyyyMMdd"];
+//            NSString *currentDateString = [dateFormatter stringFromDate:_bsVc.currentDate];
+            NSCalendar * gregorian = [[NSCalendar alloc] initWithCalendarIdentifier:NSCalendarIdentifierGregorian];
+            NSDateComponents *components = [gregorian components:NSCalendarUnitEra | NSCalendarUnitYear | NSCalendarUnitMonth | NSCalendarUnitDay fromDate:_bsVc.currentDate];
+            //储存往后五年的时间
+            int timeDuration = 5;//五年
+            NSMutableArray *dateString = [NSMutableArray arrayWithCapacity:5];
+            switch (_bsVc.repeatIndex) {
+                case 0://每天
+                    [dateString addObject:[dateFormatter stringFromDate:_bsVc.currentDate]];
+                    for (int i = 1; i < timeDuration * 365; i ++) {
+                        components.day += 1;
+                        NSDate *tempDate = [gregorian dateFromComponents:components];
+                        [dateString addObject:[dateFormatter stringFromDate:tempDate]];
+                    }
+                    break;
+                case 1://每两天
+                    [dateString addObject:[dateFormatter stringFromDate:_bsVc.currentDate]];
+                    for (int i = 1; i < timeDuration * 365 / 2; i ++) {
+                        components.day += 2;
+                        NSDate *tempDate = [gregorian dateFromComponents:components];
+                        [dateString addObject:[dateFormatter stringFromDate:tempDate]];
+                    }
+                    break;
+                case 2://每周
+                    [dateString addObject:[dateFormatter stringFromDate:_bsVc.currentDate]];
+                    for (int i = 1; i < timeDuration * 52; i ++) {
+                        components.day += 7;
+                        NSDate *tempDate = [gregorian dateFromComponents:components];
+                        [dateString addObject:[dateFormatter stringFromDate:tempDate]];
+                    }
+                    break;
+                case 3://每月
+                    [dateString addObject:[dateFormatter stringFromDate:_bsVc.currentDate]];
+                    for (int i = 1; i < timeDuration * 12; i ++) {
+                        components.month += 1;
+                        NSDate *tempDate = [gregorian dateFromComponents:components];
+                        NSDateComponents *components1 = [gregorian components:NSCalendarUnitEra | NSCalendarUnitYear | NSCalendarUnitMonth | NSCalendarUnitDay fromDate:tempDate];
+                        if(components1.day != components.day){
+                            continue;
+                        }else{
+                            [dateString addObject:[dateFormatter stringFromDate:tempDate]];
+                        }
+                    }
+                    break;
+                case 4://每年
+                    [dateString addObject:[dateFormatter stringFromDate:_bsVc.currentDate]];
+                    if (components.month == 2 && components.day == 29) {//保存的这一天是闰日
+                        components.year += 4;//判断四年后还是不是闰年
+                        NSDate * tempDate = [gregorian dateFromComponents:components];//加一年后的日期,如果刚好是闰年，就会变成2016.2.29 -》2017.2.29=2017.3.1
+                        NSDateComponents *components1 = [gregorian components:NSCalendarUnitEra | NSCalendarUnitYear | NSCalendarUnitMonth | NSCalendarUnitDay fromDate:tempDate];
+                        if(components1.month == components.month){//如果四年后还是闰年
+                            [dateString addObject:[dateFormatter stringFromDate:tempDate]];
+                        }
+                    }else{//2月29以外的任何日期
+                        for (int i = 1; i < timeDuration; i ++) {
+                            components.year += 1;
+                            NSDate * tempDate = [gregorian dateFromComponents:components];
+                            [dateString addObject:[dateFormatter stringFromDate:tempDate]];
+                        }
+                    }
+                    break;
+                case 5://工作日
+                    [dateString addObject:[dateFormatter stringFromDate:_bsVc.currentDate]];
+                    for (int i = 1; i < timeDuration * 365; i ++) {
+                        components.day += 1;
+                        NSDate *tempDate = [gregorian dateFromComponents:components];
+                        int weekday = [tempDate dayOfWeek];//1表示周日，2表示周一
+                        if (weekday > 1 && weekday < 7) {
+                            [dateString addObject:[dateFormatter stringFromDate:tempDate]];
+                        }
+                    }
+                    break;
+                case 6://不重复
+                    [dateString addObject:[dateFormatter stringFromDate:_bsVc.currentDate]];
+                    break;
+                default:
+                    break;
             }
-            NSString *sql = [NSString stringWithFormat:@"INSERT INTO t_201601 (description,comment,week,weekday,date,time,repeat,overlap) VALUES ('%@','%@',%ld,%d,'%@','%@',%ld ,0)",_bsVc.busDescription.text,_bsVc.commentInfo,week,weekday,currentDateString,timeStr,_bsVc.repeatIndex];//注意VALUES字符串赋值要有单引号
-            [dbManger executeNonQuery:sql];
-        }        
-        [self.navigationController popViewControllerAnimated:YES];
+            
+            [dbManger beginTransaction];
+            NSInteger timeArrCount = [_bsVc.sections count];
+            for (int i = 0; i <timeArrCount; i ++) {
+                NSMutableArray *section = _bsVc.sections[i];
+                NSMutableString *timeStr = [[NSMutableString alloc] initWithCapacity:10];
+                for (int j = 0; j < section.count; j++) {
+                    [timeStr appendFormat:@"%@、",section[j]];
+                }
+                for (int k = 0; k < dateString.count; k ++) {
+                    NSString *sql = [NSString stringWithFormat:@"INSERT INTO t_201601 (description,comment,week,weekday,date,time,repeat,overlap) VALUES ('%@','%@','','','%@','%@',%ld ,0);",_bsVc.busDescription.text,_bsVc.commentInfo,dateString[k],timeStr,_bsVc.repeatIndex];//注意VALUES字符串赋值要有单引号
+                    [dbManger executeNonQuery:sql];
+                }
+            }
+            [dbManger commitTransaction];
+            
+            dispatch_async(dispatch_get_main_queue(), ^{
+                [self.navigationController popViewControllerAnimated:YES];
+            });
+        });
     }else{//如果是课程界面
-   
+		NSLog(@"comfirm");
+        //警告窗
+        
+        //数据存储
+        if([_courseVc DataStore])
+            //退出当前视图(数据成功存储才退出当前控制器)
+            [self.navigationController popViewControllerAnimated:YES];
     }
 }
-
 - (void)cancel{
     if (_segCtrl.selectedSegmentIndex == 0) {//如果是事务界面
-        if ([_bsVc.busDescription.text isEqualToString:@""]) {
+        if ([_bsVc.busDescription.text isEqualToString:@""]) {//如果描述没有输入就直接返回
             [self.navigationController popViewControllerAnimated:YES];//返回主界面
         }else{
-            UIAlertController *alert = [UIAlertController alertControllerWithTitle:@"确认退出？" message:@"一旦退出，编辑将不会保存" preferredStyle:UIAlertControllerStyleAlert];
-//            [self alertTitleAppearance:alert title:@"确认退出？" hexColor:@"#333333"];
-//            [self alertMessageAppearance:alert message:@"一旦退出，编辑将不会保存" hexColor:@"#333333"];
-            [alert alertTitleAppearance_title:@"确认退出？" hexColor:@"#333333"];
-            [alert alertMessageAppearance_message:@"一旦退出，编辑将不会保存" hexColor:@"#333333"];
-            
-            UIAlertAction *cancelAction = [UIAlertAction actionWithTitle:@"取消" style:UIAlertActionStyleCancel handler:nil];
-            UIAlertAction *confirmlAction = [UIAlertAction actionWithTitle:@"确定" style:UIAlertActionStyleDefault handler:^(UIAlertAction *action) {
+            void (^otherBlock)(UIAlertAction *action) = ^(UIAlertAction *action){
                 [self.navigationController popViewControllerAnimated:YES];
-            }];
-            //            NSLog(@"********所有变量/值:\n%@", [self getAllIvar:cancelAction]);
-            
-            [alert addActionTarget:cancelAction hexColor:@"#00A7FA"];
-            [alert addActionTarget:confirmlAction hexColor:@"#00A7FA"];
-            // 会更改UIAlertController中所有字体的内容（此方法有个缺点，会修改所有字体的样式）
-            UILabel *appearanceLabel = [UILabel appearanceWhenContainedIn:UIAlertController.class, nil];
-            UIFont *font = [UIFont systemFontOfSize:13];
-            [appearanceLabel setAppearanceFont:font];
-            
+            };
+            NSArray *otherBlocks = @[otherBlock];
+            UIAlertController *alert = [UIAlertController alertControllerWithTitle:@"确认退出？" message:@"一旦退出，编辑将不会保存" preferredStyle:UIAlertControllerStyleAlert cancelTitle:@"取消" cancelBlock:nil otherTitles:@[@"确定"] otherBlocks:otherBlocks];
             [self presentViewController:alert animated:YES completion:nil];
         }
     }else{//如果是课程界面
         
     }
 }
-
-////提示框按钮样式设置
-//- (void)addActionTarget:(UIAlertController *)alertController action:(UIAlertAction*)action hexColor:(NSString *)color{
-//    [action setValue:[Utils colorWithHexString:color] forKey:@"titleTextColor"];
-//    [alertController addAction:action];
-//}
-//
-////提示框title样式设置
-//- (void)alertTitleAppearance:(UIAlertController *)alertController title:(NSString *)title hexColor:(NSString *)color{
-//    NSInteger length = [title length];
-//    NSMutableAttributedString *alertControllerStr = [[NSMutableAttributedString alloc] initWithString:title];
-//    [alertControllerStr addAttribute:NSForegroundColorAttributeName value:[Utils colorWithHexString:color] range:NSMakeRange(0, length - 1)];
-//    [alertController setValue:alertControllerStr forKey:@"attributedTitle"];
-//}
-////提示框Message样式设置
-//- (void)alertMessageAppearance:(UIAlertController *)alertController message:(NSString *)message hexColor:(NSString *)color{
-//    NSInteger length = [message length];
-//    NSMutableAttributedString *alertControllerStr = [[NSMutableAttributedString alloc] initWithString:message];
-//    [alertControllerStr addAttribute:NSForegroundColorAttributeName value:[Utils colorWithHexString:color] range:NSMakeRange(0, length - 1)];
-//    [alertController setValue:alertControllerStr forKey:@"attributedMessage"];
-//}
-
 
 //kvc 获取所有key值
 - (NSArray *)getAllIvar:(id)object

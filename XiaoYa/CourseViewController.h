@@ -10,4 +10,6 @@
 
 @interface CourseViewController : UIViewController
 
+-(BOOL)DataStore;
+
 @end

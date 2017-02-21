@@ -46,20 +46,49 @@ static DbManager* _instance = nil;
     NSLog(@"%@",directory);
     NSString *filePath=[directory stringByAppendingPathComponent:dbname];
     //如果有数据库则直接打开，否则创建并打开（注意filePath是ObjC中的字符串，需要转化为C语言字符串类型）
-    if (SQLITE_OK ==sqlite3_open(filePath.UTF8String, &_database)) {
+    if (SQLITE_OK == sqlite3_open(filePath.UTF8String, &_database)) {
         NSLog(@"数据库打开成功!");
     }else{
         NSLog(@"数据库打开失败!");
+        sqlite3_close(_database);
     }
 }
 
 -(void)executeNonQuery:(NSString *)sql{
     char *error;
     //单步执行sql语句，用于插入、修改、删除
-    if (SQLITE_OK!=sqlite3_exec(_database, sql.UTF8String, NULL, NULL,&error)) {
+    if (SQLITE_OK != sqlite3_exec(_database, sql.UTF8String, NULL, NULL,&error)) {
         NSLog(@"执行SQL语句过程中发生错误！错误信息：%s",error);
     }
 }
+
+////执行 insert,update,delete 等非查询SQL语句
+//- (int)executeNonQuery:(NSString *)sql error:(NSError **)error {
+//    int rc;
+//    char *errmsg;
+//    rc = [self open];
+//    if (rc) {
+//        //错误处理
+//        if (error != NULL) {
+//            NSDictionary *eDict = [NSDictionary dictionaryWithObject:@"open database failed"
+//                                        forKey:NSLocalizedDescriptionKey];
+//            *error = [NSError errorWithDomain:kSqliteErrorDomain code:rc userInfo:eDict];
+//        }
+//        return rc;
+//    }
+//    rc = sqlite3_exec(database, [sql UTF8String], NULL, NULL, &amp;errmsg);
+//    if (rc != SQLITE_OK) {
+//        if (error != NULL) {
+//            NSDictionary *eDict = [NSDictionary dictionaryWithObject:@"exec sql error"
+//                                        forKey:NSLocalizedDescriptionKey];
+//            *error = [NSError errorWithDomain:kSqliteErrorDomain code:rc userInfo:eDict];
+//        }
+//        NSLog(@"%s", errmsg);
+//        sqlite3_free(errmsg);
+//    }
+//    [self close];
+//    return rc;
+//}
 
 -(NSArray *)executeQuery:(NSString *)sql{
     NSMutableArray *rows=[NSMutableArray array];//数据行
@@ -85,5 +114,28 @@ static DbManager* _instance = nil;
     sqlite3_finalize(stmt);
     
     return rows;
+}
+
+//关闭数据库
+- (void) close{
+    if (_database != NULL) {
+        sqlite3_close(_database);
+    }
+}
+
+//开始事务
+- (void)beginTransaction{
+    char *errmsg;
+    if (SQLITE_OK != sqlite3_exec(_database, "BEGIN TRANSACTION", NULL, NULL, &errmsg)){
+        NSLog(@"开始事务过程中发生错误！错误信息：%s",errmsg);
+    }
+}
+
+//提交事务
+- (void)commitTransaction{
+    char *errmsg;
+    if (SQLITE_OK != sqlite3_exec(_database, "COMMIT TRANSACTION", NULL, NULL, &errmsg)){
+        NSLog(@"提交事务过程中发生错误！错误信息：%s",errmsg);
+    }
 }
 @end

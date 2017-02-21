@@ -23,6 +23,7 @@
 #import "CommentViewController.h"
 #import "UIAlertController+Appearance.h"
 #import "UILabel+AlertActionFont.h"
+#import "DbManager.h"
 
 #define kScreenWidth [UIApplication sharedApplication].keyWindow.bounds.size.width
 #define kScreenHeight [UIApplication sharedApplication].keyWindow.bounds.size.height
@@ -80,6 +81,7 @@
     
     self.sectionArray = [NSMutableArray array];
     self.sections = [NSMutableArray array];
+    self.commentInfo = [NSString string];
     self.repeatItem = @[@"每天",@"每两天",@"每周",@"每月",@"每年",@"工作日",@"不重复"];
     rowHeight = 80;
     separateHeight = 30;
@@ -119,31 +121,23 @@
     }
 }
 
+//事务界面自己的确认和取消按钮方法。从主界面点击格子跳转进事务界面的情况下，方法才会有效；如果是从“+”进来的就没用
 - (void)confirm{//这里需要完善->能否点击的条件
     [self.navigationController popViewControllerAnimated:YES];
 }
 
 - (void)cancel{
-    if ([_busDescription.text isEqualToString:@""]) {
-        [self.navigationController popViewControllerAnimated:YES];//返回主界面
-    }else{
-        UIAlertController *alert = [UIAlertController alertControllerWithTitle:@"确认退出？" message:@"一旦退出，编辑将不会保存" preferredStyle:UIAlertControllerStyleAlert];
-        [alert alertTitleAppearance_title:@"确认退出？" hexColor:@"#333333"];
-        [alert alertMessageAppearance_message:@"一旦退出，编辑将不会保存" hexColor:@"#333333"];
-        UIAlertAction *cancelAction = [UIAlertAction actionWithTitle:@"取消" style:UIAlertActionStyleCancel handler:nil];
-        UIAlertAction *confirmlAction = [UIAlertAction actionWithTitle:@"确定" style:UIAlertActionStyleDefault handler:^(UIAlertAction *action) {
+    //如果全部没输入就直接返回，但日期是一定会有的（所以不存在直接返回的情况）
+//    if ([_busDescription.text isEqualToString:@""] && self.sectionArray.count == 0) {
+//        [self.navigationController popViewControllerAnimated:YES];//返回主界面
+//    }else{
+        void (^otherBlock)(UIAlertAction *action) = ^(UIAlertAction *action){
             [self.navigationController popViewControllerAnimated:YES];
-        }];
-        
-        [alert addActionTarget:cancelAction hexColor:@"#00A7FA"];
-        [alert addActionTarget:confirmlAction hexColor:@"#00A7FA"];
-        // 会更改UIAlertController中所有字体的内容（此方法有个缺点，会修改所有字体的样式）
-        UILabel *appearanceLabel = [UILabel appearanceWhenContainedIn:UIAlertController.class, nil];
-        UIFont *font = [UIFont systemFontOfSize:13];
-        [appearanceLabel setAppearanceFont:font];
-        
+        };
+        NSArray *otherBlocks = @[otherBlock];
+        UIAlertController *alert = [UIAlertController alertControllerWithTitle:@"确认退出？" message:@"一旦退出，编辑将不会保存" preferredStyle:UIAlertControllerStyleAlert cancelTitle:@"取消" cancelBlock:nil otherTitles:@[@"确定"] otherBlocks:otherBlocks];
         [self presentViewController:alert animated:YES completion:nil];
-    }
+//    }
 }
 
 - (void)didReceiveMemoryWarning {
@@ -283,18 +277,27 @@
     [businesstime_view.button2 addTarget:self action:@selector(sectionSelected) forControlEvents:UIControlEventTouchUpInside];
     
     if (self.busModel) {
-        NSString *dayStr = [self.currentDate dayOfCHNWeek];
-        NSCalendar *gregorian = [[NSCalendar alloc]initWithCalendarIdentifier:NSCalendarIdentifierGregorian];
-        NSDateComponents *curDateComp = [gregorian components:(NSCalendarUnitYear|NSCalendarUnitMonth|NSCalendarUnitDay) fromDate:self.currentDate];
-        NSInteger month = curDateComp.month;
-        NSInteger day = curDateComp.day;
-        if (_busModel.week.intValue == -1) {
-            [_businessTime_view.button1 setTitle:[NSString stringWithFormat:@"第 周 周%@ %ld月%ld日",dayStr,month,day] forState:UIControlStateNormal];
-        }else{
-            [_businessTime_view.button1 setTitle:[NSString stringWithFormat:@"第%d周 周%@ %ld月%ld日",_busModel.week.intValue+1,dayStr,month,day] forState:UIControlStateNormal];
-        }
+        [self bsTVBtnSetting:self.currentDate];
         
-        NSString *subTimeStr = [self.busModel.time substringToIndex:self.busModel.time.length - 1];
+        NSMutableArray * tempArr = [self.sectionArray mutableCopy];
+        for (int i = 0; i < tempArr.count ; i ++) {
+            if ([tempArr[i] intValue] == 0) {
+                tempArr[i] = @"早间";
+            }else if ([tempArr[i] intValue] == 5){
+                tempArr[i] = @"午间";
+            }else if([tempArr[i] intValue] > 5 && [tempArr[i] intValue] < 14){
+                tempArr[i] = [NSString stringWithFormat:@"%d",[tempArr[i] intValue] - 1];
+            }else if ([tempArr[i] intValue] == 14){
+                tempArr[i] = @"晚间";
+            }
+        }
+        NSMutableString *subTimeStr = [NSMutableString stringWithFormat:@"%@",tempArr[0]];
+        if (self.sectionArray.count != 1) {
+            for (int i = 1; i < self.sectionArray.count; i++) {
+                [subTimeStr appendFormat:@"、%@",tempArr[i]];
+            }
+        }
+//        NSString *subTimeStr = [self.busModel.time substringToIndex:self.busModel.time.length - 1];
         [self.businessTime_view.button2 setTitle:[NSString stringWithFormat:@"第%@节",subTimeStr] forState:UIControlStateNormal];
     }
 }
@@ -394,7 +397,6 @@
         make.bottom.equalTo(_remind_btn.mas_bottom);
     }];
 }
-
 
 - (void)remind_btn_click{
     _remind_btn.hidden = YES;
@@ -544,6 +546,7 @@
     [_delete_btn setTitleColor:[Utils colorWithHexString:@"#FF0000"] forState:UIControlStateNormal];
     _delete_btn.titleLabel.font = [UIFont systemFontOfSize:14 * fontScale];
     _delete_btn.backgroundColor = [UIColor whiteColor];
+    [_delete_btn addTarget:self action:@selector(deleteAction) forControlEvents:UIControlEventTouchUpInside];
     
     __weak typeof(self) weakself = self;
     [self.view addSubview:_delete_btn];
@@ -572,6 +575,42 @@
     }];
 }
 
+- (void)deleteAction{
+    DbManager *dbManger = [DbManager shareInstance];
+    if (_busModel.repeat.intValue == 6) {//不重复
+        NSArray *otherTitles = @[@"确认"];
+        void (^confirmBlock)(UIAlertAction *action) = ^(UIAlertAction *action){
+            NSString *sql = [NSString stringWithFormat:@"DELETE from t_201601 where description = '%@' and comment = '%@' and date = '%@' and time = '%@' and repeat = %@ and overlap = %@;",_busModel.desc,_busModel.comment,_busModel.date,_busModel.time,_busModel.repeat,_busModel.overlap];
+            [dbManger executeNonQuery:sql];
+            [self.navigationController popViewControllerAnimated:YES];
+            
+        };
+        NSArray *otherBlocks = @[confirmBlock];
+        UIAlertController *alert = [UIAlertController alertControllerWithTitle:@"确认删除本次事务？" message:@"本次删除不可逆" preferredStyle:UIAlertControllerStyleAlert cancelTitle:@"取消" cancelBlock:nil otherTitles:otherTitles otherBlocks:otherBlocks];
+        [self presentViewController:alert animated:YES completion:nil];
+    }else{
+        NSArray *otherTitles = @[@"仅删除本次事件",@"删除将来所有事件"];
+        void (^confirmBlock1)(UIAlertAction *action) = ^(UIAlertAction *action){
+            NSString *sql = [NSString stringWithFormat:@"DELETE from t_201601 where description = '%@' and comment = '%@' and date = '%@' and time = '%@' and repeat = %@ and overlap = %@;",_busModel.desc,_busModel.comment,_busModel.date,_busModel.time,_busModel.repeat,_busModel.overlap];
+            [dbManger executeNonQuery:sql];
+            [self.navigationController popViewControllerAnimated:YES];
+        };
+        void (^confirmBlock2)(UIAlertAction *action) = ^(UIAlertAction *action){
+            dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
+                [dbManger beginTransaction];
+                NSString *sql = [NSString stringWithFormat:@"DELETE from t_201601 where description = '%@' and comment = '%@'  and time = '%@' and repeat = %@ and overlap = %@;",_busModel.desc,_busModel.comment,_busModel.time,_busModel.repeat,_busModel.overlap];
+                [dbManger executeNonQuery:sql];
+                [dbManger commitTransaction];
+                dispatch_async(dispatch_get_main_queue(), ^{
+                    [self.navigationController popViewControllerAnimated:YES];
+                });
+            });
+        };
+        NSArray *otherBlocks = @[confirmBlock1,confirmBlock2];
+        UIAlertController *alert = [UIAlertController alertControllerWithTitle:@"此为重复事件" message:@"请选择您需要删除的类型" preferredStyle:UIAlertControllerStyleAlert cancelTitle:nil cancelBlock:nil otherTitles:otherTitles otherBlocks:otherBlocks];
+        [self presentViewController:alert animated:YES completion:nil];
+    }
+}
 
 #pragma mark DatePickerDelegate
 - (void)datePicker:(DatePicker *)datePicker createMonthPickerWithDate:(NSDate *)currentDate{
@@ -589,6 +628,11 @@
 - (void)datePicker:(DatePicker *)datePicker selectedDate:(NSDate *)selectedDate{
     [_coverLayer removeFromSuperview];//移除遮罩
     self.currentDate = selectedDate;//下次就会默认选中上次的日期
+    [self bsTVBtnSetting:selectedDate];
+}
+
+//_businessTime_view.button1按钮文本设置
+- (void)bsTVBtnSetting:(NSDate *) selectedDate{
     //确定这一天是周几
     NSString * dayStr = [selectedDate dayOfCHNWeek];
     NSCalendar *gregorian = [[NSCalendar alloc]initWithCalendarIdentifier:NSCalendarIdentifierGregorian];
@@ -659,10 +703,24 @@
                 return NSOrderedDescending;//将第一个元素放在第二个元素之后
             }
         }];
-        NSMutableString *str = [NSMutableString stringWithFormat:@"%@",sectionArray[0]];
+        
+        NSMutableArray *tempArray = [sectionArray mutableCopy];
+        for (int i = 0; i < tempArray.count ; i ++) {
+            if ([tempArray[i] intValue] == 0) {
+                tempArray[i] = @"早间";
+            }else if ([tempArray[i] intValue] == 5){
+                tempArray[i] = @"午间";
+            }else if([tempArray[i] intValue] > 5 && [tempArray[i] intValue] < 14){
+                tempArray[i] = [NSString stringWithFormat:@"%d",[tempArray[i] intValue] - 1];
+            }
+            else if ([tempArray[i] intValue] == 14){
+                tempArray[i] = @"晚间";
+            }
+        }
+        NSMutableString *str = [NSMutableString stringWithFormat:@"%@",tempArray[0]];
         if (count != 1) {
             for (int i = 1; i < count; i++) {
-                [str appendFormat:@"、%@",sectionArray[i]];
+                [str appendFormat:@"、%@",tempArray[i]];
             }
         }
         [self.businessTime_view.button2 setTitle:[NSString stringWithFormat:@"第%@节",str] forState:UIControlStateNormal];

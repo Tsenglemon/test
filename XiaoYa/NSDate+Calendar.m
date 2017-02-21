@@ -22,7 +22,8 @@
     return startDate;
 }
 
--(int)dayOfWeek{
+//周几，1表示周日，2表示周一
+- (int)dayOfWeek{
     NSCalendar *gregorian = [[NSCalendar alloc]initWithCalendarIdentifier:NSCalendarIdentifierGregorian];
     NSDateComponents *weekdayComponents = [gregorian components:(NSCalendarUnitYear|NSCalendarUnitMonth|NSCalendarUnitDay|NSCalendarUnitWeekday) fromDate:self];
     int weekday = (int)[weekdayComponents weekday];

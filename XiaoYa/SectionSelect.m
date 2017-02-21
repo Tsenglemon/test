@@ -32,7 +32,7 @@
         self.layer.cornerRadius = 10.0;
         self.layer.masksToBounds = YES;
         
-        self.timeData = @[@[@"8:00",@"1"],@[@"8:55",@"2"],@[@"10:00",@"3"],@[@"10:55",@"4"],@[@"14:30",@"5"],@[@"15:25",@"6"],@[@"16:20",@"7"],@[@"17:15",@"8"],@[@"19:00",@"9"],@[@"19:55",@"10"],@[@"20:50",@"11"],@[@"21:45",@"12"]];
+        self.timeData = @[@[@"早间",@""],@[@"8:00",@"1"],@[@"8:55",@"2"],@[@"10:00",@"3"],@[@"10:55",@"4"],@[@"午间",@""],@[@"14:30",@"5"],@[@"15:25",@"6"],@[@"16:20",@"7"],@[@"17:15",@"8"],@[@"19:00",@"9"],@[@"19:55",@"10"],@[@"20:50",@"11"],@[@"21:45",@"12"],@[@"晚间",@""]];
         _selectIndexs = sectionArray;
         _selectedDate = date;
 //        _currentDate = currentDate;
@@ -110,7 +110,7 @@
     cell.model = self.timeData[indexPath.row];
     cell.selectionStyle = UITableViewCellSelectionStyleNone;
     cell.delegate = self;
-    if ([_selectIndexs containsObject:[NSString stringWithFormat:@"%ld",indexPath.row + 1]]) {
+    if ([_selectIndexs containsObject:[NSString stringWithFormat:@"%ld",indexPath.row]]) {
         [cell.mutipleChoice setSelected:YES];
     }else{
         [cell.mutipleChoice setSelected:NO];
@@ -120,11 +120,11 @@
 
 #pragma mark SectionSelectTableViewCellDelegate
 - (void)SectionSelectTableViewCell:(SectionSelectTableViewCell *)cell selectIndex:(NSIndexPath *)indexPath{
-    [self.selectIndexs addObject:[NSString stringWithFormat:@"%ld",indexPath.row + 1]];
+    [self.selectIndexs addObject:[NSString stringWithFormat:@"%ld",indexPath.row]];
 }
 
 - (void)SectionSelectTableViewCell:(SectionSelectTableViewCell *)cell deSelectIndex:(NSIndexPath *)indexPath{
-    [self.selectIndexs removeObject:[NSString stringWithFormat:@"%ld",indexPath.row + 1]];
+    [self.selectIndexs removeObject:[NSString stringWithFormat:@"%ld",indexPath.row]];
 }
 
 //确定
