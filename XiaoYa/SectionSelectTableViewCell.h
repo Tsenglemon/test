@@ -17,6 +17,7 @@
 
 @interface SectionSelectTableViewCell : UITableViewCell
 @property (nonatomic , weak)UIButton *mutipleChoice;//复选按钮
+@property (nonatomic , weak)UIButton *conflict;
 @property (nonatomic , strong)NSArray *model;//模型
 @property (nonatomic , weak) id <SectionSelectTableViewCellDelegate> delegate;
 //类初始化方法

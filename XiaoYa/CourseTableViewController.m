@@ -135,8 +135,8 @@ static BOOL flag = false ;
     NSString *sql = [NSString stringWithFormat:@"CREATE TABLE IF NOT EXISTS t_201601(                                                                                                         id INTEGER PRIMARY KEY AUTOINCREMENT,                                                                        description TEXT NOT NULL,                                                                                                comment TEXT,                                                                                                                                                week INTEGER NOT NULL,                                                                                                weekday INTEGER NOT NULL,                                                                                                date TEXT,                                                                                                                        time TEXT,                                                                                                                        repeat INTEGER,                                                                                                overlap INTEGER);"];
     [dbManger executeNonQuery:sql];
 
-	NSString *sql2 = [NSString stringWithFormat:@"create table if not exists course_table (id integer primary key autoincrement,weeks text not null,weekDay text not null,courseStart text not null,numberOfCourse text not null,courseName text not null,place text not null);"];
-    [dbManger executeNonQuery:sql2];
+//	NSString *sql2 = [NSString stringWithFormat:@"create table if not exists course_table (id integer primary key autoincrement,weeks text not null,weekDay text not null,courseStart text not null,numberOfCourse text not null,courseName text not null,place text not null);"];
+//    [dbManger executeNonQuery:sql2];
 }
 
 - (void)popWeekSheet{
@@ -243,9 +243,9 @@ static BOOL flag = false ;
     NSArray *dataQuery = [dbManger executeQuery:sql];
     if (dataQuery.count > 0) {
         for (int j = 0; j < dataQuery.count ; j++) {
-            NSMutableDictionary *course = [NSMutableDictionary dictionaryWithDictionary:dataQuery[j]];
-            BusinessModel *weekCourse = [[BusinessModel alloc] initWithDict:course];//转数据模型
-            [self.allCourses addObject:weekCourse];
+            NSMutableDictionary *busDict = [NSMutableDictionary dictionaryWithDictionary:dataQuery[j]];
+            BusinessModel *model = [[BusinessModel alloc] initWithDict:busDict];//转数据模型
+            [self.allCourses addObject:model];
         }
         [self handleData:self.allCourses];
     }

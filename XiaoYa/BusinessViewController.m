@@ -57,7 +57,8 @@
 //@property (nonatomic , copy) NSString *commentInfo;//备注的内容
 @property (nonatomic , strong) NSArray *repeatItem;//“重复”项的内容
 //@property (nonatomic , assign) NSInteger repeatIndex;//“重复”中的哪一项
-
+@property (nonatomic , strong) NSDate *originDate;//记录一点进来时初始的日期
+@property (nonatomic , strong) NSMutableArray *originArr;//初始节数数组
 @end
 
 @implementation BusinessViewController{
@@ -82,6 +83,7 @@
     self.sectionArray = [NSMutableArray array];
     self.sections = [NSMutableArray array];
     self.commentInfo = [NSString string];
+    self.coverIndexs = [NSMutableArray array];
     self.repeatItem = @[@"每天",@"每两天",@"每周",@"每月",@"每年",@"工作日",@"不重复"];
     rowHeight = 80;
     separateHeight = 30;
@@ -90,7 +92,7 @@
         NSDateFormatter * dateFormatter = [[NSDateFormatter alloc] init];
         [dateFormatter setDateFormat:@"yyyyMMdd"];
         self.currentDate = [dateFormatter dateFromString:[NSString stringWithFormat:@"%@",self.busModel.date]];
-        self.sectionArray = self.busModel.timeArray;
+        self.sectionArray = [self.busModel.timeArray mutableCopy];
         self.repeatIndex = self.busModel.repeat.integerValue;
         
         self.navigationController.navigationBar.titleTextAttributes = @{NSForegroundColorAttributeName:[Utils colorWithHexString:@"#333333"],NSFontAttributeName:[UIFont systemFontOfSize:17]};//设置标题文字样式
@@ -101,6 +103,8 @@
         self.currentDate = [NSDate date];//当前时间
         self.repeatIndex = 6;//如果是从“+”进来的，默认是最后一项，“不重复”
     }
+    self.originDate = self.currentDate;
+    self.originArr = [self.sectionArray mutableCopy];
     
     self.view.backgroundColor = [Utils colorWithHexString:@"#F0F0F6"];
     [self addBusinessField_view];
@@ -343,7 +347,7 @@
     CGFloat width = 650 / 750.0 * kScreenWidth;
     CGFloat height = (178 + 130 ) / 1334.0 * kScreenHeight + 39 * 5;
     
-    SectionSelect *selectSection = [[SectionSelect alloc]initWithFrame:CGRectMake(0, 0, width, height) sectionArr:self.sectionArray selectedDate:self.currentDate];
+    SectionSelect *selectSection = [[SectionSelect alloc]initWithFrame:CGRectMake(0, 0, width, height) sectionArr:self.sectionArray selectedDate:self.currentDate originIndexs:self.originArr originDate:self.originDate];
     CGPoint center =  selectSection.center;
     center.x = self.view.frame.size.width/2;
     center.y = self.view.frame.size.height/2;
@@ -688,8 +692,9 @@
 }
 
 //确认操作
-- (void)SectionSelectComfirmAction:(SectionSelect *)sectionSelector sectionArr:(NSMutableArray *)sectionArray{
+- (void)SectionSelectComfirmAction:(SectionSelect *)sectionSelector sectionArr:(NSMutableArray *)sectionArray coverIndexs:(NSMutableArray *)coverIndexs{
     [_coverLayer removeFromSuperview];
+    self.coverIndexs = [coverIndexs mutableCopy];
     NSInteger count = sectionArray.count;
     if (count != 0) {
         [sectionArray sortUsingComparator:^NSComparisonResult(id _Nonnull obj1, id _Nonnull obj2)

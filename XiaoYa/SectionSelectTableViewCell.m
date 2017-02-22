@@ -17,14 +17,26 @@
 @property (nonatomic , weak)UILabel *time;
 @property (nonatomic , weak)UILabel *number;
 @property (nonatomic , weak)UILabel *event;
-//@property (nonatomic , weak)UIButton *mutipleChoice;
+//@property (nonatomic , assign)BOOL haveBusiness;//是否原有有事务
+@property (nonatomic , assign)BOOL isBusiness;//是否是事务（或事务+课程共同）
 
 @end
 
 @implementation SectionSelectTableViewCell
-- (void)setModel:(NSArray *)model{
+- (void)setModel:(NSMutableArray *)model{
     self.time.text = model[0];
     self.number.text = model[1];
+    if (model.count > 2) {
+        self.event.text = model[2];
+        if (model.count > 3) {
+            self.isBusiness = YES;
+        }else{
+            self.isBusiness = NO;
+        }
+    }else{//课程、事务都没有
+        self.event.text = @"";
+        self.isBusiness = NO;
+    }
     __weak typeof(self)weakself = self;
     if ([self.number.text isEqual: @""]) {
         [_time mas_updateConstraints:^(MASConstraintMaker *make) {
@@ -36,7 +48,6 @@
         }];
     }
 }
-
 
 +(instancetype)SectionCellWithTableView:(UITableView *)tableview{
     static NSString *ID = @"SectionSelectCell";
@@ -51,6 +62,7 @@
     self = [super initWithStyle:style reuseIdentifier:reuseIdentifier];
     if (self) {
         [self initSubView];
+        self.isBusiness = NO;
     }
     return self;
 }
@@ -101,7 +113,7 @@
     UILabel *event = [[UILabel alloc]init];
     _event = event;
     _event.font = [UIFont systemFontOfSize:14];
-    _event.text = @"事件描述";
+    _event.text = @"";
     _event.textColor = [Utils colorWithHexString:@"#333333"];
     [self.contentView addSubview:_event];
     [_event mas_makeConstraints:^(MASConstraintMaker *make) {
@@ -120,6 +132,30 @@
         make.right.equalTo(weakself.contentView.mas_right).offset(-5);
     }];
     [_mutipleChoice addTarget:self action:@selector(mutipleClicked:) forControlEvents:UIControlEventTouchUpInside];
+    
+    //冲突提示
+    UIButton *conflict = [[UIButton alloc]init];
+    _conflict = conflict;
+    _conflict.backgroundColor = [UIColor colorWithRed:0.78 green:0.78 blue:0.8 alpha:1.0];
+    [_conflict setImage:[UIImage imageNamed:@"感叹号"] forState:UIControlStateNormal];
+    [_conflict setTitle:@"将会覆盖原有事务" forState:UIControlStateNormal];
+    [_conflict setTitleColor:[Utils colorWithHexString:@"#999999"] forState:UIControlStateNormal];
+    _conflict.titleLabel.font = [UIFont systemFontOfSize:8];
+    [self.contentView addSubview:_conflict];
+    [_conflict mas_makeConstraints:^(MASConstraintMaker *make) {
+        make.width.mas_equalTo(506 / 750.0 * kScreenWidth);
+        make.height.mas_equalTo(12);
+        make.top.equalTo(weakself.contentView);
+        make.left.equalTo(horSeparate.mas_right);
+    }];
+    //折角
+    UIImageView *fold = [[UIImageView alloc]initWithImage:[UIImage imageNamed:@"折角"]];
+    [_conflict addSubview:fold];
+    [fold mas_makeConstraints:^(MASConstraintMaker *make) {
+        make.right.top.equalTo(_conflict);
+        make.width.height.mas_equalTo(12);
+    }];
+    _conflict.hidden = YES;
 }
 
 - (void)mutipleClicked:(UIButton *)sender{
@@ -130,6 +166,7 @@
  
     if (sender.isSelected) {//已经选中了
         sender.selected = NO;//置为未选中
+        _conflict.hidden = YES;
         [self.delegate SectionSelectTableViewCell:self deSelectIndex:indexPath];
     }else{
         sender.selected = YES;

@@ -34,7 +34,7 @@
 
 - (instancetype)initWithControllersArray:(NSArray *)controllersArray firstDateOfTerm:(NSDate *)firstDateOfTerm{
     if(self = [super init]){
-        self.controllersArray = controllersArray;
+        self.controllersArray = [controllersArray mutableCopy];
         self.firstDateOfTerm = firstDateOfTerm;
     }
     return self;
@@ -57,7 +57,7 @@
 
 //课程和事务公用这两个按钮
 - (void)confirm{
-    if (_segCtrl.selectedSegmentIndex == 0) {//如果是事务界面
+    if (_segCtrl.selectedSegmentIndex == 0) {//如果是事务界面。在这个类文件里面执行的，都是直接插入数据而不是修改原有数据的
         dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
             DbManager *dbManger = [DbManager shareInstance];
 //        NSString *sql = [NSString stringWithFormat:@"CREATE TABLE IF NOT EXISTS t_201601(id INTEGER PRIMARY KEY AUTOINCREMENT,description TEXT NOT NULL,comment TEXT,week INTEGER NOT NULL,weekday INTEGER NOT NULL,date TEXT,time TEXT,repeat INTEGER,overlap INTEGER);"];
@@ -76,7 +76,6 @@
             
             NSDateFormatter * dateFormatter = [[NSDateFormatter alloc] init];
             [dateFormatter setDateFormat:@"yyyyMMdd"];
-//            NSString *currentDateString = [dateFormatter stringFromDate:_bsVc.currentDate];
             NSCalendar * gregorian = [[NSCalendar alloc] initWithCalendarIdentifier:NSCalendarIdentifierGregorian];
             NSDateComponents *components = [gregorian components:NSCalendarUnitEra | NSCalendarUnitYear | NSCalendarUnitMonth | NSCalendarUnitDay fromDate:_bsVc.currentDate];
             //储存往后五年的时间
@@ -170,6 +169,10 @@
             }
             [dbManger commitTransaction];
             
+            if (_bsVc.coverIndexs.count > 0) {
+                NSLog(@"修改覆盖数据");
+            }
+            
             dispatch_async(dispatch_get_main_queue(), ^{
                 [self.navigationController popViewControllerAnimated:YES];
             });
@@ -184,6 +187,7 @@
             [self.navigationController popViewControllerAnimated:YES];
     }
 }
+
 - (void)cancel{
     if (_segCtrl.selectedSegmentIndex == 0) {//如果是事务界面
         if ([_bsVc.busDescription.text isEqualToString:@""]) {//如果描述没有输入就直接返回

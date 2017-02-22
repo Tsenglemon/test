@@ -9,6 +9,8 @@
 #import "SectionSelect.h"
 #import "SectionSelectTableViewCell.h"
 #import "NSDate+Calendar.h"
+#import "DbManager.h"
+#import "BusinessModel.h"
 
 #define kScreenWidth [[UIScreen mainScreen] bounds].size.width
 #define kScreenHeight [[UIScreen mainScreen] bounds].size.height
@@ -19,27 +21,46 @@
 @property (nonatomic , weak) UILabel *dateLab;
 @property (nonatomic , weak) UITableView *multipleChoiceTable;
 
-@property (nonatomic ,strong) NSArray *timeData;//左侧时间数据
+@property (nonatomic ,strong) NSMutableArray *timeData;//时间数据
 @property (strong, nonatomic) NSMutableArray *selectIndexs;//多选选中的行
-@property (nonatomic ,strong) NSDate *selectedDate;
+@property (nonatomic ,strong) NSDate *selectedDate;//现在选择的日期
+@property (nonatomic ,strong) NSMutableArray *originIndexs;//原选中的行
+@property (nonatomic ,strong) NSDate *originDate;//原日期
 @end
 
 @implementation SectionSelect
-- (instancetype)initWithFrame:(CGRect)frame sectionArr:(NSMutableArray* )sectionArray selectedDate:(NSDate*)date
+- (instancetype)initWithFrame:(CGRect)frame sectionArr:(NSMutableArray* )sectionArray selectedDate:(NSDate*)date originIndexs:(NSMutableArray*)originIndexs originDate:(NSDate* )originDate
 {
     if (self = [super initWithFrame:frame]) {
         self.backgroundColor = [UIColor whiteColor];
         self.layer.cornerRadius = 10.0;
         self.layer.masksToBounds = YES;
         
-        self.timeData = @[@[@"早间",@""],@[@"8:00",@"1"],@[@"8:55",@"2"],@[@"10:00",@"3"],@[@"10:55",@"4"],@[@"午间",@""],@[@"14:30",@"5"],@[@"15:25",@"6"],@[@"16:20",@"7"],@[@"17:15",@"8"],@[@"19:00",@"9"],@[@"19:55",@"10"],@[@"20:50",@"11"],@[@"21:45",@"12"],@[@"晚间",@""]];
-        _selectIndexs = sectionArray;
+        //timeData数组的说明：元素1：“时间段”，元素2“第几节”，元素三“事务描述”或“课程信息”（为空代表没课程也没事务），元素四“是否有事务”
+        [self timeDataInit];
+        _selectIndexs = [sectionArray mutableCopy];
         _selectedDate = date;
-//        _currentDate = currentDate;
-//        NSCalendar *gregorian = [[NSCalendar alloc]initWithCalendarIdentifier:NSCalendarIdentifierGregorian];
-//        self.curDateComp = [gregorian components:(NSCalendarUnitYear|NSCalendarUnitMonth|NSCalendarUnitDay) fromDate:currentDate];
-//        _year = self.curDateComp.year;
-//        _month = self.curDateComp.month;
+        _originDate = originDate;
+        _originIndexs = [originIndexs mutableCopy];
+
+        NSDateFormatter * dateFormatter = [[NSDateFormatter alloc] init];
+        [dateFormatter setDateFormat:@"yyyyMMdd"];
+        NSString *dateString = [dateFormatter stringFromDate:_selectedDate];
+
+        DbManager *dbManger = [DbManager shareInstance];
+        NSString *sql = [NSString stringWithFormat:@"select * from t_201601 where date = %@;",dateString];
+        NSArray *dataQuery = [dbManger executeQuery:sql];
+        if (dataQuery.count > 0) {
+            for (int j = 0; j < dataQuery.count ; j++) {
+                NSMutableDictionary *businessDict = [NSMutableDictionary dictionaryWithDictionary:dataQuery[j]];
+                BusinessModel *busModel = [[BusinessModel alloc] initWithDict:businessDict];//转数据模型
+                for (int k = 0; k < busModel.timeArray.count; k ++) {
+                    int index = [busModel.timeArray[k] intValue];
+                    [self.timeData[index] addObject:busModel.desc];//元素三
+                    [self.timeData[index] addObject:@1];//元素四
+                }
+            }
+        }
         
         [self commonInit];
     }
@@ -110,10 +131,24 @@
     cell.model = self.timeData[indexPath.row];
     cell.selectionStyle = UITableViewCellSelectionStyleNone;
     cell.delegate = self;
-    if ([_selectIndexs containsObject:[NSString stringWithFormat:@"%ld",indexPath.row]]) {
+    if ([_selectIndexs containsObject:[NSString stringWithFormat:@"%ld",indexPath.row]]) {//是否是现选择的行？
         [cell.mutipleChoice setSelected:YES];
+        if ([self.timeData[indexPath.row] count] == 4) {
+            cell.conflict.hidden = NO;
+        }else{
+            cell.conflict.hidden = YES;
+        }
+        NSCalendar *gregorian = [[NSCalendar alloc]initWithCalendarIdentifier:NSCalendarIdentifierGregorian];
+        NSDateComponents *comp1 = [gregorian components:(NSCalendarUnitYear|NSCalendarUnitMonth|NSCalendarUnitDay) fromDate:self.selectedDate];
+        NSDateComponents *comp2 = [gregorian components:(NSCalendarUnitYear|NSCalendarUnitMonth|NSCalendarUnitDay) fromDate:self.originDate];
+        if (comp1.year == comp2.year && comp1.month == comp2.month && comp1.day == comp2.day) {//没有更改过日期(1.直接改节，2.先改日期，再改节，再改回原来的日期)
+            if ([_originIndexs containsObject:[NSString stringWithFormat:@"%ld",indexPath.row]]){
+                cell.conflict.hidden = YES;
+            }
+        }
     }else{
         [cell.mutipleChoice setSelected:NO];
+        cell.conflict.hidden = YES;
     }
     return cell;
 }
@@ -121,6 +156,20 @@
 #pragma mark SectionSelectTableViewCellDelegate
 - (void)SectionSelectTableViewCell:(SectionSelectTableViewCell *)cell selectIndex:(NSIndexPath *)indexPath{
     [self.selectIndexs addObject:[NSString stringWithFormat:@"%ld",indexPath.row]];
+    
+    if ([self.timeData[indexPath.row] count] == 4) {
+        cell.conflict.hidden = NO;
+    }else{
+        cell.conflict.hidden = YES;
+    }
+    NSCalendar *gregorian = [[NSCalendar alloc]initWithCalendarIdentifier:NSCalendarIdentifierGregorian];
+    NSDateComponents *comp1 = [gregorian components:(NSCalendarUnitYear|NSCalendarUnitMonth|NSCalendarUnitDay) fromDate:self.selectedDate];
+    NSDateComponents *comp2 = [gregorian components:(NSCalendarUnitYear|NSCalendarUnitMonth|NSCalendarUnitDay) fromDate:self.originDate];
+    if (comp1.year == comp2.year && comp1.month == comp2.month && comp1.day == comp2.day) {//没有更改过日期(1.直接改节，2.先改日期，再改节，再改回原来的日期)
+        if ([_originIndexs containsObject:[NSString stringWithFormat:@"%ld",indexPath.row]]){
+            cell.conflict.hidden = YES;
+        }
+    }
 }
 
 - (void)SectionSelectTableViewCell:(SectionSelectTableViewCell *)cell deSelectIndex:(NSIndexPath *)indexPath{
@@ -130,7 +179,15 @@
 //确定
 - (void)confirmAction{
     [self removeFromSuperview];
-    [self.delegate SectionSelectComfirmAction:self sectionArr:self.selectIndexs];
+    //现selectedindex-原originindex-(timedata.count!=4) = 标记覆盖的index,即现selectindex中不是origin又是有事务的
+    NSMutableArray *coverIndexs = [NSMutableArray array];
+    for (int i = 0 ; i < self.selectIndexs.count; i++) {
+        //有事务                                                                      不是origin
+        if ([self.timeData[[self.selectIndexs[i] intValue]] count] == 4 && [_originIndexs containsObject:self.selectIndexs[i]] == NO) {
+            [coverIndexs addObject:self.selectIndexs[i]];
+        }
+    }
+    [self.delegate SectionSelectComfirmAction:self sectionArr:self.selectIndexs coverIndexs:coverIndexs];
 }
 
 //取消,移除视图，什么也不做
@@ -182,6 +239,25 @@
     UIColor *fillColor = [UIColor colorWithRed:57/255.0 green:185/255.0 blue:248/255.0 alpha:1.0];//39b9f8
     [fillColor set];
     [path fill];
+}
+
+- (void)timeDataInit{
+    self.timeData = [NSMutableArray arrayWithCapacity:15];
+    [self.timeData addObject:[NSMutableArray arrayWithObjects:@"早间",@"", nil]];
+    [self.timeData addObject:[NSMutableArray arrayWithObjects:@"8:00",@"1", nil]];
+    [self.timeData addObject:[NSMutableArray arrayWithObjects:@"8:55",@"2", nil]];
+    [self.timeData addObject:[NSMutableArray arrayWithObjects:@"10:00",@"3", nil]];
+    [self.timeData addObject:[NSMutableArray arrayWithObjects:@"10:55",@"4", nil]];
+    [self.timeData addObject:[NSMutableArray arrayWithObjects:@"午间",@"", nil]];
+    [self.timeData addObject:[NSMutableArray arrayWithObjects:@"14:30",@"5", nil]];
+    [self.timeData addObject:[NSMutableArray arrayWithObjects:@"15:25",@"6", nil]];
+    [self.timeData addObject:[NSMutableArray arrayWithObjects:@"16:20",@"7", nil]];
+    [self.timeData addObject:[NSMutableArray arrayWithObjects:@"17:15",@"8", nil]];
+    [self.timeData addObject:[NSMutableArray arrayWithObjects:@"19:00",@"9", nil]];
+    [self.timeData addObject:[NSMutableArray arrayWithObjects:@"19:55",@"10", nil]];
+    [self.timeData addObject:[NSMutableArray arrayWithObjects:@"20:50",@"11", nil]];
+    [self.timeData addObject:[NSMutableArray arrayWithObjects:@"21:45",@"12", nil]];
+    [self.timeData addObject:[NSMutableArray arrayWithObjects:@"晚间",@"", nil]];
 }
 
 @end
