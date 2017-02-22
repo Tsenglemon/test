@@ -10,4 +10,7 @@
 #import <UIKit/UIKit.h>
 @interface Utils : NSObject
 + (UIColor *)colorWithHexString: (NSString *)color;
+
+//事务节数分割连续段
++ (NSMutableArray*)subSectionArraysFromArray:(NSMutableArray *)sectionArray;
 @end

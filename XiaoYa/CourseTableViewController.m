@@ -239,7 +239,7 @@ static BOOL flag = false ;
     }    
     self.allCourses =[NSMutableArray array];
     DbManager *dbManger = [DbManager shareInstance];
-    NSString *sql = [NSString stringWithFormat:@"select * from t_201601 where date = %@ or date = %@ or date = %@ or date = %@ or date = %@ or date = %@ or date = %@ ;",dateArray[0],dateArray[1],dateArray[2],dateArray[3],dateArray[4],dateArray[5],dateArray[6]];
+    NSString *sql = [NSString stringWithFormat:@"SELECT * FROM t_201601 WHERE date = '%@' or date = '%@' or date = '%@' or date = '%@' or date = '%@' or date = '%@' or date = '%@' ;",dateArray[0],dateArray[1],dateArray[2],dateArray[3],dateArray[4],dateArray[5],dateArray[6]];
     NSArray *dataQuery = [dbManger executeQuery:sql];
     if (dataQuery.count > 0) {
         for (int j = 0; j < dataQuery.count ; j++) {

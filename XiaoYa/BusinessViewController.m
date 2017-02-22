@@ -283,25 +283,7 @@
     if (self.busModel) {
         [self bsTVBtnSetting:self.currentDate];
         
-        NSMutableArray * tempArr = [self.sectionArray mutableCopy];
-        for (int i = 0; i < tempArr.count ; i ++) {
-            if ([tempArr[i] intValue] == 0) {
-                tempArr[i] = @"早间";
-            }else if ([tempArr[i] intValue] == 5){
-                tempArr[i] = @"午间";
-            }else if([tempArr[i] intValue] > 5 && [tempArr[i] intValue] < 14){
-                tempArr[i] = [NSString stringWithFormat:@"%d",[tempArr[i] intValue] - 1];
-            }else if ([tempArr[i] intValue] == 14){
-                tempArr[i] = @"晚间";
-            }
-        }
-        NSMutableString *subTimeStr = [NSMutableString stringWithFormat:@"%@",tempArr[0]];
-        if (self.sectionArray.count != 1) {
-            for (int i = 1; i < self.sectionArray.count; i++) {
-                [subTimeStr appendFormat:@"、%@",tempArr[i]];
-            }
-        }
-//        NSString *subTimeStr = [self.busModel.time substringToIndex:self.busModel.time.length - 1];
+        NSString *subTimeStr = [self appendSectionStringWithArray:self.sectionArray];
         [self.businessTime_view.button2 setTitle:[NSString stringWithFormat:@"第%@节",subTimeStr] forState:UIControlStateNormal];
     }
 }
@@ -709,28 +691,12 @@
             }
         }];
         
-        NSMutableArray *tempArray = [sectionArray mutableCopy];
-        for (int i = 0; i < tempArray.count ; i ++) {
-            if ([tempArray[i] intValue] == 0) {
-                tempArray[i] = @"早间";
-            }else if ([tempArray[i] intValue] == 5){
-                tempArray[i] = @"午间";
-            }else if([tempArray[i] intValue] > 5 && [tempArray[i] intValue] < 14){
-                tempArray[i] = [NSString stringWithFormat:@"%d",[tempArray[i] intValue] - 1];
-            }
-            else if ([tempArray[i] intValue] == 14){
-                tempArray[i] = @"晚间";
-            }
-        }
-        NSMutableString *str = [NSMutableString stringWithFormat:@"%@",tempArray[0]];
-        if (count != 1) {
-            for (int i = 1; i < count; i++) {
-                [str appendFormat:@"、%@",tempArray[i]];
-            }
-        }
+//        //拼接字符串
+        NSString *str = [self appendSectionStringWithArray:sectionArray];
         [self.businessTime_view.button2 setTitle:[NSString stringWithFormat:@"第%@节",str] forState:UIControlStateNormal];
         self.sectionArray = sectionArray;
         
+        //分割连续段
         [self.sections removeAllObjects];
         int sectionCount = 1;
         if (count != 1){
@@ -769,6 +735,30 @@
             }
         }
     }
+}
+
+//拼接节数字符串
+- (NSString* )appendSectionStringWithArray:(NSMutableArray<NSString*>*)sectionArray{
+    NSMutableArray *tempArray = [sectionArray mutableCopy];
+    for (int i = 0; i < tempArray.count ; i ++) {
+        if ([tempArray[i] intValue] == 0) {
+            tempArray[i] = @"早间";
+        }else if ([tempArray[i] intValue] == 5){
+            tempArray[i] = @"午间";
+        }else if([tempArray[i] intValue] > 5 && [tempArray[i] intValue] < 14){
+            tempArray[i] = [NSString stringWithFormat:@"%d",[tempArray[i] intValue] - 1];
+        }
+        else if ([tempArray[i] intValue] == 14){
+            tempArray[i] = @"晚间";
+        }
+    }
+    NSMutableString *str = [NSMutableString stringWithFormat:@"%@",tempArray[0]];
+    if (sectionArray.count != 1) {
+        for (int i = 1; i < sectionArray.count; i++) {
+            [str appendFormat:@"、%@",tempArray[i]];
+        }
+    }
+    return str;
 }
 
 #pragma mark RemindSelectDelegate

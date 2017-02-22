@@ -78,12 +78,63 @@
             [dateFormatter setDateFormat:@"yyyyMMdd"];
             NSCalendar * gregorian = [[NSCalendar alloc] initWithCalendarIdentifier:NSCalendarIdentifierGregorian];
             NSDateComponents *components = [gregorian components:NSCalendarUnitEra | NSCalendarUnitYear | NSCalendarUnitMonth | NSCalendarUnitDay fromDate:_bsVc.currentDate];
+            NSString *currentDateStr = [dateFormatter stringFromDate:_bsVc.currentDate];
+            //修改覆盖数据
+            if (_bsVc.coverIndexs.count > 0) {
+                //找出将要被覆盖的事务
+                NSMutableString *sqlTime = [NSMutableString string];
+                for (int i = 0; i < _bsVc.coverIndexs.count; i++) {
+                    [sqlTime appendString:[NSString stringWithFormat:@"time LIKE '%%%d%%' or ",[_bsVc.coverIndexs[i] intValue]]];
+                }
+                sqlTime = (NSMutableString*)[sqlTime substringToIndex:sqlTime.length - 3];
+                NSString *sql = [NSString stringWithFormat:@"SELECT * FROM t_201601 WHERE date = '%@' and (%@);",currentDateStr,sqlTime];
+                NSArray *dataQuery = [dbManger executeQuery:sql];
+                
+                NSMutableArray *busModels = [NSMutableArray array];
+                if (dataQuery.count > 0) {
+                    for (int j = 0; j < dataQuery.count ; j++) {
+                        //转换成模型
+                        NSMutableDictionary *busDict = [NSMutableDictionary dictionaryWithDictionary:dataQuery[j]];
+                        BusinessModel *model = [[BusinessModel alloc] initWithDict:busDict];
+                        [busModels addObject:model];
+                    }
+                    for (int j = 0; j < busModels.count; j++) {
+                        BusinessModel *tempModel = busModels[j];
+                        //每条事务数据，删去重复的时间段（被覆盖掉了）得到新的事务时间段
+                        NSMutableArray *tempArray = [tempModel.timeArray mutableCopy];
+                        for (int k = 0 ; k < _bsVc.coverIndexs.count; k++) {
+                            if ([tempArray containsObject:_bsVc.coverIndexs[k]]) {
+                                [tempArray removeObject:_bsVc.coverIndexs[k]];
+                            }
+                        }
+                        //对新的事务节数时间段进行连续性分割
+                        NSMutableArray *sections = [Utils subSectionArraysFromArray:tempArray];
+                        //然后插入更新后的事务
+                        [dbManger beginTransaction];
+                        for (int k = 0; k < sections.count; k++) {
+                            NSMutableArray *newSection = sections[k];
+                            NSMutableString *newTimeStr = [[NSMutableString alloc] initWithCapacity:5];
+                            for (int l = 0; l < newSection.count; l++) {
+                                [newTimeStr appendFormat:@"%@、",newSection[l]];
+                            }
+                            NSString *sql = [NSString stringWithFormat:@"INSERT INTO t_201601 (description,comment,week,weekday,date,time,repeat,overlap) VALUES ('%@','%@','','','%@','%@',6 ,0);",tempModel.desc,tempModel.comment,currentDateStr,newTimeStr];//一律改成不重复
+                            [dbManger executeNonQuery:sql];
+                        }
+                        [dbManger commitTransaction];
+                    }
+                }
+                //删除旧的事务数据
+                NSString *deleteSql = [NSString stringWithFormat:@"DELETE FROM t_201601 WHERE date = '%@' and (%@);",currentDateStr,sqlTime];
+                [dbManger executeNonQuery:deleteSql];
+            }
+            
+            //插入新事务
             //储存往后五年的时间
             int timeDuration = 5;//五年
             NSMutableArray *dateString = [NSMutableArray arrayWithCapacity:5];
             switch (_bsVc.repeatIndex) {
                 case 0://每天
-                    [dateString addObject:[dateFormatter stringFromDate:_bsVc.currentDate]];
+                    [dateString addObject:currentDateStr];
                     for (int i = 1; i < timeDuration * 365; i ++) {
                         components.day += 1;
                         NSDate *tempDate = [gregorian dateFromComponents:components];
@@ -91,7 +142,7 @@
                     }
                     break;
                 case 1://每两天
-                    [dateString addObject:[dateFormatter stringFromDate:_bsVc.currentDate]];
+                    [dateString addObject:currentDateStr];
                     for (int i = 1; i < timeDuration * 365 / 2; i ++) {
                         components.day += 2;
                         NSDate *tempDate = [gregorian dateFromComponents:components];
@@ -99,7 +150,7 @@
                     }
                     break;
                 case 2://每周
-                    [dateString addObject:[dateFormatter stringFromDate:_bsVc.currentDate]];
+                    [dateString addObject:currentDateStr];
                     for (int i = 1; i < timeDuration * 52; i ++) {
                         components.day += 7;
                         NSDate *tempDate = [gregorian dateFromComponents:components];
@@ -107,7 +158,7 @@
                     }
                     break;
                 case 3://每月
-                    [dateString addObject:[dateFormatter stringFromDate:_bsVc.currentDate]];
+                    [dateString addObject:currentDateStr];
                     for (int i = 1; i < timeDuration * 12; i ++) {
                         components.month += 1;
                         NSDate *tempDate = [gregorian dateFromComponents:components];
@@ -120,7 +171,7 @@
                     }
                     break;
                 case 4://每年
-                    [dateString addObject:[dateFormatter stringFromDate:_bsVc.currentDate]];
+                    [dateString addObject:currentDateStr];
                     if (components.month == 2 && components.day == 29) {//保存的这一天是闰日
                         components.year += 4;//判断四年后还是不是闰年
                         NSDate * tempDate = [gregorian dateFromComponents:components];//加一年后的日期,如果刚好是闰年，就会变成2016.2.29 -》2017.2.29=2017.3.1
@@ -137,7 +188,7 @@
                     }
                     break;
                 case 5://工作日
-                    [dateString addObject:[dateFormatter stringFromDate:_bsVc.currentDate]];
+                    [dateString addObject:currentDateStr];
                     for (int i = 1; i < timeDuration * 365; i ++) {
                         components.day += 1;
                         NSDate *tempDate = [gregorian dateFromComponents:components];
@@ -148,7 +199,7 @@
                     }
                     break;
                 case 6://不重复
-                    [dateString addObject:[dateFormatter stringFromDate:_bsVc.currentDate]];
+                    [dateString addObject:currentDateStr];
                     break;
                 default:
                     break;
@@ -168,10 +219,6 @@
                 }
             }
             [dbManger commitTransaction];
-            
-            if (_bsVc.coverIndexs.count > 0) {
-                NSLog(@"修改覆盖数据");
-            }
             
             dispatch_async(dispatch_get_main_queue(), ^{
                 [self.navigationController popViewControllerAnimated:YES];

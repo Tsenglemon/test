@@ -48,7 +48,7 @@
         NSString *dateString = [dateFormatter stringFromDate:_selectedDate];
 
         DbManager *dbManger = [DbManager shareInstance];
-        NSString *sql = [NSString stringWithFormat:@"select * from t_201601 where date = %@;",dateString];
+        NSString *sql = [NSString stringWithFormat:@"SELECT * FROM t_201601 WHERE date = '%@';",dateString];
         NSArray *dataQuery = [dbManger executeQuery:sql];
         if (dataQuery.count > 0) {
             for (int j = 0; j < dataQuery.count ; j++) {
