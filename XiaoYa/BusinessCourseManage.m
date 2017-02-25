@@ -61,12 +61,12 @@
         dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
             DbManager *dbManger = [DbManager shareInstance];
 //        NSString *sql = [NSString stringWithFormat:@"CREATE TABLE IF NOT EXISTS t_201601(id INTEGER PRIMARY KEY AUTOINCREMENT,description TEXT NOT NULL,comment TEXT,week INTEGER NOT NULL,weekday INTEGER NOT NULL,date TEXT,time TEXT,repeat INTEGER,overlap INTEGER);"];
-//        NSInteger dateDistance = [DateUtils dateDistanceFromDate:_bsVc.currentDate toDate:self.firstDateOfTerm];
-//        NSInteger week = dateDistance / 7;//存入数据库的week从0-n；
+        NSInteger dateDistance = [DateUtils dateDistanceFromDate:_bsVc.currentDate toDate:self.firstDateOfTerm];
+        NSInteger week = dateDistance / 7;//存入数据库的week从0-n；
 //        if (week < 0 || week > 23) {
 //            week = -1;
 //        }
-//        
+//
 //        int weekday = [_bsVc.currentDate dayOfWeek];
 //        if (weekday == 1) {//存入数据库的weekday从0-6，周一为0
 //            weekday = 6;
@@ -143,6 +143,7 @@
             [dbManger commitTransaction];
             
             dispatch_async(dispatch_get_main_queue(), ^{
+                [self.delegate BusinessCourseManage:self week:week];
                 [self.navigationController popViewControllerAnimated:YES];
             });
         });

@@ -25,7 +25,7 @@
 
 #define kScreenWidth [UIApplication sharedApplication].keyWindow.bounds.size.width
 #define kScreenHeight [UIApplication sharedApplication].keyWindow.bounds.size.height
-@interface CourseTableViewController ()<UIScrollViewDelegate,WeekSheetDelegate>
+@interface CourseTableViewController ()<UIScrollViewDelegate,WeekSheetDelegate,BusinessCourseManageDelegate,BusinessViewControllerDelegate>
 @property (nonatomic ,weak) UIButton* navItemTitle;
 @property (nonatomic ,weak) WeekSheet* weeksheet;//标题按钮下拉列表
 @property (nonatomic ,weak) UIScrollView* timeView;//纵向表示时间段的scrollview
@@ -102,15 +102,14 @@ static BOOL flag = false ;
     [self bottomLineSetting];
     [self weekSheetInit];//最后加，加在最上一层
 
-    [self loadLoacalData:@"1"];
+    [self loadLoacalData:(curWeek - 1)];
 //	_displayweek = [NSString stringWithFormat:@"%ld",(long)curWeek];
     
 }
 
 
-////每次显示都需要重新加载
-//-(void)viewWillAppear:(BOOL)animated
-//{
+//每次显示都需要重新加载
+//-(void)viewWillAppear:(BOOL)animated{
 //   //刷新表格中的课程数据
 //    //    //清除原有数据
 //    for(UIView *columview in self.classSubViewArray)
@@ -154,18 +153,19 @@ static BOOL flag = false ;
 -(void)pushAddViewController{
     NSMutableArray *controllersArray = [NSMutableArray array];
     BusinessViewController *businessManage = [[BusinessViewController alloc]initWithfirstDateOfTerm:self.firstDateOfTerm businessModel:nil];
+    businessManage.delegate = self;
     [controllersArray addObject:businessManage];
     CourseViewController *courseManage = [[CourseViewController alloc]init];
     [controllersArray addObject:courseManage];
 
     BusinessCourseManage *management = [[BusinessCourseManage alloc]initWithControllersArray:controllersArray firstDateOfTerm:self.firstDateOfTerm];
+    management.delegate = self;
     management.hidesBottomBarWhenPushed = YES;//从下级vc开始，tabbar都隐藏掉
     [self.navigationController pushViewController:management animated:YES];
 }
 
 //加载本地的模拟数据
-- (void)loadLoacalData:(NSString *)week
-{
+- (void)loadLoacalData:(NSInteger )week{
 //    static BOOL flag = YES;
 //    NSString *coursePath;
 //    if (flag) {
@@ -220,8 +220,18 @@ static BOOL flag = false ;
 //        }
 //    }
 //    [self handleData:self.allCourses];
+
+    //刷新表格中的课程数据
+    //清除原有数据
+    for(UIView *columview in self.classSubViewArray)
+    {
+        for(CourseButton *coursebtn in [columview subviews])
+        {
+            [coursebtn removeFromSuperview];
+        }
+    }
     
-    NSDate *weekMonday = [DateUtils dateOfWeekMonday:14 firstDateOfTrem:self.firstDateOfTerm];
+    NSDate *weekMonday = [DateUtils dateOfWeekMonday:week firstDateOfTrem:self.firstDateOfTerm];
     NSArray *data = [DateUtils getDatesOfCurrence:weekMonday];
     
     NSCalendar *gregorian = [[NSCalendar alloc] initWithCalendarIdentifier:NSCalendarIdentifierGregorian];
@@ -274,12 +284,6 @@ static BOOL flag = false ;
 
 - (void)handleData:(NSArray *)courses
 {
-    for (UIView *view in self.classView.subviews) {
-        if ([view isKindOfClass:[CourseButton class]]) {
-            [view removeFromSuperview];     //清掉所有课程格子btn
-        }
-    }
-    
     if (courses.count > 0) {
         //处理周课表
         for (int i = 0; i<courses.count; i++) {
@@ -419,27 +423,35 @@ static BOOL flag = false ;
 
 - (void)didReceiveMemoryWarning {
     [super didReceiveMemoryWarning];
-    // Dispose of any resources that can be recreated.
+}
+
+#pragma mark BusinessCourseMangerDelegate
+- (void)BusinessCourseManage:(BusinessCourseManage *)viewController week:(NSInteger )selectedWeek{
+    [_navItemTitle setTitle:[NSString stringWithFormat:@"第%ld周",selectedWeek + 1] forState:UIControlStateNormal];
+    NSDate *weekMonday = [DateUtils dateOfWeekMonday:selectedWeek firstDateOfTrem:self.firstDateOfTerm];
+    [self daysViewSetting:weekMonday];
+    [self loadLoacalData:selectedWeek];
+    [self.view bringSubviewToFront:_weeksheet];
+}
+
+#pragma mark BusinessViewControllerDelegate
+- (void)BusinessViewController:(BusinessViewController *)viewController week:(NSInteger)selectedWeek{
+    [_navItemTitle setTitle:[NSString stringWithFormat:@"第%ld周",selectedWeek + 1] forState:UIControlStateNormal];
+    NSDate *weekMonday = [DateUtils dateOfWeekMonday:selectedWeek firstDateOfTrem:self.firstDateOfTerm];
+    [self daysViewSetting:weekMonday];
+    [self loadLoacalData:selectedWeek];
+    [self.view bringSubviewToFront:_weeksheet];
 }
 
 #pragma mark weekSheetDelegate
 - (void)refreshNavItemTitle:(WeekSheet *)weeksheet content:(NSInteger)weekSheetRow{
     [_navItemTitle setTitle:[NSString stringWithFormat:@"第%ld周",weekSheetRow + 1] forState:UIControlStateNormal];
-
-//    //刷新表格中的课程数据
-//    //清除原有数据
-//    for(UIView *columview in self.classSubViewArray)
-//    {
-//        for(CourseButton *coursebtn in [columview subviews])
-//        {
-//            [coursebtn removeFromSuperview];
-//        }
-//    }
 //    //加载新数据
 //    [self loadDatafromSQL:[NSString stringWithFormat:@"%ld",weekSheetRow + 1]];
     self.weeksheet.hidden = YES;
     NSDate *weekMonday = [DateUtils dateOfWeekMonday:weekSheetRow firstDateOfTrem:self.firstDateOfTerm];
     [self daysViewSetting:weekMonday];
+    [self loadLoacalData:weekSheetRow];
     [self.view bringSubviewToFront:_weeksheet];
     flag = false;
 }

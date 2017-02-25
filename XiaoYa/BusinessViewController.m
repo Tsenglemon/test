@@ -140,6 +140,9 @@
         }
         [dbManger commitTransaction];
 
+        //当前选择日期是第几周
+        NSInteger dateDistance = [DateUtils dateDistanceFromDate:self.currentDate toDate:self.firstDateOfTerm];
+        NSInteger week = dateDistance / 7;//存入数据库的week从0-n；
         //储存往后五年的时间
         NSMutableArray *dateString = [Utils dateStringArrayFromDate:self.currentDate yearDuration:5 repeatIndex:self.repeatIndex];
         //修改覆盖数据
@@ -207,6 +210,7 @@
         [dbManger commitTransaction];
         
         dispatch_async(dispatch_get_main_queue(), ^{
+            [self.delegate BusinessViewController:self week:week];
             [self.navigationController popViewControllerAnimated:YES];
         });
     });

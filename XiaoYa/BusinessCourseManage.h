@@ -7,8 +7,16 @@
 //
 
 #import <UIKit/UIKit.h>
+@class BusinessCourseManage;
+@protocol BusinessCourseManageDelegate <NSObject>
+//传回添加的那一周
+- (void)BusinessCourseManage:(BusinessCourseManage*)viewController week:(NSInteger )selectedWeek;
+
+@end
 
 @interface BusinessCourseManage : UIViewController
+@property (nonatomic , weak) id <BusinessCourseManageDelegate> delegate;
+
 /**
  *  指定初始化方法
  *  @param controllersArray         子控制器数组
