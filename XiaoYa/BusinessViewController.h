@@ -15,7 +15,9 @@
 @property (nonatomic , strong) NSMutableArray *sections;//二维数组，对不连续的节数分连续段储存
 @property (nonatomic , assign) NSInteger repeatIndex;//“重复”中的哪一项
 @property (nonatomic , copy) NSString *commentInfo;//备注的内容
-@property (nonatomic , strong) NSMutableArray *coverIndexs;
+//@property (nonatomic , strong) NSMutableArray *coverIndexs;
+@property (nonatomic , strong) NSMutableArray *sectionArray;//选择节数数组
+
 
 - (instancetype)initWithfirstDateOfTerm:(NSDate *)firstDateOfTerm businessModel:(BusinessModel *)busModel;
 

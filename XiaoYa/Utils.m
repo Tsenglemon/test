@@ -7,7 +7,7 @@
 //
 
 #import "Utils.h"
-
+#import "NSDate+Calendar.h"
 @implementation Utils
 #pragma mark - 颜色转换 IOS中十六进制的颜色转换为UIColor
 + (UIColor *)colorWithHexString: (NSString *)color
@@ -93,5 +93,89 @@
         }
     }
     return sections;
+}
+
+//返回日期数组，元素储存格式yyyymmdd。参数1：起始日期；参数2：持续时间，以年为单位;参数3：重复项。
++ (NSMutableArray *)dateStringArrayFromDate:(NSDate *)currentDate yearDuration:(int)yearDuration repeatIndex:(NSInteger)repeat{
+    NSDateFormatter * dateFormatter = [[NSDateFormatter alloc] init];
+    [dateFormatter setDateFormat:@"yyyyMMdd"];
+    NSCalendar * gregorian = [[NSCalendar alloc] initWithCalendarIdentifier:NSCalendarIdentifierGregorian];
+    NSDateComponents *components = [gregorian components:NSCalendarUnitEra | NSCalendarUnitYear | NSCalendarUnitMonth | NSCalendarUnitDay fromDate:currentDate];
+    NSString *currentDateStr = [dateFormatter stringFromDate:currentDate];
+    
+    NSMutableArray *dateString = [NSMutableArray arrayWithCapacity:5];
+    switch (repeat) {
+        case 0://每天
+            [dateString addObject:currentDateStr];
+            for (int i = 1; i < yearDuration * 365; i ++) {
+                components.day += 1;
+                NSDate *tempDate = [gregorian dateFromComponents:components];
+                [dateString addObject:[dateFormatter stringFromDate:tempDate]];
+            }
+            break;
+        case 1://每两天
+            [dateString addObject:currentDateStr];
+            for (int i = 1; i < yearDuration * 365 / 2; i ++) {
+                components.day += 2;
+                NSDate *tempDate = [gregorian dateFromComponents:components];
+                [dateString addObject:[dateFormatter stringFromDate:tempDate]];
+            }
+            break;
+        case 2://每周
+            [dateString addObject:currentDateStr];
+            for (int i = 1; i < yearDuration * 52; i ++) {
+                components.day += 7;
+                NSDate *tempDate = [gregorian dateFromComponents:components];
+                [dateString addObject:[dateFormatter stringFromDate:tempDate]];
+            }
+            break;
+        case 3://每月
+            [dateString addObject:currentDateStr];
+            for (int i = 1; i < yearDuration * 12; i ++) {
+                components.month += 1;
+                NSDate *tempDate = [gregorian dateFromComponents:components];
+                NSDateComponents *components1 = [gregorian components:NSCalendarUnitEra | NSCalendarUnitYear | NSCalendarUnitMonth | NSCalendarUnitDay fromDate:tempDate];
+                if(components1.day != components.day){
+                    continue;
+                }else{
+                    [dateString addObject:[dateFormatter stringFromDate:tempDate]];
+                }
+            }
+            break;
+        case 4://每年
+            [dateString addObject:currentDateStr];
+            if (components.month == 2 && components.day == 29) {//保存的这一天是闰日
+                components.year += 4;//判断四年后还是不是闰年
+                NSDate * tempDate = [gregorian dateFromComponents:components];//加一年后的日期,如果刚好是闰年，就会变成2016.2.29 -》2017.2.29=2017.3.1
+                NSDateComponents *components1 = [gregorian components:NSCalendarUnitEra | NSCalendarUnitYear | NSCalendarUnitMonth | NSCalendarUnitDay fromDate:tempDate];
+                if(components1.month == components.month){//如果四年后还是闰年
+                    [dateString addObject:[dateFormatter stringFromDate:tempDate]];
+                }
+            }else{//2月29以外的任何日期
+                for (int i = 1; i < yearDuration; i ++) {
+                    components.year += 1;
+                    NSDate * tempDate = [gregorian dateFromComponents:components];
+                    [dateString addObject:[dateFormatter stringFromDate:tempDate]];
+                }
+            }
+            break;
+        case 5://工作日
+            [dateString addObject:currentDateStr];
+            for (int i = 1; i < yearDuration * 365; i ++) {
+                components.day += 1;
+                NSDate *tempDate = [gregorian dateFromComponents:components];
+                int weekday = [tempDate dayOfWeek];//1表示周日，2表示周一
+                if (weekday > 1 && weekday < 7) {
+                    [dateString addObject:[dateFormatter stringFromDate:tempDate]];
+                }
+            }
+            break;
+        case 6://不重复
+            [dateString addObject:currentDateStr];
+            break;
+        default:
+            break;
+    }
+    return dateString;
 }
 @end

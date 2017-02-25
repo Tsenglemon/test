@@ -52,7 +52,7 @@
 @property (nonatomic , weak) RemindSelect *settingRemind;//提醒
 @property (nonatomic , weak) RepeatSetting *settingRepeat;//重复
 @property (nonatomic , strong) NSDate *firstDateOfTerm;//传入本学期第一天的日期
-@property (nonatomic , strong) NSMutableArray *sectionArray;//选择节数数组
+//@property (nonatomic , strong) NSMutableArray *sectionArray;//选择节数数组
 @property (nonatomic , strong) BusinessModel *busModel;
 //@property (nonatomic , copy) NSString *commentInfo;//备注的内容
 @property (nonatomic , strong) NSArray *repeatItem;//“重复”项的内容
@@ -83,7 +83,6 @@
     self.sectionArray = [NSMutableArray array];
     self.sections = [NSMutableArray array];
     self.commentInfo = [NSString string];
-    self.coverIndexs = [NSMutableArray array];
     self.repeatItem = @[@"每天",@"每两天",@"每周",@"每月",@"每年",@"工作日",@"不重复"];
     rowHeight = 80;
     separateHeight = 30;
@@ -127,6 +126,91 @@
 
 //事务界面自己的确认和取消按钮方法。从主界面点击格子跳转进事务界面的情况下，方法才会有效；如果是从“+”进来的就没用
 - (void)confirm{//这里需要完善->能否点击的条件
+    dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
+        DbManager *dbManger = [DbManager shareInstance];
+        //删除原事务（就是从格子上的那个事务）（如果重复，所有重复都删除）
+        NSDateFormatter * dateFormatter = [[NSDateFormatter alloc] init];
+        [dateFormatter setDateFormat:@"yyyyMMdd"];
+        NSDate *originDate = [dateFormatter dateFromString:self.busModel.date];
+        NSMutableArray *originDateStrArr = [Utils dateStringArrayFromDate:originDate yearDuration:5 repeatIndex:self.busModel.repeat.integerValue];
+        [dbManger beginTransaction];
+        for (int i = 0; i < originDateStrArr.count; i++) {
+            NSString *deleteOrigin = [NSString stringWithFormat:@"DELETE FROM t_201601 WHERE date = '%@' and time = '%@';",originDateStrArr[i],self.busModel.time];
+            [dbManger executeNonQuery:deleteOrigin];
+        }
+        [dbManger commitTransaction];
+
+        //储存往后五年的时间
+        NSMutableArray *dateString = [Utils dateStringArrayFromDate:self.currentDate yearDuration:5 repeatIndex:self.repeatIndex];
+        //修改覆盖数据
+        //                找出将要被覆盖的事务
+        NSMutableString *sqlTime = [NSMutableString string];
+        for (int i = 0; i < self.sectionArray.count; i++) {
+            [sqlTime appendString:[NSString stringWithFormat:@"time LIKE '%%%d%%' or ",[self.sectionArray[i] intValue]]];
+        }
+        sqlTime = (NSMutableString*)[sqlTime substringToIndex:sqlTime.length - 3];
+//        [dbManger beginTransaction];
+        //往后五年的每一条数据都要拿出来剔除覆盖
+        for (int i = 0; i < dateString.count; i ++) {
+            NSString *sql = [NSString stringWithFormat:@"SELECT * FROM t_201601 WHERE date = '%@' and (%@);",dateString[i],sqlTime];
+            NSArray *dataQuery = [dbManger executeQuery:sql];
+            if (dataQuery.count > 0) {
+                for (int j = 0; j < dataQuery.count ; j++) {
+                    //转换成模型
+                    NSMutableDictionary *busDict = [NSMutableDictionary dictionaryWithDictionary:dataQuery[j]];
+                    BusinessModel *model = [[BusinessModel alloc] initWithDict:busDict];
+                    //每条事务数据，删去重复的时间段（被覆盖掉了）得到新的事务时间段
+                    NSMutableArray *tempArray = [model.timeArray mutableCopy];
+                    for (int k = 0 ; k < self.sectionArray.count; k++) {
+                        if ([tempArray containsObject:self.sectionArray[k]]) {
+                            [tempArray removeObject:self.sectionArray[k]];
+                        }
+                    }
+                    if (tempArray.count != 0) {//tempArray.count=0意味着现事务把原事务整个都覆盖掉了，所以原事务直接删
+                        //对新的事务节数时间段进行连续性分割
+                        NSMutableArray *sections = [Utils subSectionArraysFromArray:tempArray];
+                        //然后插入更新后的事务
+                        [dbManger beginTransaction];
+                        for (int k = 0; k < sections.count; k++) {
+                            NSMutableArray *newSection = sections[k];
+                            NSMutableString *newTimeStr = [[NSMutableString alloc] initWithCapacity:5];
+                            for (int l = 0; l < newSection.count; l++) {
+                                [newTimeStr appendFormat:@"%@、",newSection[l]];
+                            }
+                            NSString *sql = [NSString stringWithFormat:@"INSERT INTO t_201601 (description,comment,week,weekday,date,time,repeat,overlap) VALUES ('%@','%@','','','%@','%@',6 ,0);",model.desc,model.comment,dateString[i],newTimeStr];//一律改成不重复
+                            [dbManger executeNonQuery:sql];
+                        }
+                        [dbManger commitTransaction];
+                    }
+                }
+                //删除旧的事务数据
+                NSString *deleteSql = [NSString stringWithFormat:@"DELETE FROM t_201601 WHERE date = '%@' and (%@);",dateString[i],sqlTime];
+                [dbManger executeNonQuery:deleteSql];
+            }
+        }
+//        [dbManger commitTransaction];
+
+        //插入新事务
+        [dbManger beginTransaction];
+        NSInteger timeArrCount = [self.sections count];
+        for (int i = 0; i <timeArrCount; i ++) {
+            NSMutableArray *section = self.sections[i];
+            NSMutableString *timeStr = [[NSMutableString alloc] initWithCapacity:5];
+            for (int j = 0; j < section.count; j++) {
+                [timeStr appendFormat:@"%@、",section[j]];
+            }
+            for (int k = 0; k < dateString.count; k ++) {
+                NSString *sql = [NSString stringWithFormat:@"INSERT INTO t_201601 (description,comment,week,weekday,date,time,repeat,overlap) VALUES ('%@','%@','','','%@','%@',%ld ,0);",self.busDescription.text,self.commentInfo,dateString[k],timeStr,self.repeatIndex];//注意VALUES字符串赋值要有单引号
+                [dbManger executeNonQuery:sql];
+            }
+        }
+        [dbManger commitTransaction];
+        
+        dispatch_async(dispatch_get_main_queue(), ^{
+            [self.navigationController popViewControllerAnimated:YES];
+        });
+    });
+    
     [self.navigationController popViewControllerAnimated:YES];
 }
 
@@ -674,9 +758,8 @@
 }
 
 //确认操作
-- (void)SectionSelectComfirmAction:(SectionSelect *)sectionSelector sectionArr:(NSMutableArray *)sectionArray coverIndexs:(NSMutableArray *)coverIndexs{
+- (void)SectionSelectComfirmAction:(SectionSelect *)sectionSelector sectionArr:(NSMutableArray *)sectionArray {
     [_coverLayer removeFromSuperview];
-    self.coverIndexs = [coverIndexs mutableCopy];
     NSInteger count = sectionArray.count;
     if (count != 0) {
         [sectionArray sortUsingComparator:^NSComparisonResult(id _Nonnull obj1, id _Nonnull obj2)
@@ -698,42 +781,7 @@
         
         //分割连续段
         [self.sections removeAllObjects];
-        int sectionCount = 1;
-        if (count != 1){
-            int i = 1;
-            for (; i < count; i++) {
-                NSString *num1 = (NSString*)sectionArray[i-1];
-                NSString *num2 = (NSString*)sectionArray[i];
-                if ([num1 intValue] != [num2 intValue] - 1) {
-                    sectionCount ++;
-                }
-            }
-        }
-        if (sectionCount == 1) {
-            [self.sections addObject:sectionArray];
-        }else{
-            int i = 0;
-            for (int k = 0; k < sectionCount; k ++) {
-                NSMutableArray *temp = [NSMutableArray array];
-                for (; i < count-1; i++) {
-                    NSString *num1 = (NSString*)sectionArray[i];
-                    NSString *num2 = (NSString*)sectionArray[i+1];
-                    if ([num1 intValue] == [num2 intValue] - 1) {
-                        [temp addObject:num1];
-                    }
-                    else{
-                        [temp addObject:num1];
-                        [self.sections addObject:temp];
-                        i++;
-                        break;
-                    }
-                }
-                if (k == sectionCount - 1) {
-                    [temp addObject:sectionArray[count-1]];
-                    [self.sections addObject:temp];
-                }
-            }
-        }
+        self.sections = [[Utils subSectionArraysFromArray:sectionArray] mutableCopy];
     }
 }
 

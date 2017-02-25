@@ -180,14 +180,14 @@
 - (void)confirmAction{
     [self removeFromSuperview];
     //现selectedindex-原originindex-(timedata.count!=4) = 标记覆盖的index,即现selectindex中不是origin又是有事务的
-    NSMutableArray *coverIndexs = [NSMutableArray array];
-    for (int i = 0 ; i < self.selectIndexs.count; i++) {
-        //有事务                                                                      不是origin
-        if ([self.timeData[[self.selectIndexs[i] intValue]] count] == 4 && [_originIndexs containsObject:self.selectIndexs[i]] == NO) {
-            [coverIndexs addObject:self.selectIndexs[i]];
-        }
-    }
-    [self.delegate SectionSelectComfirmAction:self sectionArr:self.selectIndexs coverIndexs:coverIndexs];
+//    NSMutableArray *coverIndexs = [NSMutableArray array];
+//    for (int i = 0 ; i < self.selectIndexs.count; i++) {
+//        //有事务                                                                      不是origin
+//        if ([self.timeData[[self.selectIndexs[i] intValue]] count] == 4 && [_originIndexs containsObject:self.selectIndexs[i]] == NO) {
+//            [coverIndexs addObject:self.selectIndexs[i]];
+//        }
+//    }
+    [self.delegate SectionSelectComfirmAction:self sectionArr:self.selectIndexs];
 }
 
 //取消,移除视图，什么也不做

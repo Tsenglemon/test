@@ -11,7 +11,7 @@
 @protocol SectionSelectDelegate<NSObject>
 
 //确认操作。传递选中节数、被覆盖的节数到控制器
-- (void)SectionSelectComfirmAction:(SectionSelect *)sectionSelector sectionArr:(NSMutableArray *)sectionArray coverIndexs:(NSMutableArray *)coverIndexs;
+- (void)SectionSelectComfirmAction:(SectionSelect *)sectionSelector sectionArr:(NSMutableArray *)sectionArray;
 //取消
 - (void)SectionSelectCancelAction:(SectionSelect *)sectionSelector;
 @end
