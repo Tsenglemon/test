@@ -135,7 +135,10 @@ static BOOL flag = false ;
     [dbManger executeNonQuery:sql];
 
 //	NSString *sql2 = [NSString stringWithFormat:@"create table if not exists course_table (id integer primary key autoincrement,weeks text not null,weekDay text not null,courseStart text not null,numberOfCourse text not null,courseName text not null,place text not null);"];
-//    [dbManger executeNonQuery:sql2];
+    
+    //测试阶段，先每次开启都创建新的表格
+    NSString *sql2 = [NSString stringWithFormat:@"create table exists course_table (id integer primary key autoincrement,weeks text not null,weekDay text not null,courseStart text not null,numberOfCourse text not null,courseName text not null,place text not null);"];
+    [dbManger executeNonQuery:sql2];
 }
 
 - (void)popWeekSheet{
@@ -420,6 +423,24 @@ static BOOL flag = false ;
 //        }
 //    }];
 //}
+
+
+//点击课程格子	btn的方法，卉馨你添加courseBtn的时候帮忙addtarget一下
+-(void)editCourse:(id)sender
+{
+    CourseButton *clickCourseBtn = (CourseButton *)sender;
+    
+    //NSLog(@"clickCourseBtn.courseModel:%@,%@,%@,%@,%@,%@",clickCourseBtn.courseModel.weeks,clickCourseBtn.courseModel.weekday,clickCourseBtn.courseModel.courseName,clickCourseBtn.courseModel.courseStart,clickCourseBtn.courseModel.numberOfCourse,clickCourseBtn.courseModel.place);
+    //NSLog(@"clickCourseBtn:%@,%@",clickCourseBtn.event,clickCourseBtn.place);
+    
+    CourseViewController *editCourseController = [[CourseViewController alloc] init];
+    
+    [self.navigationController pushViewController:editCourseController animated:YES];
+    
+    [editCourseController setCourseCellModelFromCourseModel:clickCourseBtn.courseModel];
+    
+}
+
 
 - (void)didReceiveMemoryWarning {
     [super didReceiveMemoryWarning];

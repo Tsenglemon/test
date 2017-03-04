@@ -35,7 +35,7 @@
 }
 
 
-- (instancetype)initWithFrame:(CGRect)frame
+- (instancetype)initWithFrame:(CGRect)frame andDayString:(NSString *)dayString
 {
     if (self = [super initWithFrame:frame]) {
         self.backgroundColor = [UIColor whiteColor];
@@ -44,6 +44,26 @@
         
         self.itemData = @[@"星期一",@"星期二",@"星期三",@"星期四",@"星期五",@"星期六",@"星期日"];
         choicebtn_aray = [[NSMutableArray alloc] init];
+        NSString * weekDayString = [[NSString alloc] init];
+        _weekDayString = weekDayString;
+        _weekDayString = dayString;
+        
+        NSString * whichSection = [[NSString alloc] init];
+        _whichSection = whichSection;
+        
+//        for(int i = 0;i<_itemData.count;i++)
+//        {
+//            UIButton *selectedBtn = [[UIButton alloc] init];
+//            [selectedBtn setImage:[UIImage imageNamed:@"未选择星期"] forState:UIControlStateNormal];
+//            [selectedBtn setImage:[UIImage imageNamed:@"选择星期"] forState:UIControlStateSelected];
+//            [selectedBtn addTarget:self action:@selector(choice_click:) forControlEvents:UIControlEventTouchUpInside];
+//            selectedBtn.tag = i+1;
+//            if([(NSString *)_itemData[i] isEqualToString:_weekDayString])
+//            {
+//                selectedBtn.selected = YES;
+//            }
+//            [choicebtn_aray addObject:selectedBtn];
+//        }
         [self settableview];
         [self setconfirmcancelbtn];
     
@@ -115,6 +135,9 @@
         make.left.equalTo(line.mas_right);
         make.bottom.equalTo(weakself.mas_bottom);
     }];
+    
+    [_cancel_btn addTarget:self action:@selector(dayselectcancel) forControlEvents:UIControlEventTouchUpInside];
+    [_confirm_btn addTarget:self action:@selector(dayselectconfirm) forControlEvents:UIControlEventTouchUpInside];
 
     
 }
@@ -128,17 +151,23 @@
 -(UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath
 {
     static NSString *ID = @"dayselectcell";
-    PublicTemplateCell *cell = [tableView dequeueReusableCellWithIdentifier:ID];
+    DaySelectCell *cell = [tableView dequeueReusableCellWithIdentifier:ID];
     
     if(cell == nil)
     {
-        cell=[[PublicTemplateCell alloc]initWithStyle:UITableViewCellStyleDefault reuseIdentifier:ID];
-        [choicebtn_aray addObject:cell.choiceBtn];
+        cell=[[DaySelectCell alloc]initWithStyle:UITableViewCellStyleDefault reuseIdentifier:ID];
         cell.selectionStyle=UITableViewCellSelectionStyleNone;
         [cell.choiceBtn addTarget:self action:@selector(choice_click:) forControlEvents:UIControlEventTouchUpInside];
+        [choicebtn_aray addObject:cell.choiceBtn];//
     }
     
-    cell.model = _itemData[indexPath.row];
+    cell.choiceBtn.selected = NO;
+    cell.item.text = _itemData[indexPath.row];
+    
+    if(indexPath.row == (_weekDayString.integerValue-1))
+    {
+        cell.choiceBtn.selected = YES;
+    }
     
     return cell;
 }
@@ -156,12 +185,53 @@
         UIButton *choice_btn = (UIButton *)item;
         choice_btn.selected = NO;
     }
+    //至少要有一个选择结果的，所以按钮并不能反选，只要点击，selected状态就置yes
     UIButton *selected_btn = (UIButton *)sender;
     selected_btn.selected=YES;
-    PublicTemplateCell *cellfrom = (PublicTemplateCell *)[[selected_btn superview] superview];
-    NSLog(@"%@",cellfrom);
-    NSIndexPath *index = [_dayselect_tableview indexPathForCell:cellfrom];
-    _dayselected = _itemData[index.row];
+    //一次superview是cellcontentview，第二次superview才是cell
+    //DaySelectCell *choicecell =(DaySelectCell *)[[selected_btn superview] superview];
+    //NSLog(@"cell:%@",choicecell);
+    //_weekDayString = [choicecell ];
+    
+    //[_dayselect_tableview reloadData];
 }
+
+-(void)dayselectcancel{
+    [_delegate removeCover];
+    [self removeFromSuperview];
+}
+
+
+-(void)dayselectconfirm{
+//    //拿到section
+//    UIButton *btnfrom = (UIButton*)sender;
+//    long index = btnfrom.tag;
+//    dayselectview *showview = (dayselectview *)[btnfrom superview];
+//    
+//    if(showview.dayselected != NULL)
+//    {
+//        //改数组里的字典
+//        NSMutableDictionary *changedict = courseview_array[index];
+//        [changedict setValue:showview.dayselected forKey:@"weekday"];
+//        
+//        
+//        //让tableview刷新数据
+//        NSIndexSet *indexset= [[NSIndexSet alloc] initWithIndex:index];
+//        [_course_tableview reloadSections:indexset withRowAnimation:UITableViewRowAnimationFade];
+//    }
+//    [self dayselectcancel];
+    for(int i = 0;i<choicebtn_aray.count;i++)
+    {
+        UIButton *everyone = (UIButton *)choicebtn_aray[i];
+        if(everyone.selected == YES)
+        {
+            _weekDayString = [NSString stringWithFormat:@"%d",i+1]; //_weeDayString的格式为1~7 表示星期一至日
+        }
+    }
+    if([_delegate respondsToSelector:@selector(setDayString:inSection:)])
+        [_delegate setDayString:_weekDayString inSection:_whichSection.integerValue];
+    [self dayselectcancel];
+}
+
 
 @end

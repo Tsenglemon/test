@@ -16,7 +16,6 @@
 		571B82031DB38BCE001171EE /* Utils.m in Sources */ = {isa = PBXBuildFile; fileRef = 571B82021DB38BCE001171EE /* Utils.m */; };
 		571B82091DB465D4001171EE /* WeekCell.m in Sources */ = {isa = PBXBuildFile; fileRef = 571B82081DB465D4001171EE /* WeekCell.m */; };
 		571B825A1DB8AD6C001171EE /* TimeViewCell.m in Sources */ = {isa = PBXBuildFile; fileRef = 571B82591DB8AD6C001171EE /* TimeViewCell.m */; };
-		57327EF41DEB27410030E1E2 /* CourseViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 57327EF31DEB27410030E1E2 /* CourseViewController.m */; };
 		577FA5C51DEBDE0400A0AEF7 /* BusinessCourseManage.m in Sources */ = {isa = PBXBuildFile; fileRef = 577FA5C41DEBDE0400A0AEF7 /* BusinessCourseManage.m */; };
 		577FA5CB1DEC2AF800A0AEF7 /* SectionSelectTableViewCell.m in Sources */ = {isa = PBXBuildFile; fileRef = 577FA5CA1DEC2AF800A0AEF7 /* SectionSelectTableViewCell.m */; };
 		577FA5CE1DEC45C400A0AEF7 /* SectionSelect.m in Sources */ = {isa = PBXBuildFile; fileRef = 577FA5CD1DEC45C400A0AEF7 /* SectionSelect.m */; };
@@ -45,12 +44,15 @@
 		57D69A241DC77278005E73EA /* courses-1.json in Resources */ = {isa = PBXBuildFile; fileRef = 57D69A231DC77278005E73EA /* courses-1.json */; };
 		57D69A2A1DC7832F005E73EA /* CourseModel.m in Sources */ = {isa = PBXBuildFile; fileRef = 57D69A291DC7832F005E73EA /* CourseModel.m */; };
 		57D69A2D1DC83734005E73EA /* CourseButton.m in Sources */ = {isa = PBXBuildFile; fileRef = 57D69A2C1DC83734005E73EA /* CourseButton.m */; };
-		E2391FEA1DD9F6870014DA94 /* weekselectview.m in Sources */ = {isa = PBXBuildFile; fileRef = E2391FE91DD9F6870014DA94 /* weekselectview.m */; };
-		E260AC111DEF0C5400965C46 /* dayselectview.m in Sources */ = {isa = PBXBuildFile; fileRef = E260AC101DEF0C5300965C46 /* dayselectview.m */; };
-		E2627E4B1DCDB8D70051B320 /* CourseTimeCell.m in Sources */ = {isa = PBXBuildFile; fileRef = E2627E4A1DCDB8D70051B320 /* CourseTimeCell.m */; };
 		E2647DF71DD05CAD0034BE4D /* businessviewcell.m in Sources */ = {isa = PBXBuildFile; fileRef = E2647DF61DD05CAD0034BE4D /* businessviewcell.m */; };
-		E295FB431E332BCF00AA7A72 /* timeselecteview.m in Sources */ = {isa = PBXBuildFile; fileRef = E295FB401E332BCF00AA7A72 /* timeselecteview.m */; };
-		E295FB441E332BCF00AA7A72 /* timeselecttableviewcell.m in Sources */ = {isa = PBXBuildFile; fileRef = E295FB421E332BCF00AA7A72 /* timeselecttableviewcell.m */; };
+		E26B70071E6AFF60000A08CB /* CourseTimeCell.m in Sources */ = {isa = PBXBuildFile; fileRef = E26B70061E6AFF60000A08CB /* CourseTimeCell.m */; };
+		E26B70121E6AFF75000A08CB /* dayselectview.m in Sources */ = {isa = PBXBuildFile; fileRef = E26B70091E6AFF75000A08CB /* dayselectview.m */; };
+		E26B70131E6AFF75000A08CB /* DaySelectCell.m in Sources */ = {isa = PBXBuildFile; fileRef = E26B700B1E6AFF75000A08CB /* DaySelectCell.m */; };
+		E26B70141E6AFF75000A08CB /* weekselectview.m in Sources */ = {isa = PBXBuildFile; fileRef = E26B700D1E6AFF75000A08CB /* weekselectview.m */; };
+		E26B70151E6AFF75000A08CB /* timeselecteview.m in Sources */ = {isa = PBXBuildFile; fileRef = E26B700F1E6AFF75000A08CB /* timeselecteview.m */; };
+		E26B70161E6AFF75000A08CB /* timeselecttableviewcell.m in Sources */ = {isa = PBXBuildFile; fileRef = E26B70111E6AFF75000A08CB /* timeselecttableviewcell.m */; };
+		E26B70191E6AFF84000A08CB /* CourseTimeCellModel.m in Sources */ = {isa = PBXBuildFile; fileRef = E26B70181E6AFF84000A08CB /* CourseTimeCellModel.m */; };
+		E26B701C1E6AFFA2000A08CB /* CourseViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = E26B701B1E6AFFA2000A08CB /* CourseViewController.m */; };
 		E2F0B70B1DD3653F00AEE343 /* DayViewCell.m in Sources */ = {isa = PBXBuildFile; fileRef = E2F0B70A1DD3653F00AEE343 /* DayViewCell.m */; };
 		EAB20136F318CDE1EC37771C /* libPods-XiaoYa.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 95B73B7E7C445C004F46A8E9 /* libPods-XiaoYa.a */; };
 /* End PBXBuildFile section */
@@ -93,8 +95,6 @@
 		571B82081DB465D4001171EE /* WeekCell.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = WeekCell.m; sourceTree = "<group>"; };
 		571B82581DB8AD6C001171EE /* TimeViewCell.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = TimeViewCell.h; sourceTree = "<group>"; };
 		571B82591DB8AD6C001171EE /* TimeViewCell.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = TimeViewCell.m; sourceTree = "<group>"; };
-		57327EF21DEB27410030E1E2 /* CourseViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CourseViewController.h; sourceTree = "<group>"; };
-		57327EF31DEB27410030E1E2 /* CourseViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CourseViewController.m; sourceTree = "<group>"; };
 		577FA5C31DEBDE0400A0AEF7 /* BusinessCourseManage.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = BusinessCourseManage.h; sourceTree = "<group>"; };
 		577FA5C41DEBDE0400A0AEF7 /* BusinessCourseManage.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = BusinessCourseManage.m; sourceTree = "<group>"; };
 		577FA5C91DEC2AF800A0AEF7 /* SectionSelectTableViewCell.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SectionSelectTableViewCell.h; sourceTree = "<group>"; };
@@ -149,18 +149,24 @@
 		57D69A2B1DC83734005E73EA /* CourseButton.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CourseButton.h; sourceTree = "<group>"; };
 		57D69A2C1DC83734005E73EA /* CourseButton.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CourseButton.m; sourceTree = "<group>"; };
 		95B73B7E7C445C004F46A8E9 /* libPods-XiaoYa.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-XiaoYa.a"; sourceTree = BUILT_PRODUCTS_DIR; };
-		E2391FE81DD9F6870014DA94 /* weekselectview.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = weekselectview.h; sourceTree = "<group>"; };
-		E2391FE91DD9F6870014DA94 /* weekselectview.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = weekselectview.m; sourceTree = "<group>"; };
-		E260AC0F1DEF0C5300965C46 /* dayselectview.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = dayselectview.h; sourceTree = "<group>"; };
-		E260AC101DEF0C5300965C46 /* dayselectview.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = dayselectview.m; sourceTree = "<group>"; };
-		E2627E491DCDB8D70051B320 /* CourseTimeCell.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CourseTimeCell.h; sourceTree = "<group>"; };
-		E2627E4A1DCDB8D70051B320 /* CourseTimeCell.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CourseTimeCell.m; sourceTree = "<group>"; };
 		E2647DF51DD05CAD0034BE4D /* businessviewcell.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = businessviewcell.h; sourceTree = "<group>"; };
 		E2647DF61DD05CAD0034BE4D /* businessviewcell.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = businessviewcell.m; sourceTree = "<group>"; };
-		E295FB3F1E332BCF00AA7A72 /* timeselecteview.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = timeselecteview.h; sourceTree = "<group>"; };
-		E295FB401E332BCF00AA7A72 /* timeselecteview.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = timeselecteview.m; sourceTree = "<group>"; };
-		E295FB411E332BCF00AA7A72 /* timeselecttableviewcell.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = timeselecttableviewcell.h; sourceTree = "<group>"; };
-		E295FB421E332BCF00AA7A72 /* timeselecttableviewcell.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = timeselecttableviewcell.m; sourceTree = "<group>"; };
+		E26B70051E6AFF60000A08CB /* CourseTimeCell.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CourseTimeCell.h; sourceTree = "<group>"; };
+		E26B70061E6AFF60000A08CB /* CourseTimeCell.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CourseTimeCell.m; sourceTree = "<group>"; };
+		E26B70081E6AFF75000A08CB /* dayselectview.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = dayselectview.h; sourceTree = "<group>"; };
+		E26B70091E6AFF75000A08CB /* dayselectview.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = dayselectview.m; sourceTree = "<group>"; };
+		E26B700A1E6AFF75000A08CB /* DaySelectCell.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DaySelectCell.h; sourceTree = "<group>"; };
+		E26B700B1E6AFF75000A08CB /* DaySelectCell.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = DaySelectCell.m; sourceTree = "<group>"; };
+		E26B700C1E6AFF75000A08CB /* weekselectview.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = weekselectview.h; sourceTree = "<group>"; };
+		E26B700D1E6AFF75000A08CB /* weekselectview.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = weekselectview.m; sourceTree = "<group>"; };
+		E26B700E1E6AFF75000A08CB /* timeselecteview.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = timeselecteview.h; sourceTree = "<group>"; };
+		E26B700F1E6AFF75000A08CB /* timeselecteview.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = timeselecteview.m; sourceTree = "<group>"; };
+		E26B70101E6AFF75000A08CB /* timeselecttableviewcell.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = timeselecttableviewcell.h; sourceTree = "<group>"; };
+		E26B70111E6AFF75000A08CB /* timeselecttableviewcell.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = timeselecttableviewcell.m; sourceTree = "<group>"; };
+		E26B70171E6AFF84000A08CB /* CourseTimeCellModel.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CourseTimeCellModel.h; sourceTree = "<group>"; };
+		E26B70181E6AFF84000A08CB /* CourseTimeCellModel.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CourseTimeCellModel.m; sourceTree = "<group>"; };
+		E26B701A1E6AFFA2000A08CB /* CourseViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CourseViewController.h; sourceTree = "<group>"; };
+		E26B701B1E6AFFA2000A08CB /* CourseViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CourseViewController.m; sourceTree = "<group>"; };
 		E2F0B7091DD3653F00AEE343 /* DayViewCell.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DayViewCell.h; sourceTree = "<group>"; };
 		E2F0B70A1DD3653F00AEE343 /* DayViewCell.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = DayViewCell.m; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -234,8 +240,8 @@
 				571A3D091DE82F0C009042BC /* BusinessViewController.m */,
 				57BDFA1F1E52EF1300C0E254 /* CommentViewController.h */,
 				57BDFA201E52EF1300C0E254 /* CommentViewController.m */,
-				57327EF21DEB27410030E1E2 /* CourseViewController.h */,
-				57327EF31DEB27410030E1E2 /* CourseViewController.m */,
+				E26B701A1E6AFFA2000A08CB /* CourseViewController.h */,
+				E26B701B1E6AFFA2000A08CB /* CourseViewController.m */,
 			);
 			name = controllers;
 			sourceTree = "<group>";
@@ -247,6 +253,8 @@
 				57D69A291DC7832F005E73EA /* CourseModel.m */,
 				57BDFA191E4CB98000C0E254 /* BusinessModel.h */,
 				57BDFA1A1E4CB98100C0E254 /* BusinessModel.m */,
+				E26B70171E6AFF84000A08CB /* CourseTimeCellModel.h */,
+				E26B70181E6AFF84000A08CB /* CourseTimeCellModel.m */,
 			);
 			name = models;
 			sourceTree = "<group>";
@@ -386,9 +394,9 @@
 		E2B52ACE1DDAAA5E005ABBB7 /* 课程管理 */ = {
 			isa = PBXGroup;
 			children = (
+				E26B70051E6AFF60000A08CB /* CourseTimeCell.h */,
+				E26B70061E6AFF60000A08CB /* CourseTimeCell.m */,
 				E2B52ACF1DDAAAAE005ABBB7 /* 悬浮view */,
-				E2627E491DCDB8D70051B320 /* CourseTimeCell.h */,
-				E2627E4A1DCDB8D70051B320 /* CourseTimeCell.m */,
 			);
 			name = "课程管理";
 			sourceTree = "<group>";
@@ -396,14 +404,16 @@
 		E2B52ACF1DDAAAAE005ABBB7 /* 悬浮view */ = {
 			isa = PBXGroup;
 			children = (
-				E260AC0F1DEF0C5300965C46 /* dayselectview.h */,
-				E260AC101DEF0C5300965C46 /* dayselectview.m */,
-				E2391FE81DD9F6870014DA94 /* weekselectview.h */,
-				E2391FE91DD9F6870014DA94 /* weekselectview.m */,
-				E295FB3F1E332BCF00AA7A72 /* timeselecteview.h */,
-				E295FB401E332BCF00AA7A72 /* timeselecteview.m */,
-				E295FB411E332BCF00AA7A72 /* timeselecttableviewcell.h */,
-				E295FB421E332BCF00AA7A72 /* timeselecttableviewcell.m */,
+				E26B70081E6AFF75000A08CB /* dayselectview.h */,
+				E26B70091E6AFF75000A08CB /* dayselectview.m */,
+				E26B700A1E6AFF75000A08CB /* DaySelectCell.h */,
+				E26B700B1E6AFF75000A08CB /* DaySelectCell.m */,
+				E26B700C1E6AFF75000A08CB /* weekselectview.h */,
+				E26B700D1E6AFF75000A08CB /* weekselectview.m */,
+				E26B700E1E6AFF75000A08CB /* timeselecteview.h */,
+				E26B700F1E6AFF75000A08CB /* timeselecteview.m */,
+				E26B70101E6AFF75000A08CB /* timeselecttableviewcell.h */,
+				E26B70111E6AFF75000A08CB /* timeselecttableviewcell.m */,
 			);
 			name = "悬浮view";
 			sourceTree = "<group>";
@@ -594,28 +604,31 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				E26B701C1E6AFFA2000A08CB /* CourseViewController.m in Sources */,
 				571A3B361DE0D08A009042BC /* NSDate+Calendar.m in Sources */,
 				579C2FF41DAD02EF00E4EE54 /* CourseTableViewController.m in Sources */,
 				571A3B331DE0D07C009042BC /* MonthPicker.m in Sources */,
 				57BDFA1E1E4CCB5E00C0E254 /* UIView+Extend.m in Sources */,
+				E26B70191E6AFF84000A08CB /* CourseTimeCellModel.m in Sources */,
 				571B82091DB465D4001171EE /* WeekCell.m in Sources */,
 				57D69A2A1DC7832F005E73EA /* CourseModel.m in Sources */,
 				571A3B301DE0D071009042BC /* DatePicker.m in Sources */,
-				E295FB441E332BCF00AA7A72 /* timeselecttableviewcell.m in Sources */,
 				57BDFA241E52F06A00C0E254 /* UIAlertController+Appearance.m in Sources */,
 				571A3B2A1DE0D05A009042BC /* DateUtils.m in Sources */,
-				E260AC111DEF0C5400965C46 /* dayselectview.m in Sources */,
 				579C2FC11DAD000E00E4EE54 /* AppDelegate.m in Sources */,
+				E26B70151E6AFF75000A08CB /* timeselecteview.m in Sources */,
+				E26B70141E6AFF75000A08CB /* weekselectview.m in Sources */,
 				577FA5D41DEDDF9300A0AEF7 /* RemindSelect.m in Sources */,
+				E26B70121E6AFF75000A08CB /* dayselectview.m in Sources */,
 				577FA5DD1DEEA9F000A0AEF7 /* RepeatSetting.m in Sources */,
-				E2627E4B1DCDB8D70051B320 /* CourseTimeCell.m in Sources */,
 				577FA5CB1DEC2AF800A0AEF7 /* SectionSelectTableViewCell.m in Sources */,
+				E26B70161E6AFF75000A08CB /* timeselecttableviewcell.m in Sources */,
 				57BDFA131E2E038D00C0E254 /* DbManager.m in Sources */,
 				579C2FBE1DAD000E00E4EE54 /* main.m in Sources */,
 				57D69A2D1DC83734005E73EA /* CourseButton.m in Sources */,
 				57BDFA1B1E4CB98100C0E254 /* BusinessModel.m in Sources */,
+				E26B70131E6AFF75000A08CB /* DaySelectCell.m in Sources */,
 				577FA5CE1DEC45C400A0AEF7 /* SectionSelect.m in Sources */,
-				E2391FEA1DD9F6870014DA94 /* weekselectview.m in Sources */,
 				577FA5C51DEBDE0400A0AEF7 /* BusinessCourseManage.m in Sources */,
 				E2F0B70B1DD3653F00AEE343 /* DayViewCell.m in Sources */,
 				57BDFA181E326E0500C0E254 /* UILabel+AlertActionFont.m in Sources */,
@@ -623,11 +636,10 @@
 				571A3D0A1DE82F0C009042BC /* BusinessViewController.m in Sources */,
 				E2647DF71DD05CAD0034BE4D /* businessviewcell.m in Sources */,
 				577FA5D11DEDD5EB00A0AEF7 /* PublicTemplateCell.m in Sources */,
-				E295FB431E332BCF00AA7A72 /* timeselecteview.m in Sources */,
 				577FA5D71DEE7C1400A0AEF7 /* RemindCell.m in Sources */,
+				E26B70071E6AFF60000A08CB /* CourseTimeCell.m in Sources */,
 				571B825A1DB8AD6C001171EE /* TimeViewCell.m in Sources */,
 				571B82031DB38BCE001171EE /* Utils.m in Sources */,
-				57327EF41DEB27410030E1E2 /* CourseViewController.m in Sources */,
 				571A3B2F1DE0D071009042BC /* CalendarView.m in Sources */,
 				577FA5DA1DEEA6B900A0AEF7 /* RepeatCell.m in Sources */,
 				579C2FF71DAD036000E4EE54 /* WeekSheet.m in Sources */,

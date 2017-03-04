@@ -7,9 +7,11 @@
 //
 
 #import <UIKit/UIKit.h>
+#import "CourseModel.h"
+#import "CourseTimeCell.h"
 
 @interface CourseViewController : UIViewController
 
--(BOOL)DataStore;
-
+-(NSInteger)DataStore;
+-(void)setCourseCellModelFromCourseModel:(CourseModel *)courseMDL;
 @end

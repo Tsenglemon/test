@@ -83,28 +83,68 @@
             make.width.mas_equalTo(80*scaletowidth);
         }];
         
-        
-        UIButton *select = [[UIButton alloc] init];
-        _select = select;
-        [_select setImage:[UIImage imageNamed:@"未选择节"] forState:UIControlStateNormal];
-        [_select setImage:[UIImage imageNamed:@"选择节"] forState:UIControlStateSelected];
+        //右边的勾选框
+        UIButton *selectBtn = [[UIButton alloc] init];
+        _selectBtn = selectBtn;
+        [_selectBtn setImage:[UIImage imageNamed:@"未选择节"] forState:UIControlStateNormal];
+        [_selectBtn setImage:[UIImage imageNamed:@"选择节"] forState:UIControlStateSelected];
         //[_select addTarget:self action:@selector(choose:) forControlEvents:UIControlEventTouchUpInside];
-        [self addSubview:_select];
-        [_select mas_makeConstraints:^(MASConstraintMaker *make) {
+        [self addSubview:_selectBtn];
+        [_selectBtn mas_makeConstraints:^(MASConstraintMaker *make) {
             make.top.bottom.equalTo(weakself);
             make.right.equalTo(weakself).offset(-20*scaletowidth);
         }];
         
-        
+        //中间的描述
         UILabel *comment = [[UILabel alloc] init];
         _comment = comment;
         [_comment setTextColor:[Utils colorWithHexString:@"#333333"]];
         [_comment setTextAlignment:NSTextAlignmentCenter];
-        [_comment setFont:[UIFont systemFontOfSize:28*fontscale]];
+        [_comment setFont:[UIFont systemFontOfSize:14*fontscale]];
         [self addSubview:_comment];
         [_comment mas_makeConstraints:^(MASConstraintMaker *make) {
             make.top.bottom.centerX.equalTo(weakself);
         }];
+        
+        //提示“将会覆盖原有课程”的警示条
+        UIView *overlapAlertView = [[UIView alloc] init];
+        _overlapAlertView = overlapAlertView;
+        _overlapAlertView.backgroundColor = [Utils colorWithHexString:@"#D9D9D9"];
+        [self addSubview:_overlapAlertView];
+        [_overlapAlertView mas_makeConstraints:^(MASConstraintMaker *make) {
+            make.top.equalTo(weakself);
+            make.width.mas_equalTo(507*scaletowidth);
+            make.height.mas_equalTo(24*scaletoheight);
+            make.left.equalTo(verticalline.mas_right);
+        }];
+        
+        UILabel *alertWord = [[UILabel alloc] init];
+        alertWord.text = @"将会覆盖原有课程";
+        alertWord.font = [UIFont systemFontOfSize:8*fontscale];
+        alertWord.textColor = [Utils colorWithHexString:@"#999999"];
+        [_overlapAlertView addSubview:alertWord];
+        [alertWord mas_makeConstraints:^(MASConstraintMaker *make) {
+            make.centerX.centerY.top.bottom.equalTo(_overlapAlertView);
+        }];
+        
+        UIImageView *excalmatoryMark = [[UIImageView alloc] init];
+        [excalmatoryMark setImage:[UIImage imageNamed:@"感叹号"]];
+        [_overlapAlertView addSubview:excalmatoryMark];
+        [excalmatoryMark mas_makeConstraints:^(MASConstraintMaker *make) {
+            make.right.equalTo(alertWord.mas_left).mas_offset(-10*scaletowidth);
+            make.centerY.equalTo(alertWord.mas_centerY);
+        }];
+        
+        UIImageView *angle = [[UIImageView alloc] init];
+        [angle setImage:[UIImage imageNamed:@"折角"]];
+        [_overlapAlertView addSubview:angle];
+        [angle mas_makeConstraints:^(MASConstraintMaker *make) {
+            make.top.bottom.right.equalTo(_overlapAlertView);
+        }];
+        
+        //默认是隐藏的
+        _overlapAlertView.alpha=0;
+        
     }
     
     return self;

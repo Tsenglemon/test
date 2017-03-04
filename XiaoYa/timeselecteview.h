@@ -7,6 +7,14 @@
 //
 
 #import <UIKit/UIKit.h>
+#import "CourseTimeCellModel.h"
+
+@protocol timeselectViewDelegate <NSObject>
+
+-(void)setCourseTimeArray:(NSMutableArray *)courseTimeArray andtoDeleteID:(NSArray*) toDeleteID inSection:(NSInteger )section;
+-(void)removeCover;
+
+@end
 
 @interface timeselecteview : UIView
 
@@ -15,8 +23,13 @@
 @property (nonatomic,weak) UIButton *confirm_btn;
 @property (nonatomic,weak) UILabel *today;
 @property (nonatomic,strong) NSMutableArray *selectresult;
+@property (nonatomic,strong) NSString *whichSection;
 
--(instancetype)initWithFrame:(CGRect)frame;
+@property (nonatomic,strong) NSMutableSet *toDeleteID;//整理的要删除的课程ID,避免重复用set
+
+@property (nonatomic,weak) id delegate;
+
+-(instancetype)initWithFrame:(CGRect)frame andCellModel:(CourseTimeCellModel *)cellMoedl;
 
 
 @end

@@ -13,8 +13,9 @@
 @property (nonatomic,weak) UILabel *time;
 @property (nonatomic,weak) UILabel *number;
 @property (nonatomic,weak) UILabel *timenode;
-@property (nonatomic,weak) UILabel *comment;
-@property (nonatomic,weak) UIButton *select;
+@property (nonatomic,weak) UILabel *comment; //中间的注释
+@property (nonatomic,weak) UIButton *selectBtn; //右边的选框
+@property (nonatomic,weak) UIView *overlapAlertView; //提示“将会覆盖原有课程”的警示条
 
 
 -(instancetype)initWithreuseIdentifier:(NSString *)reuseIdentifier;

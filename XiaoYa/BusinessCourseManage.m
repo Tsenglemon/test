@@ -148,13 +148,32 @@
             });
         });
     }else{//如果是课程界面
-		NSLog(@"comfirm");
-        //警告窗
-        
         //数据存储
-        if([_courseVc DataStore])
-            //退出当前视图(数据成功存储才退出当前控制器)
-            [self.navigationController popViewControllerAnimated:YES];
+        NSInteger storeResult = [_courseVc DataStore] ;
+        switch (storeResult) {
+            case 0:
+            {
+                UIAlertController *alertController = [UIAlertController alertControllerWithTitle:@"警告" message:@"课程时间冲突" preferredStyle:UIAlertControllerStyleAlert];
+                UIAlertAction *okAction = [UIAlertAction actionWithTitle:@"好的" style:UIAlertActionStyleDefault handler:nil];
+                [alertController addAction:okAction];
+                [self presentViewController:alertController animated:YES completion:nil];
+                break;
+            }
+            case 1:
+            {UIAlertController *alertController = [UIAlertController alertControllerWithTitle:@"警告" message:@"课程信息不完整" preferredStyle:UIAlertControllerStyleAlert];
+                UIAlertAction *okAction = [UIAlertAction actionWithTitle:@"好的" style:UIAlertActionStyleDefault handler:nil];
+                [alertController addAction:okAction];
+                [self presentViewController:alertController animated:YES completion:nil];
+                break;
+            }
+            default:
+            {
+                //退出当前视图(数据成功存储才退出当前控制器)
+                [self.navigationController popViewControllerAnimated:YES];
+                break;
+            }
+                
+        }
     }
 }
 
@@ -171,6 +190,16 @@
             [self presentViewController:alert animated:YES completion:nil];
         }
     }else{//如果是课程界面
+        UIAlertController *alertController = [UIAlertController alertControllerWithTitle:@"确认退出？" message:@"一旦退出，编辑将不会保存" preferredStyle:UIAlertControllerStyleAlert];
+        UIAlertAction *okAction = [UIAlertAction actionWithTitle:@"确定" style:UIAlertActionStyleDefault handler:^(UIAlertAction * _Nonnull action) {
+            [self.navigationController popViewControllerAnimated:YES];
+        }];
+        [alertController addAction:okAction];
+        
+        UIAlertAction *cancelAction = [UIAlertAction actionWithTitle:@"取消" style:UIAlertActionStyleCancel handler:nil];
+        [alertController addAction:cancelAction];
+        
+        [self presentViewController:alertController animated:YES completion:nil];
         
     }
 }

@@ -98,68 +98,68 @@
         }];
         
         //设置三个显示的button和一个field
-        UIButton *weeksnum = [[UIButton alloc] init];
-        _weeksnum = weeksnum;
-        [self addSubview:_weeksnum];
-        UIButton *weekday = [[UIButton alloc] init];
-        _weekday = weekday;
-        [self addSubview:_weekday];
-        UIButton *coursenum = [[UIButton alloc] init];
-        _coursenum = coursenum;
-        [self addSubview:_coursenum];
-        UITextField *classroom = [[UITextField alloc] init];
-        _classroom = classroom;
-        [self addSubview:_classroom];
+        UIButton *weeks = [[UIButton alloc] init];
+        _weeks = weeks;
+        [self addSubview:_weeks];
+        UIButton *weekDay = [[UIButton alloc] init];
+        _weekDay = weekDay;
+        [self addSubview:_weekDay];
+        UIButton *courseTime = [[UIButton alloc] init];
+        _courseTime = courseTime;
+        [self addSubview:_courseTime];
+        UITextField *place = [[UITextField alloc] init];
+        _place = place;
+        [self addSubview:_place];
         
-        [_weeksnum setTitle:@"1-16周" forState:UIControlStateNormal];
-        [_weeksnum setTitleColor:[UIColor blackColor] forState:UIControlStateNormal];
-        _weeksnum.titleLabel.font = [UIFont systemFontOfSize:14*fontscale];
+        [_weeks setTitle:@"1-16周" forState:UIControlStateNormal];
+        [_weeks setTitleColor:[UIColor blackColor] forState:UIControlStateNormal];
+        _weeks.titleLabel.font = [UIFont systemFontOfSize:14*fontscale];
         
-        [_weekday setTitle:@"周一" forState:UIControlStateNormal];
-        [_weekday setTitleColor:[UIColor blackColor] forState:UIControlStateNormal];
-        _weekday.titleLabel.font = [UIFont systemFontOfSize:14*fontscale];
+        [_weekDay setTitle:@"周一" forState:UIControlStateNormal];
+        [_weekDay setTitleColor:[UIColor blackColor] forState:UIControlStateNormal];
+        _weekDay.titleLabel.font = [UIFont systemFontOfSize:14*fontscale];
         
-        [_coursenum setTitle:@"1-2节" forState:UIControlStateNormal];
-        [_coursenum setTitleColor:[UIColor blackColor] forState:UIControlStateNormal];
-        _coursenum.titleLabel.font = [UIFont systemFontOfSize:14*fontscale];
+        [_courseTime setTitle:@"1-2节" forState:UIControlStateNormal];
+        [_courseTime setTitleColor:[UIColor blackColor] forState:UIControlStateNormal];
+        _courseTime.titleLabel.font = [UIFont systemFontOfSize:14*fontscale];
         
         
         NSMutableDictionary *dict = [NSMutableDictionary dictionary];
         dict[NSForegroundColorAttributeName] = [Utils colorWithHexString:@"#d9d9d9"];
         dict[NSFontAttributeName] = [UIFont systemFontOfSize:12.0];
         NSAttributedString *attribute = [[NSAttributedString alloc] initWithString:@"请输入上课教室" attributes:dict];
-        [_classroom setAttributedPlaceholder:attribute];
-        _classroom.font = [UIFont systemFontOfSize:12.0*fontscale];
+        [_place setAttributedPlaceholder:attribute];
+        _place.font = [UIFont systemFontOfSize:12.0*fontscale];
 
-        //_classroom.placeholder = @"请输入上课教室";
-        [_classroom setTextAlignment:NSTextAlignmentCenter];
+        //_place.placeholder = @"请输入上课教室";
+        [_place setTextAlignment:NSTextAlignmentCenter];
         
-        [_weeksnum mas_makeConstraints:^(MASConstraintMaker *make) {
+        [_weeks mas_makeConstraints:^(MASConstraintMaker *make) {
             make.centerX.equalTo(weakself.mas_centerX);
             make.width.mas_equalTo(500.0 / 750.0 *kScreenWidth);
             make.height.mas_equalTo(80.0 / 1334.0 *kScreenHeight);
             make.top.equalTo(weakself.mas_top);
         }];
         
-        [_weekday mas_makeConstraints:^(MASConstraintMaker *make) {
+        [_weekDay mas_makeConstraints:^(MASConstraintMaker *make) {
             make.centerX.equalTo(weakself.mas_centerX);
             make.width.mas_equalTo(500.0 / 750.0 *kScreenWidth);
             make.height.mas_equalTo(80.0 / 1334.0 *kScreenHeight);
-            make.top.equalTo(_weeksnum.mas_bottom);
+            make.top.equalTo(_weeks.mas_bottom);
         }];
 
-        [_coursenum mas_makeConstraints:^(MASConstraintMaker *make) {
+        [courseTime mas_makeConstraints:^(MASConstraintMaker *make) {
             make.centerX.equalTo(weakself.mas_centerX);
             make.width.mas_equalTo(500.0 / 750.0 *kScreenWidth);
             make.height.mas_equalTo(80.0 / 1334.0 *kScreenHeight);
-            make.top.equalTo(_weekday.mas_bottom);
+            make.top.equalTo(_weekDay.mas_bottom);
         }];
 
-        [_classroom mas_makeConstraints:^(MASConstraintMaker *make) {
+        [_place mas_makeConstraints:^(MASConstraintMaker *make) {
             make.centerX.equalTo(weakself.mas_centerX);
             make.width.mas_equalTo(500.0 / 750.0 *kScreenWidth);
             make.height.mas_equalTo(80.0 / 1334.0 *kScreenHeight);
-            make.top.equalTo(_coursenum.mas_bottom);
+            make.top.equalTo(courseTime.mas_bottom);
         }];
 
         

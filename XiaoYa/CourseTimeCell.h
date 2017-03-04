@@ -10,11 +10,11 @@
 
 @interface CourseTimeCell : UITableViewCell
 
-@property (nonatomic,weak) UIButton *weeksnum;
-@property (nonatomic,weak) UIButton *weekday;
-@property (nonatomic,weak) UIButton *coursenum;
+@property (nonatomic,weak) UIButton *weeks;
+@property (nonatomic,weak) UIButton *weekDay;
+@property (nonatomic,weak) UIButton *courseTime;
 @property (nonatomic,weak) UIButton *delete_btn;
-@property (nonatomic,weak) UITextField *classroom;
+@property (nonatomic,weak) UITextField *place;
 
 
 -(instancetype)initWithreuseIdentifier:(NSString *)ID;

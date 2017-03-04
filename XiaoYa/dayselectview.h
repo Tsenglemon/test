@@ -7,16 +7,27 @@
 //
 
 #import <UIKit/UIKit.h>
-#import "PublicTemplateCell.h"
+#import "DaySelectCell.h"
+
+@protocol dayselsctViewDelegate <NSObject>
+
+-(void)setDayString:(NSString *)dayString inSection:(NSInteger )section;
+-(void)removeCover;
+
+@end
 
 
 @interface dayselectview : UIView
-@property (nonatomic,strong) NSString *dayselected;//选择的日子
+@property (nonatomic,strong) NSString *weekDayString;//选择的星期几结果
 @property (nonatomic,weak) UIButton *cancel_btn;
 @property (nonatomic,weak) UIButton *confirm_btn;
+@property (nonatomic,copy) NSString * whichSection;
 
 
--(instancetype)initWithFrame:(CGRect)frame;
+@property (nonatomic,weak) id delegate;
+
+
+-(instancetype)initWithFrame:(CGRect)frame andDayString:(NSString *)dayString;
 
 
 @end
