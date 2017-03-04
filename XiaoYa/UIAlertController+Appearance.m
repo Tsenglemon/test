@@ -13,7 +13,7 @@
 
 //提示框按钮样式设置
 - (void)addActionTarget:(UIAlertAction*)action hexColor:(NSString *)color{
-    [action setValue:[Utils colorWithHexString:color] forKey:@"titleTextColor"];
+    [action setValue:[Utils colorWithHexString:color] forKey:@"titleTextColor"];//iOS8.3
     [self addAction:action];
 }
 
