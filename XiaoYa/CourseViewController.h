@@ -13,5 +13,5 @@
 @interface CourseViewController : UIViewController
 
 -(NSInteger)DataStore;
--(void)setCourseCellModelFromCourseModel:(CourseModel *)courseMDL;
+-(void)setCourseTimeCellModelFromCourseModel:(CourseModel *)courseMDL;
 @end

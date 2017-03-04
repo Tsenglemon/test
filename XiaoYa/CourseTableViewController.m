@@ -437,7 +437,7 @@ static BOOL flag = false ;
     
     [self.navigationController pushViewController:editCourseController animated:YES];
     
-    [editCourseController setCourseCellModelFromCourseModel:clickCourseBtn.courseModel];
+    [editCourseController setCourseTimeCellModelFromCourseModel:clickCourseBtn.courseModel];
     
 }
 

@@ -728,7 +728,7 @@
 
 
 
--(void)setCourseCellModelFromCourseModel:(CourseModel *)courseMDL
+-(void)setCourseTimeCellModelFromCourseModel:(CourseModel *)courseMDL
 {
     //NSLog(@"courseMDL:%@,%@,%@,%@,%@,%@",courseMDL.weeks,courseMDL.weekday,courseMDL.courseName,courseMDL.courseStart,courseMDL.numberOfCourse,courseMDL.place);
     

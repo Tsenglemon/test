@@ -31,7 +31,7 @@
 -(void)courseTimeArraytoCourseTimeString;
 -(void)weekDayNumtoWeekDay;
 
-//把coursetimecellmodel转变coursemodel，装在nsarray返回。方便存储和使用
+//把coursetimecellmodel转变coursemodel，装在参数nsmutablearray里。方便存储和使用
 -(BOOL)CourseCellModeltoCourseModelinArray:(NSMutableArray *)courseModelArray;
 
 //对比查看是否有时间冲突,有冲突返回YES ，没有冲突返回NO

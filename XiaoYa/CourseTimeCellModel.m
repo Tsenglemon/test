@@ -131,7 +131,7 @@
     
 }
 
-//把coursetimecellmodel转变coursemodel，装在nsarray返回。方便存储和使用
+//把coursetimecellmodel转变coursemodel，装在参数NSMutableArray。方便存储和使用
 -(BOOL)CourseCellModeltoCourseModelinArray:(NSMutableArray *)courseModelArray
 {
     
