@@ -56,8 +56,8 @@
 @implementation CourseViewController
 
 
-- (void)viewWillAppear:(BOOL)animated {
-    [super viewWillAppear:animated];
+- (void)viewDidLoad {
+    [super viewDidLoad];
     
     UIView *courseview = [[UIView alloc] init];
     _courseView = courseview;
