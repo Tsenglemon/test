@@ -25,7 +25,7 @@
 
 #define kScreenWidth [UIApplication sharedApplication].keyWindow.bounds.size.width
 #define kScreenHeight [UIApplication sharedApplication].keyWindow.bounds.size.height
-@interface CourseTableViewController ()<UIScrollViewDelegate,WeekSheetDelegate,BusinessCourseManageDelegate,BusinessViewControllerDelegate>
+@interface CourseTableViewController ()<UIScrollViewDelegate,WeekSheetDelegate,BusinessCourseManageDelegate,BusinessViewControllerDelegate,CourseViewControllerDelegate>
 @property (nonatomic ,weak) UIButton* navItemTitle;
 @property (nonatomic ,weak) WeekSheet* weeksheet;//标题按钮下拉列表
 @property (nonatomic ,weak) UIScrollView* timeView;//纵向表示时间段的scrollview
@@ -37,8 +37,9 @@
 
 @property (nonatomic ,strong)NSMutableArray *classSubViewArray;//classview上七个列向上的子view，用来控制某列所有课程格子的宽度
 @property (nonatomic ,strong)NSMutableArray *allCourses;//存储一周所有课程数据模型的数组
+@property (nonatomic ,strong)NSMutableArray *allBusiness;//存储一周所有事务数据模型的数组
 @property (nonatomic ,strong)NSDate *firstDateOfTerm;
-@property (nonatomic,strong) NSString *displayweek;//需要显示第几周的课程事务
+@property (nonatomic , assign)NSInteger curWeek;//当前周，从0开始
 @end
 
 static BOOL flag = false ;
@@ -55,6 +56,8 @@ static BOOL flag = false ;
 
 - (void)viewDidLoad {
     [super viewDidLoad];
+    self.allBusiness =[NSMutableArray array];
+    self.allCourses =[NSMutableArray array];
     //-------
     NSDate *currentDate = [NSDate date];//当前日期。
     int weekday = [currentDate dayOfWeek];//周几，1表示周日，2表示周一
@@ -68,7 +71,7 @@ static BOOL flag = false ;
     //-------设置学期第一周周一是几号
     NSDateFormatter * dateFormatter = [[NSDateFormatter alloc] init];
     [dateFormatter setDateFormat:@"yyyyMMdd"];
-    self.firstDateOfTerm = [dateFormatter dateFromString:@"20160829"];
+    self.firstDateOfTerm = [dateFormatter dateFromString:@"20170227"];
     
     //-------设置右上角加号
     self.navigationItem.rightBarButtonItem = [[UIBarButtonItem alloc]initWithImage:[[UIImage imageNamed:@"addItem"] imageWithRenderingMode:UIImageRenderingModeAlwaysOriginal] style:UIBarButtonItemStyleDone target:self action:@selector(pushAddViewController)];
@@ -81,8 +84,8 @@ static BOOL flag = false ;
     _navItemTitle = navItemTitle;
     _navItemTitle.titleLabel.font = [UIFont systemFontOfSize:17.0];
     NSInteger curDateDistance = [DateUtils dateDistanceFromDate:currentDate toDate:self.firstDateOfTerm];//当前日期距离学期第一天的天数
-    NSInteger curWeek = curDateDistance / 7 + 1;//当前周
-    [_navItemTitle setTitle:[NSString stringWithFormat:@"第%ld周",curWeek] forState:UIControlStateNormal];
+    self.curWeek = curDateDistance / 7;//当前周
+    [_navItemTitle setTitle:[NSString stringWithFormat:@"第%ld周",self.curWeek+1] forState:UIControlStateNormal];
     [_navItemTitle setTitleColor:[UIColor blackColor] forState:UIControlStateNormal];
     [_navItemTitle addTarget:self action:@selector(popWeekSheet) forControlEvents:UIControlEventTouchUpInside];
     self.navigationItem.titleView = _navItemTitle;
@@ -97,47 +100,21 @@ static BOOL flag = false ;
     [self dataBase];
     [self topLeftViewSetting];
     [self timeScrollViewSetting];
-    [self classViewSetting];
-    [self daysViewSetting:currentDate];
+    [self dayAndClassRefresh:currentDate];
     [self bottomLineSetting];
     [self weekSheetInit];//最后加，加在最上一层
 
-    [self loadLoacalData:(curWeek - 1)];
-//	_displayweek = [NSString stringWithFormat:@"%ld",(long)curWeek];
-    
+    [self loadLoacalData:self.curWeek];
 }
-
-
-//每次显示都需要重新加载
-//-(void)viewWillAppear:(BOOL)animated{
-//   //刷新表格中的课程数据
-//    //    //清除原有数据
-//    for(UIView *columview in self.classSubViewArray)
-//    {
-//        for(CourseButton *coursebtn in [columview subviews])
-//        {
-//            [coursebtn removeFromSuperview];
-//        }
-//    }
-//    //加载新数据
-//    _displayweek = _navItemTitle.titleLabel.text;
-//    _displayweek = [_displayweek substringWithRange:NSMakeRange(1, _displayweek.length-2)];
-//    [self loadDatafromSQL:_displayweek];
-//    
-//}
 
 - (void)dataBase{
     //-------数据库
     DbManager *dbManger = [DbManager shareInstance];
     [dbManger openDb:@"eventData.sqlite"];
 //    [dbManger executeNonQuery:@"drop table if exists t_201601"];
-    NSString *sql = [NSString stringWithFormat:@"CREATE TABLE IF NOT EXISTS t_201601(                                                                                                         id INTEGER PRIMARY KEY AUTOINCREMENT,                                                                        description TEXT NOT NULL,                                                                                                comment TEXT,                                                                                                                                                week INTEGER NOT NULL,                                                                                                weekday INTEGER NOT NULL,                                                                                                date TEXT,                                                                                                                        time TEXT,                                                                                                                        repeat INTEGER,                                                                                                overlap INTEGER);"];
+    NSString *sql = [NSString stringWithFormat:@"CREATE TABLE IF NOT EXISTS t_201601(                                                                                                         id INTEGER PRIMARY KEY AUTOINCREMENT,                                                                        description TEXT NOT NULL,                                                                                                comment TEXT,                                                                                                                                                                                                                                                date TEXT NOT NULL,                                                                                                                        time TEXT NOT NULL,                                                                                                                        repeat INTEGER NOT NULL,                                                                                                overlap INTEGER);"];
     [dbManger executeNonQuery:sql];
-
-//	NSString *sql2 = [NSString stringWithFormat:@"create table if not exists course_table (id integer primary key autoincrement,weeks text not null,weekDay text not null,courseStart text not null,numberOfCourse text not null,courseName text not null,place text not null);"];
-    
-    //测试阶段，先每次开启都创建新的表格
-    NSString *sql2 = [NSString stringWithFormat:@"create table exists course_table (id integer primary key autoincrement,weeks text not null,weekDay text not null,courseStart text not null,numberOfCourse text not null,courseName text not null,place text not null);"];
+    NSString *sql2 = [NSString stringWithFormat:@"create table IF NOT EXISTS  course_table(                                                                                                                id integer primary key autoincrement,                                                                       courseName text not null,                                                                                                                                        weeks text not null,                                                                                                                                                            weekday text not null,                                                                                                                                                              time text not null,                                                                                                                                                               place text not null);"];
     [dbManger executeNonQuery:sql2];
 }
 
@@ -158,7 +135,8 @@ static BOOL flag = false ;
     BusinessViewController *businessManage = [[BusinessViewController alloc]initWithfirstDateOfTerm:self.firstDateOfTerm businessModel:nil];
     businessManage.delegate = self;
     [controllersArray addObject:businessManage];
-    CourseViewController *courseManage = [[CourseViewController alloc]init];
+    CourseViewController *courseManage = [[CourseViewController alloc]initWithCourseModel:nil];
+    courseManage.delegate = self;
     [controllersArray addObject:courseManage];
 
     BusinessCourseManage *management = [[BusinessCourseManage alloc]initWithControllersArray:controllersArray firstDateOfTerm:self.firstDateOfTerm];
@@ -167,73 +145,16 @@ static BOOL flag = false ;
     [self.navigationController pushViewController:management animated:YES];
 }
 
-//加载本地的模拟数据
+//加载本地的模拟数据,参数week,周数从0开始
 - (void)loadLoacalData:(NSInteger )week{
-//    static BOOL flag = YES;
-//    NSString *coursePath;
-//    if (flag) {
-//        coursePath = [[NSBundle mainBundle] pathForResource:@"courses" ofType:@"json"];
-//        flag = NO;
-//    }else {
-//        coursePath = [[NSBundle mainBundle] pathForResource:@"courses-1" ofType:@"json"];
-//        flag = YES;
-//    }
-//    //对plist文件json数据的处理，转数据模型
-//    NSData *data = [NSData dataWithContentsOfFile:coursePath];
-//    NSDictionary *dict = [NSJSONSerialization JSONObjectWithData:data options:NSJSONReadingAllowFragments error:nil];
-//    NSString *status = [dict objectForKey:@"status"];
-//    if (![@"200" isEqualToString:status]) {
-//        NSLog(@"没有数据");
-//        return;
-//    }
-//    NSArray *dataArray = [dict objectForKey:@"data"];
-//    self.allCourses =[NSMutableArray array];
-//    if (dataArray != nil && dataArray.count > 0) {
-//        for (int i = 0; i < dataArray.count; i++) {
-//            NSDictionary *dayDict = dataArray[i];//某天的数据字典，周几，课程数据
-//            NSArray *dayCoursesArray = [dayDict objectForKey:@"data"];//某天的课程数组，数组中元素是课程字典
-//            NSString *weekDay = [dayDict objectForKey:@"weekDay"];
-//            NSString *weekNum;
-//            //周几转化成数字（字符串）
-//            if ([@"monday" isEqualToString:weekDay]) {
-//                weekNum = @"1";
-//            }else if ([@"tuesday" isEqualToString:weekDay]){
-//                weekNum = @"2";
-//            }else if ([@"wednesday" isEqualToString:weekDay]){
-//                weekNum = @"3";
-//            }else if ([@"thursday" isEqualToString:weekDay]){
-//                weekNum = @"4";
-//            }else if ([@"friday" isEqualToString:weekDay]){
-//                weekNum = @"5";
-//            }else if ([@"saturday" isEqualToString:weekDay]){
-//                weekNum = @"6";
-//            }else if([@"sunday" isEqualToString:weekDay]){
-//                weekNum = @"7";
-//            }else {
-//                weekNum = @"1";
-//            }
-//            
-//            for (int j = 0; j < dayCoursesArray.count ; j++) {
-//                NSMutableDictionary *course = [NSMutableDictionary dictionaryWithDictionary:dayCoursesArray[j]];
-//                [course setObject:weekNum forKey:@"weekDay"];//重新组装课程字典，添加上周几
-//                CourseModel *weekCourse = [[CourseModel alloc] initWithDict:course];//转数据模型
-//                weekCourse.weeks = week;
-//                [self.allCourses addObject:weekCourse];
-//            }
-//        }
-//    }
-//    [self handleData:self.allCourses];
-
-    //刷新表格中的课程数据
+    //刷新表格
     //清除原有数据
-    for(UIView *columview in self.classSubViewArray)
-    {
-        for(CourseButton *coursebtn in [columview subviews])
-        {
+    for(UIView *columview in self.classSubViewArray){
+        for(CourseButton *coursebtn in [columview subviews]){
             [coursebtn removeFromSuperview];
         }
     }
-    
+    //事务
     NSDate *weekMonday = [DateUtils dateOfWeekMonday:week firstDateOfTrem:self.firstDateOfTerm];
     NSArray *data = [DateUtils getDatesOfCurrence:weekMonday];
     
@@ -241,64 +162,152 @@ static BOOL flag = false ;
     NSDateFormatter * dateFormatter = [[NSDateFormatter alloc] init];
     [dateFormatter setDateFormat:@"yyyyMMdd"];
     NSDateComponents *compt = [[NSDateComponents alloc] init];
-    NSMutableArray * dateArray = [NSMutableArray arrayWithCapacity:7];
-    for (int i = 0; i < 7; i ++) {
-        [compt setYear:[data[i][0] integerValue]];
-        [compt setMonth:[data[i][1] integerValue]];
-        [compt setDay:[data[i][2] integerValue]];
+//    NSMutableArray * dateArray = [NSMutableArray arrayWithCapacity:7];
+//    for (int i = 0; i < 7; i ++) {
+//        [compt setYear:[data[i][0] integerValue]];
+//        [compt setMonth:[data[i][1] integerValue]];
+//        [compt setDay:[data[i][2] integerValue]];
+//        NSDate * tempDate = [gregorian dateFromComponents:compt];
+//        NSString *tempDateString = [dateFormatter stringFromDate:tempDate];
+//        [dateArray addObject:tempDateString];
+//    }    
+    DbManager *dbManger = [DbManager shareInstance];
+    for (int m = 0; m < 7; m++) {//按天添加格子
+        [compt setYear:[data[m][0] integerValue]];
+        [compt setMonth:[data[m][1] integerValue]];
+        [compt setDay:[data[m][2] integerValue]];
         NSDate * tempDate = [gregorian dateFromComponents:compt];
         NSString *tempDateString = [dateFormatter stringFromDate:tempDate];
-        [dateArray addObject:tempDateString];
-    }    
-    self.allCourses =[NSMutableArray array];
-    DbManager *dbManger = [DbManager shareInstance];
-    NSString *sql = [NSString stringWithFormat:@"SELECT * FROM t_201601 WHERE date = '%@' or date = '%@' or date = '%@' or date = '%@' or date = '%@' or date = '%@' or date = '%@' ;",dateArray[0],dateArray[1],dateArray[2],dateArray[3],dateArray[4],dateArray[5],dateArray[6]];
-    NSArray *dataQuery = [dbManger executeQuery:sql];
-    if (dataQuery.count > 0) {
-        for (int j = 0; j < dataQuery.count ; j++) {
-            NSMutableDictionary *busDict = [NSMutableDictionary dictionaryWithDictionary:dataQuery[j]];
-            BusinessModel *model = [[BusinessModel alloc] initWithDict:busDict];//转数据模型
-            [self.allCourses addObject:model];
+        //以天为单位搜索数据
+        NSString *sql = [NSString stringWithFormat:@"SELECT * FROM t_201601 WHERE date = '%@';",tempDateString];
+        NSArray *dataQuery = [dbManger executeQuery:sql];
+        NSString *courseSql = [NSString stringWithFormat:@"SELECT * FROM course_table WHERE weeks like '%%,%ld,%%' and weekday = '%d';",week,m];
+        NSArray *courseDataQuery = [dbManger executeQuery:courseSql];
+        
+        if (dataQuery.count > 0 && courseDataQuery.count > 0) {//课程事务都有
+            [self.allBusiness removeAllObjects];
+            [self.allCourses removeAllObjects];
+            for (int i = 0 ; i < dataQuery.count; i ++) {
+                BusinessModel *model = [[BusinessModel alloc] initWithDict:dataQuery[i]];//转数据模型
+                [self.allBusiness addObject:model];
+            }
+            for (int i = 0; i < courseDataQuery.count; i++) {
+                CourseModel *courseModel = [[CourseModel alloc]initWithDict:courseDataQuery[i]];
+                [self.allCourses addObject:courseModel];
+            }
+            //如果当前天相对今天是过去的时间
+            if ([DateUtils dateDistanceFromDate:[NSDate date] toDate:tempDate] > 0) {
+                //课程优先显示，先添加课程格子，再添加事务格子，事务格子是被覆盖的要剔除被覆盖的部分
+                for (int i = 0; i < self.allCourses.count; i ++) {
+                    CourseModel * courseMDL = self.allCourses[i];
+                    NSMutableSet *courseTimeSet = [NSMutableSet setWithArray:courseMDL.timeArray];
+                    NSMutableArray *courseBusArray = [NSMutableArray array];
+                    for (int j = 0; j < self.allBusiness.count; j++) {
+                        BusinessModel *businessMDL = self.allBusiness[j];
+                        NSMutableSet *businessTimeSet = [NSMutableSet setWithArray:businessMDL.timeArray];
+                        if ([courseTimeSet intersectsSet:businessTimeSet]) {//是否有交集
+                            [courseBusArray addObject:businessMDL];
+                            businessMDL.intersects = YES;
+                            courseMDL.intersects = YES;
+                        }
+                    }
+                    [self addCourseBtn:courseMDL businessArray:courseBusArray tempTimeArray:courseMDL.timeArray];
+                }
+                //接下来添加事务格子
+                NSArray *sortDesc = @[[[NSSortDescriptor alloc] initWithKey:nil ascending:YES]];
+                for (int i = 0; i < self.allBusiness.count; i++) {
+                    BusinessModel *businessMDL = self.allBusiness[i];
+                    if (businessMDL.intersects) {//和课程有交集
+                        NSMutableSet *businessTimeSet = [NSMutableSet setWithArray:businessMDL.timeArray];
+                        for (int j = 0; j < self.allCourses.count; j++) {
+                            CourseModel *courseMDL = self.allCourses[j];
+                            NSMutableSet *courseTimeSet = [NSMutableSet setWithArray:courseMDL.timeArray];
+                            if ([businessTimeSet intersectsSet:courseTimeSet]) {
+                                [businessTimeSet minusSet:courseTimeSet];
+                            }
+                        }
+                        if (businessTimeSet.count != 0) {
+                            NSArray *minusBusTime = [businessTimeSet sortedArrayUsingDescriptors:sortDesc];//剔除重复时间后的事务时间,升序排列
+                            NSMutableArray *minusTimeSections = [Utils subSectionArraysFromArray:[minusBusTime mutableCopy]];
+                            for (int k = 0; k < minusTimeSections.count; k++) {
+                                [self addBussinessBtn:businessMDL courseArray:nil tempTimeArray:minusTimeSections[k]];
+                            }
+                        }
+                    }else{
+                        [self addBussinessBtn:businessMDL courseArray:nil tempTimeArray:businessMDL.timeArray];
+                    }
+                }
+            }
+            //如果当前天相对今天是未来的时间
+            else{
+                //事务优先显示，先添加事务格子，再添加课程格子，课程格子是被覆盖的要剔除被覆盖的部分
+                for (int i = 0; i < self.allCourses.count; i ++) {
+                    BusinessModel *busMDL = self.allBusiness[i];
+                    NSMutableSet *businessTimeSet = [NSMutableSet setWithArray:busMDL.timeArray];
+                    NSMutableArray *busCourseArray = [NSMutableArray array];
+                    for (int j = 0; j < self.allBusiness.count; j++) {
+                        CourseModel *courseMDL = self.allCourses[j];
+                        NSMutableSet *courseTimeSet = [NSMutableSet setWithArray:courseMDL.timeArray];
+                        if ([businessTimeSet intersectsSet:courseTimeSet]) {
+                            [busCourseArray addObject:courseMDL];
+                            busMDL.intersects = YES;
+                            courseMDL.intersects = YES;
+                        }
+                    }
+                    [self addBussinessBtn:busMDL courseArray:busCourseArray tempTimeArray:busMDL.timeArray];
+                }
+                //接下来添加课程格子
+                NSArray *sortDesc = @[[[NSSortDescriptor alloc] initWithKey:nil ascending:YES]];
+                for (int i = 0; i < self.allCourses.count; i++) {
+                    CourseModel *courseMDL = self.allCourses[i];
+                    if (courseMDL.intersects) {
+                        NSMutableSet *courseTimeSet = [NSMutableSet setWithArray:courseMDL.timeArray];
+                        for (int j = 0; j < self.allBusiness.count; j++) {
+                            BusinessModel *busMDL = self.allBusiness[j];
+                            NSMutableSet *businessTimeSet = [NSMutableSet setWithArray:busMDL.timeArray];
+                            if ([courseTimeSet intersectsSet:businessTimeSet]) {
+                                [courseTimeSet minusSet:businessTimeSet];
+                            }
+                        }
+                        if (courseTimeSet.count != 0) {
+                            NSArray *minusCourseTime = [courseTimeSet sortedArrayUsingDescriptors:sortDesc];
+                            NSMutableArray *minusTimeSections = [Utils subSectionArraysFromArray:[minusCourseTime mutableCopy]];
+                            for (int k = 0; k < minusTimeSections.count; k++) {
+                                [self addCourseBtn:courseMDL businessArray:nil tempTimeArray:minusTimeSections[k]];
+                            }
+                        }
+                    }else{
+                        [self addCourseBtn:courseMDL businessArray:nil tempTimeArray:courseMDL.timeArray];
+                    }
+                }
+            }
         }
-        [self handleData:self.allCourses];
-    }
-}
-
-////从数据库加载课程数据
-//-(void)loadDatafromSQL:(NSString *)week
-//{
-//    DbManager *dbManger = [DbManager shareInstance];
-//    [dbManger openDb:@"eventcourse.sqlite"];
-//    
-//    NSString *sql = [NSString stringWithFormat:@"SELECT weeks,weekDay,courseStart,numberOfCourse,courseName,place FROM course_table WHERE weeks is '%@'",week];
-//    NSArray *thisweekcourse = [[NSArray alloc] init];
-//    thisweekcourse = [dbManger executeQuery:sql];
-//    
-//    //NSLog(@"%@",thisweekcourse);
-//    
-//    NSMutableArray *thisweekmodel = [[NSMutableArray alloc] init];
-//    for(int i = 0; i<thisweekcourse.count; i++)
-//    {
-//        CourseModel *tempmodel = [[CourseModel alloc] initWithDict:thisweekcourse[i]];
-//        [thisweekmodel addObject:tempmodel];
-//    }
-//    [self handleData:thisweekmodel];
-//}
-
-- (void)handleData:(NSArray *)courses
-{
-    if (courses.count > 0) {
-        //处理周课表
-        for (int i = 0; i<courses.count; i++) {
-            BusinessModel *busModel = courses[i];
-            [self addBussinessBtn:busModel];
+        else if (dataQuery.count > 0 && courseDataQuery.count == 0){//只有事务
+            [self.allBusiness removeAllObjects];
+            [self.allCourses removeAllObjects];
+            for (int i = 0 ; i < dataQuery.count; i ++) {
+                BusinessModel *model = [[BusinessModel alloc] initWithDict:dataQuery[i]];
+                [self addBussinessBtn:model courseArray:nil tempTimeArray:model.timeArray];
+            }
+        }else if (dataQuery.count == 0 && courseDataQuery.count > 0){//只有课
+            [self.allBusiness removeAllObjects];
+            [self.allCourses removeAllObjects];
+            for (int i = 0 ; i < courseDataQuery.count; i++) {
+                CourseModel *model = [[CourseModel alloc] initWithDict:courseDataQuery[i]];
+                [self addCourseBtn:model businessArray:nil tempTimeArray:model.timeArray];
+            }
         }
     }
+//    NSString *sql = [NSString stringWithFormat:@"SELECT * FROM t_201601 WHERE date = '%@' or date = '%@' or date = '%@' or date = '%@' or date = '%@' or date = '%@' or date = '%@' ;",dateArray[0],dateArray[1],dateArray[2],dateArray[3],dateArray[4],dateArray[5],dateArray[6]];
+//    NSArray *dataQuery = [dbManger executeQuery:sql];
+//    //课程
+//    NSString *courseSql = [NSString stringWithFormat:@"SELECT * FROM course_table WHERE weeks like '%%,%ld,%%';",week];
+//    NSArray *courseDataQuery = [dbManger executeQuery:courseSql];
 }
 
 //添加单个事务格子
-- (void)addBussinessBtn:(BusinessModel *)busModel{
-    int rowNum = [busModel.time substringToIndex:1].intValue;//开始时第几节
+- (void)addBussinessBtn:(BusinessModel *)busModel courseArray:(NSMutableArray*)courseArray tempTimeArray:(NSMutableArray *)tempTimearray{
+    int rowNum = [tempTimearray.firstObject intValue];//开始时第几节
     NSDateFormatter * dateFormatter = [[NSDateFormatter alloc] init];
     [dateFormatter setDateFormat:@"yyyyMMdd"];
     NSDate *curDate = [dateFormatter dateFromString:[NSString stringWithFormat:@"%@",busModel.date]];
@@ -308,38 +317,32 @@ static BOOL flag = false ;
     }else{
         colNum = colNum - 2;
     }
-//    int colNum = busModel.weekday.intValue;//周几
-    NSInteger lessonsNum = busModel.time.length / 2;//持续多少节
+    NSInteger lessonsNum = tempTimearray.count;//持续多少节
     
     CourseButton *courseBtn = [[CourseButton alloc]init];   //课程格子btn
-    courseBtn.businessModel = busModel;
+    courseBtn.businessArray = [[NSMutableArray alloc]initWithObjects:busModel, nil];
+    courseBtn.courseArray = courseArray;
     courseBtn.event.text = busModel.desc;
-    
+    if (courseArray.count > 0) {//courseArray也有可能为Nil,可能初始化了但没有元素赋值（count=0）。
+        courseBtn.isOverlap = YES;
+    }
     if (currentDayIndex == colNum) {
         courseBtn.event.font = [UIFont systemFontOfSize:13];
         courseBtn.place.font = [UIFont systemFontOfSize:13];
-        
-        if (busModel.overlap.intValue == 0) {
-            UIImage *curUnderlap = [UIImage imageNamed:@"当前未重叠"];
-            curUnderlap = [curUnderlap resizableImageWithCapInsets:UIEdgeInsetsMake(2, 2, 2, 2) resizingMode:UIImageResizingModeStretch];
+        if (busModel.intersects) {//如果有重复
+            UIImage *curUnderlap = [[UIImage imageNamed:@"currentcourse"]resizableImageWithCapInsets:UIEdgeInsetsMake(5, 5, 5, 5) resizingMode:UIImageResizingModeStretch];
             [courseBtn setBackgroundImage:curUnderlap forState:UIControlStateNormal];
         }else{
-            courseBtn.isOverlap = YES;
-            UIImage *curUnderlap = [UIImage imageNamed:@"currentcourse"];
-            curUnderlap = [curUnderlap resizableImageWithCapInsets:UIEdgeInsetsMake(5, 5, 5, 5) resizingMode:UIImageResizingModeStretch];
+            UIImage *curUnderlap = [[UIImage imageNamed:@"当前未重叠"]resizableImageWithCapInsets:UIEdgeInsetsMake(2, 2, 2, 2) resizingMode:UIImageResizingModeStretch];
             [courseBtn setBackgroundImage:curUnderlap forState:UIControlStateNormal];
         }
     }else{
-        if (busModel.overlap.intValue == 0) {
-            UIImage *underlap = [UIImage imageNamed:@"未重叠"];
-            underlap = [underlap resizableImageWithCapInsets:UIEdgeInsetsMake(2, 2, 2, 2) resizingMode:UIImageResizingModeStretch];
-            [courseBtn setBackgroundImage:underlap forState:UIControlStateNormal];
-        }else{
-            courseBtn.isOverlap = YES;
-            UIImage *curUnderlap = [UIImage imageNamed:@"course"];
-            curUnderlap = [curUnderlap resizableImageWithCapInsets:UIEdgeInsetsMake(5, 5, 5, 5) resizingMode:UIImageResizingModeStretch];
+        if (busModel.intersects) {
+            UIImage *curUnderlap = [[UIImage imageNamed:@"course"]resizableImageWithCapInsets:UIEdgeInsetsMake(5, 5, 5, 5) resizingMode:UIImageResizingModeStretch];
             [courseBtn setBackgroundImage:curUnderlap forState:UIControlStateNormal];
-        }
+        }else{
+            UIImage *underlap = [[UIImage imageNamed:@"未重叠"]resizableImageWithCapInsets:UIEdgeInsetsMake(2, 2, 2, 2) resizingMode:UIImageResizingModeStretch];
+            [courseBtn setBackgroundImage:underlap forState:UIControlStateNormal];        }
     }
     UIView *btnSuperView = self.classSubViewArray[colNum];  //课程格子btn的父view
     [courseBtn addTarget:self action:@selector(courseClick:) forControlEvents:UIControlEventTouchUpInside];
@@ -361,86 +364,72 @@ static BOOL flag = false ;
         _coverLayer = coverLayer;
         UIWindow *theWindow = [[UIApplication  sharedApplication] delegate].window;//全屏遮罩要加到window上
         [theWindow addSubview:_coverLayer];
-    }else if (courseBtn.courseModel == nil){//如果只有事务
-        BusinessViewController *businessManage = [[BusinessViewController alloc]initWithfirstDateOfTerm:self.firstDateOfTerm businessModel:courseBtn.businessModel];
+    }else if (courseBtn.courseArray == nil || courseBtn.courseArray.count==0){//如果只有事务
+        BusinessViewController *businessManage = [[BusinessViewController alloc]initWithfirstDateOfTerm:self.firstDateOfTerm businessModel:courseBtn.businessArray.firstObject];
+        businessManage.delegate = self;
         businessManage.hidesBottomBarWhenPushed = YES;//从下级vc开始，tabbar都隐藏掉
         [self.navigationController pushViewController:businessManage animated:YES];
-    }else if (courseBtn.businessModel == nil){
+    }else if (courseBtn.businessArray == nil || courseBtn.businessArray.count == 0){
 //        [self pushAddViewController];
+        NSString *courseName = courseBtn.event.text;
+        DbManager *dbManger = [DbManager shareInstance];
+        NSString *sql = [NSString stringWithFormat:@"SELECT * FROM course_table WHERE courseName = '%@';",courseName];
+        NSArray *courseDataQuery = [dbManger executeQuery:sql];
+        NSMutableArray *courseModelArr = [NSMutableArray array];
+        for (int i  = 0; i < courseDataQuery.count; i++) {
+            CourseModel *courseModel = [[CourseModel alloc]initWithDict:courseDataQuery[i]];
+            [courseModelArr addObject:courseModel];
+        }
+        CourseViewController *courseVC = [[CourseViewController alloc]initWithCourseModel:courseModelArr];
+        courseVC.delegate = self;
+        courseVC.hidesBottomBarWhenPushed = YES;
+        [self.navigationController pushViewController:courseVC animated:YES];
     }
 }
 
-//数据解析后，展示在UI上
-//- (void)handleData:(NSArray *)courses
-//{
-//    for (UIView *view in self.classView.subviews) {
-//        if ([view isKindOfClass:[CourseButton class]]) {
-//            [view removeFromSuperview];     //清掉所有课程格子btn
-//        }
-//    }
-//    
-//    if (courses.count > 0) {
-//        //处理周课表
-//        for (int i = 0; i<courses.count; i++) {
-//            CourseModel *courseModel = courses[i];
-//            [self addCourseBtn:courseModel];
-//        }
-//    }
-//}
-//
-////添加单个课程格子
-//- (void)addCourseBtn:(CourseModel *)courseModel{
-//    int rowNum = courseModel.courseStart.intValue;
-//    int colNum = courseModel.weekday.intValue - 1;
-//    int lessonsNum = courseModel.numberOfCourse.intValue;
-//    
-//    CourseButton *courseBtn = [[CourseButton alloc]init];   //课程格子btn
-//    courseBtn.courseModel = courseModel;                    //内容
-//    if (currentDayIndex == colNum) {
-//        courseBtn.event.font = [UIFont systemFontOfSize:13];
-//        courseBtn.place.font = [UIFont systemFontOfSize:13];
-//        
-//        UIImage *curUnderlap = [UIImage imageNamed:@"当前未重叠"];
-//        curUnderlap = [curUnderlap resizableImageWithCapInsets:UIEdgeInsetsMake(2, 2, 2, 2) resizingMode:UIImageResizingModeStretch];
-//        [courseBtn setBackgroundImage:curUnderlap forState:UIControlStateNormal];
-//    }else{
-//        UIImage *underlap = [UIImage imageNamed:@"未重叠"];
-//        underlap = [underlap resizableImageWithCapInsets:UIEdgeInsetsMake(2, 2, 2, 2) resizingMode:UIImageResizingModeStretch];
-//        [courseBtn setBackgroundImage:underlap forState:UIControlStateNormal];
-//    }
-//    UIView *btnSuperView = self.classSubViewArray[colNum];  //课程格子btn的父view
-//    //            [courseButton addTarget:self action:@selector(courseClick:) forControlEvents:UIControlEventTouchUpInside];
-//    [btnSuperView addSubview:courseBtn];
-//    [courseBtn mas_makeConstraints:^(MASConstraintMaker *make) {
-//        make.left.equalTo(btnSuperView.mas_left);
-//        make.width.equalTo(btnSuperView.mas_width);
-//        make.height.mas_equalTo(timeViewCellHeight * lessonsNum);
-//        //处理top的约束，主要是存在“早间”“午间”“晚间”的问题，需要跟pm落实
-//        if (rowNum < 5) {
-//            make.top.mas_equalTo(rowNum * timeViewCellHeight);
-//        }else{
-//            make.top.mas_equalTo((rowNum + 1) * timeViewCellHeight);
-//        }
-//    }];
-//}
-
-
-//点击课程格子	btn的方法，卉馨你添加courseBtn的时候帮忙addtarget一下
--(void)editCourse:(id)sender
-{
-    CourseButton *clickCourseBtn = (CourseButton *)sender;
+//添加单个课程格子
+- (void)addCourseBtn:(CourseModel *)courseModel businessArray:(NSMutableArray *)busArray tempTimeArray:(NSMutableArray*)tempTimearray{
+    int rowNum = [tempTimearray.firstObject intValue];//开始时第几节
+    int colNum = courseModel.weekday.intValue;
+    NSInteger lessonsNum = tempTimearray.count;//持续多少节
     
-    //NSLog(@"clickCourseBtn.courseModel:%@,%@,%@,%@,%@,%@",clickCourseBtn.courseModel.weeks,clickCourseBtn.courseModel.weekday,clickCourseBtn.courseModel.courseName,clickCourseBtn.courseModel.courseStart,clickCourseBtn.courseModel.numberOfCourse,clickCourseBtn.courseModel.place);
-    //NSLog(@"clickCourseBtn:%@,%@",clickCourseBtn.event,clickCourseBtn.place);
-    
-    CourseViewController *editCourseController = [[CourseViewController alloc] init];
-    
-    [self.navigationController pushViewController:editCourseController animated:YES];
-    
-    [editCourseController setCourseTimeCellModelFromCourseModel:clickCourseBtn.courseModel];
-    
+    CourseButton *courseBtn = [[CourseButton alloc]init];   //课程格子btn
+    courseBtn.courseArray = [[NSMutableArray alloc]initWithObjects:courseModel, nil];
+    courseBtn.businessArray = busArray;
+    courseBtn.event.text = courseModel.courseName;
+    courseBtn.place.text = [NSString stringWithFormat:@"@%@",courseModel.place];
+    if (busArray.count > 0) {//busArray也有可能为Nil,可能初始化了但没有元素赋值（count=0）。
+        courseBtn.isOverlap = YES;
+    }
+    if (currentDayIndex == colNum) {
+        courseBtn.event.font = [UIFont systemFontOfSize:13];
+        courseBtn.place.font = [UIFont systemFontOfSize:13];
+        if (courseModel.intersects) {//如果有重复
+            UIImage *curUnderlap = [[UIImage imageNamed:@"currentcourse"]resizableImageWithCapInsets:UIEdgeInsetsMake(5, 5, 5, 5) resizingMode:UIImageResizingModeStretch];
+            [courseBtn setBackgroundImage:curUnderlap forState:UIControlStateNormal];
+        }else{
+            UIImage *curUnderlap = [[UIImage imageNamed:@"当前未重叠"]resizableImageWithCapInsets:UIEdgeInsetsMake(2, 2, 2, 2) resizingMode:UIImageResizingModeStretch];
+            [courseBtn setBackgroundImage:curUnderlap forState:UIControlStateNormal];
+        }
+    }else{
+        if (courseModel.intersects) {//如果有重复
+            UIImage *curUnderlap = [[UIImage imageNamed:@"course"]resizableImageWithCapInsets:UIEdgeInsetsMake(5, 5, 5, 5) resizingMode:UIImageResizingModeStretch];
+            [courseBtn setBackgroundImage:curUnderlap forState:UIControlStateNormal];
+        }else{
+            UIImage *curUnderlap = [[UIImage imageNamed:@"未重叠"]resizableImageWithCapInsets:UIEdgeInsetsMake(2, 2, 2, 2) resizingMode:UIImageResizingModeStretch];
+            [courseBtn setBackgroundImage:curUnderlap forState:UIControlStateNormal];
+        }
+    }
+    UIView *btnSuperView = self.classSubViewArray[colNum];  //课程格子btn的父view
+    [courseBtn addTarget:self action:@selector(courseClick:) forControlEvents:UIControlEventTouchUpInside];
+    [btnSuperView addSubview:courseBtn];
+    [courseBtn mas_makeConstraints:^(MASConstraintMaker *make) {
+        make.left.equalTo(btnSuperView.mas_left);
+        make.width.equalTo(btnSuperView.mas_width);
+        make.height.mas_equalTo(timeViewCellHeight * lessonsNum);
+        make.top.mas_equalTo(rowNum * timeViewCellHeight);
+    }];
 }
-
 
 - (void)didReceiveMemoryWarning {
     [super didReceiveMemoryWarning];
@@ -450,7 +439,8 @@ static BOOL flag = false ;
 - (void)BusinessCourseManage:(BusinessCourseManage *)viewController week:(NSInteger )selectedWeek{
     [_navItemTitle setTitle:[NSString stringWithFormat:@"第%ld周",selectedWeek + 1] forState:UIControlStateNormal];
     NSDate *weekMonday = [DateUtils dateOfWeekMonday:selectedWeek firstDateOfTrem:self.firstDateOfTerm];
-    [self daysViewSetting:weekMonday];
+    [self dayAndClassRefresh:weekMonday];
+    self.curWeek = selectedWeek;
     [self loadLoacalData:selectedWeek];
     [self.view bringSubviewToFront:_weeksheet];
 }
@@ -459,19 +449,29 @@ static BOOL flag = false ;
 - (void)BusinessViewController:(BusinessViewController *)viewController week:(NSInteger)selectedWeek{
     [_navItemTitle setTitle:[NSString stringWithFormat:@"第%ld周",selectedWeek + 1] forState:UIControlStateNormal];
     NSDate *weekMonday = [DateUtils dateOfWeekMonday:selectedWeek firstDateOfTrem:self.firstDateOfTerm];
-    [self daysViewSetting:weekMonday];
+    [self dayAndClassRefresh:weekMonday];
+    self.curWeek = selectedWeek;
     [self loadLoacalData:selectedWeek];
     [self.view bringSubviewToFront:_weeksheet];
+}
+
+- (void)deleteBusiness:(BusinessViewController *)viewController{
+    [self loadLoacalData:self.curWeek];
+}
+
+#pragma mark CourseViewControllerDelegate
+- (void)CourseViewControllerConfirm:(CourseViewController*)viewController{
+    [self loadLoacalData:self.curWeek];
 }
 
 #pragma mark weekSheetDelegate
 - (void)refreshNavItemTitle:(WeekSheet *)weeksheet content:(NSInteger)weekSheetRow{
     [_navItemTitle setTitle:[NSString stringWithFormat:@"第%ld周",weekSheetRow + 1] forState:UIControlStateNormal];
-//    //加载新数据
-//    [self loadDatafromSQL:[NSString stringWithFormat:@"%ld",weekSheetRow + 1]];
+    //加载新数据
     self.weeksheet.hidden = YES;
     NSDate *weekMonday = [DateUtils dateOfWeekMonday:weekSheetRow firstDateOfTrem:self.firstDateOfTerm];
-    [self daysViewSetting:weekMonday];
+    [self dayAndClassRefresh:weekMonday];
+    self.curWeek = weekSheetRow;
     [self loadLoacalData:weekSheetRow];
     [self.view bringSubviewToFront:_weeksheet];
     flag = false;
@@ -482,7 +482,6 @@ static BOOL flag = false ;
     if (scrollView == _classView) {
         [self.daysView setContentOffset:CGPointMake(self.classView.contentOffset.x, 0) animated:NO];
         [self.timeView setContentOffset:CGPointMake(0, self.classView.contentOffset.y) animated:NO];
-
     }
 }
 
@@ -659,6 +658,7 @@ static BOOL flag = false ;
     _stripeView = stripeView;
     [self.daysView addSubview:_stripeView];
     
+    currentDayIndex = currentWeekDay;
 //    int weekday = [date dayOfWeek];//这里先这样处理吧，暂时不清楚切换周数时界面要如何调整
     int weekday = [[NSDate date] dayOfWeek];
     if (weekday >= 6 || weekday <= 1) {//是星期五、六、日,显示周三到周日
@@ -672,6 +672,7 @@ static BOOL flag = false ;
 
 //设置课程信息scrollview
 -(void)classViewSetting{
+    [_classView removeFromSuperview];
     UIScrollView *classView = [[UIScrollView alloc]init];
     _classView = classView;
     _classView.backgroundColor = [UIColor whiteColor];
@@ -761,7 +762,7 @@ static BOOL flag = false ;
         }
         if ([colView isKindOfClass:[UIButton class]]){
             CourseButton *subview = (CourseButton *) colView;
-            if (subview.isOverlap) {
+            if ([[subview.courseArray firstObject]intersects] || [[subview.businessArray firstObject]intersects]) {
                 UIImage *curUnderlap = [UIImage imageNamed:@"currentcourse"];
                 curUnderlap = [curUnderlap resizableImageWithCapInsets:UIEdgeInsetsMake(5, 5, 5, 5) resizingMode:UIImageResizingModeStretch];
                 [subview setBackgroundImage:curUnderlap forState:UIControlStateNormal];
@@ -785,7 +786,7 @@ static BOOL flag = false ;
         }
         if ([colView isKindOfClass:[UIButton class]]){
             CourseButton *subview = (CourseButton *) colView;
-            if (subview.isOverlap) {
+            if ([[subview.courseArray firstObject]intersects] || [[subview.businessArray firstObject]intersects]) {
                 UIImage *curUnderlap = [UIImage imageNamed:@"course"];
                 curUnderlap = [curUnderlap resizableImageWithCapInsets:UIEdgeInsetsMake(5, 5, 5, 5) resizingMode:UIImageResizingModeStretch];
                 [subview setBackgroundImage:curUnderlap forState:UIControlStateNormal];
@@ -803,6 +804,11 @@ static BOOL flag = false ;
     [UIView animateWithDuration:0.2 animations:^{
         [self.stripeView setFrame:CGRectMake(currentDayIndex *dayViewCellWidth , self.daysView.frame.size.height - 2, dayViewCellWidth *2, 2)];
     }];
+}
+
+- (void)dayAndClassRefresh:(NSDate *)date{
+    [self classViewSetting];
+    [self daysViewSetting:date];
 }
 
 - (void)bottomLineSetting{

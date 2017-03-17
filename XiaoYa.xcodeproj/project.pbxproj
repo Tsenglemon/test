@@ -24,9 +24,9 @@
 		577FA5D71DEE7C1400A0AEF7 /* RemindCell.m in Sources */ = {isa = PBXBuildFile; fileRef = 577FA5D61DEE7C1400A0AEF7 /* RemindCell.m */; };
 		577FA5DA1DEEA6B900A0AEF7 /* RepeatCell.m in Sources */ = {isa = PBXBuildFile; fileRef = 577FA5D91DEEA6B900A0AEF7 /* RepeatCell.m */; };
 		577FA5DD1DEEA9F000A0AEF7 /* RepeatSetting.m in Sources */ = {isa = PBXBuildFile; fileRef = 577FA5DC1DEEA9F000A0AEF7 /* RepeatSetting.m */; };
+		5782CE781E7288C100DA4947 /* TimeSelectedTableViewCell.m in Sources */ = {isa = PBXBuildFile; fileRef = 5782CE771E7288C100DA4947 /* TimeSelectedTableViewCell.m */; };
 		579C2FBE1DAD000E00E4EE54 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 579C2FBD1DAD000E00E4EE54 /* main.m */; };
 		579C2FC11DAD000E00E4EE54 /* AppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = 579C2FC01DAD000E00E4EE54 /* AppDelegate.m */; };
-		579C2FC71DAD000E00E4EE54 /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 579C2FC51DAD000E00E4EE54 /* Main.storyboard */; };
 		579C2FC91DAD000E00E4EE54 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 579C2FC81DAD000E00E4EE54 /* Assets.xcassets */; };
 		579C2FCC1DAD000E00E4EE54 /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 579C2FCA1DAD000E00E4EE54 /* LaunchScreen.storyboard */; };
 		579C2FD71DAD000E00E4EE54 /* XiaoYaTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 579C2FD61DAD000E00E4EE54 /* XiaoYaTests.m */; };
@@ -50,8 +50,6 @@
 		E26B70131E6AFF75000A08CB /* DaySelectCell.m in Sources */ = {isa = PBXBuildFile; fileRef = E26B700B1E6AFF75000A08CB /* DaySelectCell.m */; };
 		E26B70141E6AFF75000A08CB /* weekselectview.m in Sources */ = {isa = PBXBuildFile; fileRef = E26B700D1E6AFF75000A08CB /* weekselectview.m */; };
 		E26B70151E6AFF75000A08CB /* timeselecteview.m in Sources */ = {isa = PBXBuildFile; fileRef = E26B700F1E6AFF75000A08CB /* timeselecteview.m */; };
-		E26B70161E6AFF75000A08CB /* timeselecttableviewcell.m in Sources */ = {isa = PBXBuildFile; fileRef = E26B70111E6AFF75000A08CB /* timeselecttableviewcell.m */; };
-		E26B70191E6AFF84000A08CB /* CourseTimeCellModel.m in Sources */ = {isa = PBXBuildFile; fileRef = E26B70181E6AFF84000A08CB /* CourseTimeCellModel.m */; };
 		E26B701C1E6AFFA2000A08CB /* CourseViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = E26B701B1E6AFFA2000A08CB /* CourseViewController.m */; };
 		E2F0B70B1DD3653F00AEE343 /* DayViewCell.m in Sources */ = {isa = PBXBuildFile; fileRef = E2F0B70A1DD3653F00AEE343 /* DayViewCell.m */; };
 		EAB20136F318CDE1EC37771C /* libPods-XiaoYa.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 95B73B7E7C445C004F46A8E9 /* libPods-XiaoYa.a */; };
@@ -111,11 +109,12 @@
 		577FA5D91DEEA6B900A0AEF7 /* RepeatCell.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = RepeatCell.m; sourceTree = "<group>"; };
 		577FA5DB1DEEA9F000A0AEF7 /* RepeatSetting.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = RepeatSetting.h; sourceTree = "<group>"; };
 		577FA5DC1DEEA9F000A0AEF7 /* RepeatSetting.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = RepeatSetting.m; sourceTree = "<group>"; };
+		5782CE761E7288C100DA4947 /* TimeSelectedTableViewCell.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = TimeSelectedTableViewCell.h; sourceTree = "<group>"; };
+		5782CE771E7288C100DA4947 /* TimeSelectedTableViewCell.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = TimeSelectedTableViewCell.m; sourceTree = "<group>"; };
 		579C2FB91DAD000E00E4EE54 /* XiaoYa.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = XiaoYa.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		579C2FBD1DAD000E00E4EE54 /* main.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = main.m; sourceTree = "<group>"; };
 		579C2FBF1DAD000E00E4EE54 /* AppDelegate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = AppDelegate.h; sourceTree = "<group>"; };
 		579C2FC01DAD000E00E4EE54 /* AppDelegate.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = AppDelegate.m; sourceTree = "<group>"; };
-		579C2FC61DAD000E00E4EE54 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/Main.storyboard; sourceTree = "<group>"; };
 		579C2FC81DAD000E00E4EE54 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		579C2FCB1DAD000E00E4EE54 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/LaunchScreen.storyboard; sourceTree = "<group>"; };
 		579C2FCD1DAD000E00E4EE54 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
@@ -161,10 +160,6 @@
 		E26B700D1E6AFF75000A08CB /* weekselectview.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = weekselectview.m; sourceTree = "<group>"; };
 		E26B700E1E6AFF75000A08CB /* timeselecteview.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = timeselecteview.h; sourceTree = "<group>"; };
 		E26B700F1E6AFF75000A08CB /* timeselecteview.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = timeselecteview.m; sourceTree = "<group>"; };
-		E26B70101E6AFF75000A08CB /* timeselecttableviewcell.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = timeselecttableviewcell.h; sourceTree = "<group>"; };
-		E26B70111E6AFF75000A08CB /* timeselecttableviewcell.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = timeselecttableviewcell.m; sourceTree = "<group>"; };
-		E26B70171E6AFF84000A08CB /* CourseTimeCellModel.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CourseTimeCellModel.h; sourceTree = "<group>"; };
-		E26B70181E6AFF84000A08CB /* CourseTimeCellModel.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CourseTimeCellModel.m; sourceTree = "<group>"; };
 		E26B701A1E6AFFA2000A08CB /* CourseViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CourseViewController.h; sourceTree = "<group>"; };
 		E26B701B1E6AFFA2000A08CB /* CourseViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CourseViewController.m; sourceTree = "<group>"; };
 		E2F0B7091DD3653F00AEE343 /* DayViewCell.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DayViewCell.h; sourceTree = "<group>"; };
@@ -201,6 +196,8 @@
 		571A3B271DE0D030009042BC /* Util */ = {
 			isa = PBXGroup;
 			children = (
+				57BDFA111E2E038D00C0E254 /* DbManager.h */,
+				57BDFA121E2E038D00C0E254 /* DbManager.m */,
 				571A3B341DE0D08A009042BC /* NSDate+Calendar.h */,
 				571A3B351DE0D08A009042BC /* NSDate+Calendar.m */,
 				57BDFA161E326E0500C0E254 /* UILabel+AlertActionFont.h */,
@@ -253,8 +250,6 @@
 				57D69A291DC7832F005E73EA /* CourseModel.m */,
 				57BDFA191E4CB98000C0E254 /* BusinessModel.h */,
 				57BDFA1A1E4CB98100C0E254 /* BusinessModel.m */,
-				E26B70171E6AFF84000A08CB /* CourseTimeCellModel.h */,
-				E26B70181E6AFF84000A08CB /* CourseTimeCellModel.m */,
 			);
 			name = models;
 			sourceTree = "<group>";
@@ -317,9 +312,6 @@
 				571A3B271DE0D030009042BC /* Util */,
 				579C2FBF1DAD000E00E4EE54 /* AppDelegate.h */,
 				579C2FC01DAD000E00E4EE54 /* AppDelegate.m */,
-				57BDFA111E2E038D00C0E254 /* DbManager.h */,
-				57BDFA121E2E038D00C0E254 /* DbManager.m */,
-				579C2FC51DAD000E00E4EE54 /* Main.storyboard */,
 				579C2FCA1DAD000E00E4EE54 /* LaunchScreen.storyboard */,
 				579C2FC81DAD000E00E4EE54 /* Assets.xcassets */,
 				579C2FCD1DAD000E00E4EE54 /* Info.plist */,
@@ -412,8 +404,8 @@
 				E26B700D1E6AFF75000A08CB /* weekselectview.m */,
 				E26B700E1E6AFF75000A08CB /* timeselecteview.h */,
 				E26B700F1E6AFF75000A08CB /* timeselecteview.m */,
-				E26B70101E6AFF75000A08CB /* timeselecttableviewcell.h */,
-				E26B70111E6AFF75000A08CB /* timeselecttableviewcell.m */,
+				5782CE761E7288C100DA4947 /* TimeSelectedTableViewCell.h */,
+				5782CE771E7288C100DA4947 /* TimeSelectedTableViewCell.m */,
 			);
 			name = "悬浮view";
 			sourceTree = "<group>";
@@ -530,7 +522,6 @@
 				57D69A221DC77040005E73EA /* courses.json in Resources */,
 				579C2FCC1DAD000E00E4EE54 /* LaunchScreen.storyboard in Resources */,
 				579C2FC91DAD000E00E4EE54 /* Assets.xcassets in Resources */,
-				579C2FC71DAD000E00E4EE54 /* Main.storyboard in Resources */,
 				57D69A241DC77278005E73EA /* courses-1.json in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -605,11 +596,11 @@
 			buildActionMask = 2147483647;
 			files = (
 				E26B701C1E6AFFA2000A08CB /* CourseViewController.m in Sources */,
+				5782CE781E7288C100DA4947 /* TimeSelectedTableViewCell.m in Sources */,
 				571A3B361DE0D08A009042BC /* NSDate+Calendar.m in Sources */,
 				579C2FF41DAD02EF00E4EE54 /* CourseTableViewController.m in Sources */,
 				571A3B331DE0D07C009042BC /* MonthPicker.m in Sources */,
 				57BDFA1E1E4CCB5E00C0E254 /* UIView+Extend.m in Sources */,
-				E26B70191E6AFF84000A08CB /* CourseTimeCellModel.m in Sources */,
 				571B82091DB465D4001171EE /* WeekCell.m in Sources */,
 				57D69A2A1DC7832F005E73EA /* CourseModel.m in Sources */,
 				571A3B301DE0D071009042BC /* DatePicker.m in Sources */,
@@ -622,7 +613,6 @@
 				E26B70121E6AFF75000A08CB /* dayselectview.m in Sources */,
 				577FA5DD1DEEA9F000A0AEF7 /* RepeatSetting.m in Sources */,
 				577FA5CB1DEC2AF800A0AEF7 /* SectionSelectTableViewCell.m in Sources */,
-				E26B70161E6AFF75000A08CB /* timeselecttableviewcell.m in Sources */,
 				57BDFA131E2E038D00C0E254 /* DbManager.m in Sources */,
 				579C2FBE1DAD000E00E4EE54 /* main.m in Sources */,
 				57D69A2D1DC83734005E73EA /* CourseButton.m in Sources */,
@@ -678,14 +668,6 @@
 /* End PBXTargetDependency section */
 
 /* Begin PBXVariantGroup section */
-		579C2FC51DAD000E00E4EE54 /* Main.storyboard */ = {
-			isa = PBXVariantGroup;
-			children = (
-				579C2FC61DAD000E00E4EE54 /* Base */,
-			);
-			name = Main.storyboard;
-			sourceTree = "<group>";
-		};
 		579C2FCA1DAD000E00E4EE54 /* LaunchScreen.storyboard */ = {
 			isa = PBXVariantGroup;
 			children = (

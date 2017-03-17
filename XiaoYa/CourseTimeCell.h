@@ -7,7 +7,7 @@
 //
 
 #import <UIKit/UIKit.h>
-
+#import "CourseModel.h"
 @interface CourseTimeCell : UITableViewCell
 
 @property (nonatomic,weak) UIButton *weeks;
@@ -15,8 +15,7 @@
 @property (nonatomic,weak) UIButton *courseTime;
 @property (nonatomic,weak) UIButton *delete_btn;
 @property (nonatomic,weak) UITextField *place;
-
-
--(instancetype)initWithreuseIdentifier:(NSString *)ID;
+@property (nonatomic , strong)CourseModel *model;//模型
++(instancetype)CourseTimeCellWithTableView:(UITableView *)tableview;
 
 @end

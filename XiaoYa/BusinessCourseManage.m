@@ -17,6 +17,7 @@
 #import "DateUtils.h"
 #import "NSDate+Calendar.h"
 #import "UIAlertController+Appearance.h"
+#import "CourseModel.h"
 
 #define kScreenWidth [UIApplication sharedApplication].keyWindow.bounds.size.width
 @interface BusinessCourseManage ()<UIScrollViewDelegate>
@@ -60,20 +61,8 @@
     if (_segCtrl.selectedSegmentIndex == 0) {//如果是事务界面。在这个类文件里面执行的，都是直接插入数据而不是修改原有数据的
         dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
             DbManager *dbManger = [DbManager shareInstance];
-//        NSString *sql = [NSString stringWithFormat:@"CREATE TABLE IF NOT EXISTS t_201601(id INTEGER PRIMARY KEY AUTOINCREMENT,description TEXT NOT NULL,comment TEXT,week INTEGER NOT NULL,weekday INTEGER NOT NULL,date TEXT,time TEXT,repeat INTEGER,overlap INTEGER);"];
-        NSInteger dateDistance = [DateUtils dateDistanceFromDate:_bsVc.currentDate toDate:self.firstDateOfTerm];
-        NSInteger week = dateDistance / 7;//存入数据库的week从0-n；
-//        if (week < 0 || week > 23) {
-//            week = -1;
-//        }
-//
-//        int weekday = [_bsVc.currentDate dayOfWeek];
-//        if (weekday == 1) {//存入数据库的weekday从0-6，周一为0
-//            weekday = 6;
-//        }else {
-//            weekday = weekday - 2;
-//        }
-            
+            NSInteger dateDistance = [DateUtils dateDistanceFromDate:_bsVc.currentDate toDate:self.firstDateOfTerm];
+            NSInteger week = dateDistance / 7;//存入数据库的week从0-n；
             //储存往后五年的时间
             NSMutableArray *dateString = [Utils dateStringArrayFromDate:_bsVc.currentDate yearDuration:5 repeatIndex:_bsVc.repeatIndex];
             //修改覆盖数据
@@ -81,10 +70,9 @@
 //                找出将要被覆盖的事务
                 NSMutableString *sqlTime = [NSMutableString string];
                 for (int i = 0; i < _bsVc.sectionArray.count; i++) {
-                    [sqlTime appendString:[NSString stringWithFormat:@"time LIKE '%%%d%%' or ",[_bsVc.sectionArray[i] intValue]]];
+                    [sqlTime appendString:[NSString stringWithFormat:@"time LIKE '%%,%d,%%' or ",[_bsVc.sectionArray[i] intValue]]];
                 }
                 sqlTime = (NSMutableString*)[sqlTime substringToIndex:sqlTime.length - 3];
-//                [dbManger beginTransaction];
                 //往后五年的每一条数据都要拿出来剔除覆盖
                 for (int i = 0; i < dateString.count; i ++) {
                     NSString *sql = [NSString stringWithFormat:@"SELECT * FROM t_201601 WHERE date = '%@' and (%@);",dateString[i],sqlTime];
@@ -108,11 +96,8 @@
                                 [dbManger beginTransaction];
                                 for (int k = 0; k < sections.count; k++) {
                                     NSMutableArray *newSection = sections[k];
-                                    NSMutableString *newTimeStr = [[NSMutableString alloc] initWithCapacity:5];
-                                    for (int l = 0; l < newSection.count; l++) {
-                                        [newTimeStr appendFormat:@"%@、",newSection[l]];
-                                    }
-                                    NSString *sql = [NSString stringWithFormat:@"INSERT INTO t_201601 (description,comment,week,weekday,date,time,repeat,overlap) VALUES ('%@','%@','','','%@','%@',6 ,0);",model.desc,model.comment,dateString[i],newTimeStr];//一律改成不重复
+                                    NSString *newTimeStr = [self appendStringWithArray:newSection];
+                                    NSString *sql = [NSString stringWithFormat:@"INSERT INTO t_201601 (description,comment,date,time,repeat,overlap) VALUES ('%@','%@','%@','%@',6 ,0);",model.desc,model.comment,dateString[i],newTimeStr];//一律改成不重复
                                     [dbManger executeNonQuery:sql];
                                 }
                                 [dbManger commitTransaction];
@@ -123,7 +108,6 @@
                         [dbManger executeNonQuery:deleteSql];
                     }
                 }
-//                [dbManger commitTransaction];
             }
             
             //插入新事务
@@ -131,12 +115,9 @@
             NSInteger timeArrCount = [_bsVc.sections count];
             for (int i = 0; i <timeArrCount; i ++) {
                 NSMutableArray *section = _bsVc.sections[i];
-                NSMutableString *timeStr = [[NSMutableString alloc] initWithCapacity:10];
-                for (int j = 0; j < section.count; j++) {
-                    [timeStr appendFormat:@"%@、",section[j]];
-                }
+                NSString *timeStr = [self appendStringWithArray:section];
                 for (int k = 0; k < dateString.count; k ++) {
-                    NSString *sql = [NSString stringWithFormat:@"INSERT INTO t_201601 (description,comment,week,weekday,date,time,repeat,overlap) VALUES ('%@','%@','','','%@','%@',%ld ,0);",_bsVc.busDescription.text,_bsVc.commentInfo,dateString[k],timeStr,_bsVc.repeatIndex];//注意VALUES字符串赋值要有单引号
+                    NSString *sql = [NSString stringWithFormat:@"INSERT INTO t_201601 (description,comment,date,time,repeat,overlap) VALUES ('%@','%@','%@','%@',%ld ,0);",_bsVc.busDescription.text,_bsVc.commentInfo,dateString[k],timeStr,_bsVc.repeatIndex];//注意VALUES字符串赋值要有单引号
                     [dbManger executeNonQuery:sql];
                 }
             }
@@ -148,33 +129,159 @@
             });
         });
     }else{//如果是课程界面
-        //数据存储
-        NSInteger storeResult = [_courseVc DataStore] ;
-        switch (storeResult) {
-            case 0:
-            {
-                UIAlertController *alertController = [UIAlertController alertControllerWithTitle:@"警告" message:@"课程时间冲突" preferredStyle:UIAlertControllerStyleAlert];
-                UIAlertAction *okAction = [UIAlertAction actionWithTitle:@"好的" style:UIAlertActionStyleDefault handler:nil];
-                [alertController addAction:okAction];
-                [self presentViewController:alertController animated:YES completion:nil];
-                break;
-            }
-            case 1:
-            {UIAlertController *alertController = [UIAlertController alertControllerWithTitle:@"警告" message:@"课程信息不完整" preferredStyle:UIAlertControllerStyleAlert];
-                UIAlertAction *okAction = [UIAlertAction actionWithTitle:@"好的" style:UIAlertActionStyleDefault handler:nil];
-                [alertController addAction:okAction];
-                [self presentViewController:alertController animated:YES completion:nil];
-                break;
-            }
-            default:
-            {
-                //退出当前视图(数据成功存储才退出当前控制器)
-                [self.navigationController popViewControllerAnimated:YES];
-                break;
-            }
-                
+        [_courseVc dataStore];
+//        if([self checkIfConflict]){
+//            void (^otherBlock)(UIAlertAction *action) = ^(UIAlertAction *action){
+//            };
+//            NSArray *otherBlocks = @[otherBlock];
+//            UIAlertController *alert = [UIAlertController alertControllerWithTitle:@"警告" message:@"课程时间冲突" preferredStyle:UIAlertControllerStyleAlert cancelTitle:nil cancelBlock:nil otherTitles:@[@"确定"] otherBlocks:otherBlocks];
+//            [self presentViewController:alert animated:YES completion:nil];
+//        }else{
+//            dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
+//                DbManager *dbManger = [DbManager shareInstance];
+//                //1.先修改被覆盖的数据
+//                for (int i = 0; i < _courseVc.courseview_array.count; i++) {
+//                    CourseModel *courseModel = _courseVc.courseview_array[i];
+//                    NSMutableString *sqlweek = [NSMutableString string];
+//                    NSMutableString *sqlTime = [NSMutableString string];
+//                    for (int j = 0; j < courseModel.weekArray.count; j++) {
+//                        [sqlweek appendString:[NSString stringWithFormat:@"weeks LIKE '%%,%@,%%' or ",courseModel.weekArray[j]]];
+//                    }
+//                    sqlweek = (NSMutableString*)[sqlweek substringToIndex:sqlweek.length - 3];
+//                    for (int j = 0; j < courseModel.timeArray.count; j++) {
+//                        [sqlTime appendString:[NSString stringWithFormat:@"time LIKE '%%,%@,%%' or ",courseModel.timeArray[j]]];
+//                    }
+//                    sqlTime = (NSMutableString*)[sqlTime substringToIndex:sqlTime.length - 3];
+//                    
+//                    NSString *sql = [NSString stringWithFormat:@"SELECT * FROM course_table WHERE weekday = '%@' and (%@) and (%@);",courseModel.weekday,sqlweek,sqlTime];
+//                    NSArray *dataQuery = [dbManger executeQuery:sql];//查找出重合数据
+//                    if (dataQuery.count > 0) {
+//                        for (int j = 0; j < dataQuery.count ; j++) {
+//                            NSMutableDictionary *courseDict = [NSMutableDictionary dictionaryWithDictionary:dataQuery[j]];
+//                            CourseModel *newModel = [[CourseModel alloc] initWithDict:courseDict];
+//                            //每条课程数据，删去重复的时间段（被覆盖掉了）得到新的课程时间段
+//                            //节数
+//                            NSMutableArray *newTimeArray = [newModel.timeArray mutableCopy];
+//                            for (int k = 0 ; k < courseModel.timeArray.count; k++) {
+//                                if ([newTimeArray containsObject:courseModel.timeArray[k]]) {
+//                                    [newTimeArray removeObject:courseModel.timeArray[k]];
+//                                }
+//                            }
+//                            //周数
+//                            NSMutableArray *newWeekArray1 = [newModel.weekArray mutableCopy];//没被覆盖的部分，有可能是空
+//                            NSMutableArray *newWeekarray2 = [NSMutableArray array];//被覆盖的部分,一定非空
+//                            for (int k = 0; k < courseModel.weekArray.count; k++) {
+//                                if ([newWeekArray1 containsObject:courseModel.weekArray[k]]) {
+//                                    [newWeekArray1 removeObject:courseModel.weekArray[k]];
+//                                    [newWeekarray2 addObject:courseModel.weekArray[k]];
+//                                }
+//                            }
+//                            
+//                            if (newWeekArray1.count == 0) {//周数全覆盖
+//                                if (newTimeArray.count != 0) {//newTimeArray.count=0意味着现课程把原课程节数都覆盖掉了，所以原课程直接删
+//                                    NSString *newWeekStr2 = [self appendStringWithArray:newWeekarray2];
+//                                    //对新的课程节数时间段进行连续性分割
+//                                    NSMutableArray *sections = [Utils subSectionArraysFromArray:newTimeArray];
+//                                    //然后插入更新后周数覆盖部分的课程
+//                                    [dbManger beginTransaction];
+//                                    for (int k = 0; k < sections.count; k++) {
+//                                        NSMutableArray *newSection = sections[k];
+//                                        NSString *newTimeStr = [self appendStringWithArray:newSection];
+//                                        NSString *sql = [NSString stringWithFormat:@"INSERT INTO course_table (courseName,weeks,weekday,time,place) VALUES ('%@','%@','%@','%@','%@');",newModel.courseName,newWeekStr2,newModel.weekday,newTimeStr,newModel.place];
+//                                        [dbManger executeNonQuery:sql];
+//                                    }
+//                                    [dbManger commitTransaction];
+//                                }
+//                            }else{//周数不全覆盖
+//                                NSString *newWeekStr1 = [self appendStringWithArray:newWeekArray1];
+//                                //1.对周数没有覆盖的部分：
+//                                NSString *sql = [NSString stringWithFormat:@"INSERT INTO course_table (courseName,weeks,weekday,time,place) VALUES ('%@','%@','%@','%@','%@');",newModel.courseName,newWeekStr1,newModel.weekday,newModel.time,newModel.place];
+//                                [dbManger executeNonQuery:sql];
+//                                //2.对周数覆盖的部分：
+//                                if (newTimeArray.count != 0) {
+//                                    NSString *newWeekStr2 = [self appendStringWithArray:newWeekarray2];
+//                                    //对新的课程节数时间段进行连续性分割
+//                                    NSMutableArray *sections = [Utils subSectionArraysFromArray:newTimeArray];
+//                                    //然后插入更新后周数覆盖部分的课程
+//                                    [dbManger beginTransaction];
+//                                    for (int k = 0; k < sections.count; k++) {
+//                                        NSMutableArray *newSection = sections[k];
+//                                        NSString *newTimeStr = [self appendStringWithArray:newSection];
+//                                        NSString *sql = [NSString stringWithFormat:@"INSERT INTO course_table (courseName,weeks,weekday,time,place) VALUES ('%@','%@','%@','%@','%@');",newModel.courseName,newWeekStr2,newModel.weekday,newTimeStr,newModel.place];
+//                                        [dbManger executeNonQuery:sql];
+//                                    }
+//                                    [dbManger commitTransaction];
+//                                }
+//                            }
+//                            
+//    //                        NSString *newWeekStr1 = [self appendStringWithArray:newWeekArray1];
+//    //                        //插入更新后的没被覆盖的部分(只更改了周数)
+//    //                        NSString *sql = [NSString stringWithFormat:@"INSERT INTO course_table (courseName,weeks,weekday,time,place) VALUES ('%@','%@','%@','%@','%@');",newModel.courseName,newWeekStr1,newModel.weekday,newModel.time,newModel.place];
+//    //                        [dbManger executeNonQuery:sql];
+//    //                        
+//    //                        if (newTimeArray.count != 0) {//newTimeArray.count=0意味着现课程把原课程整个都覆盖掉了，所以原课程直接删
+//    //                            NSString *newWeekStr2 = [self appendStringWithArray:newWeekarray2];
+//    //                            //对新的课程节数时间段进行连续性分割
+//    //                            NSMutableArray *sections = [Utils subSectionArraysFromArray:newTimeArray];
+//    //                            //然后插入更新后周数覆盖部分的课程
+//    //                            [dbManger beginTransaction];
+//    //                            for (int k = 0; k < sections.count; k++) {
+//    //                                NSMutableArray *newSection = sections[k];
+//    //                                NSString *newTimeStr = [self appendStringWithArray:newSection];
+//    //                                NSString *sql = [NSString stringWithFormat:@"INSERT INTO course_table (courseName,weeks,weekday,time,place) VALUES ('%@','%@','%@','%@','%@');",newModel.courseName,newWeekStr2,newModel.weekday,newTimeStr,newModel.place];
+//    //                                [dbManger executeNonQuery:sql];
+//    //                            }
+//    //                            [dbManger commitTransaction];
+//    //                        }
+//                        }
+//                        //删除旧的事务数据
+//                        NSString *deleteSql = [NSString stringWithFormat:@"DELETE FROM course_table WHERE weekday = '%@' and (%@) and (%@);",courseModel.weekday,sqlweek,sqlTime];
+//                        [dbManger executeNonQuery:deleteSql];
+//                    }
+//                    
+//                    //插入新事务
+//                    NSMutableArray *arr = [Utils subSectionArraysFromArray:courseModel.timeArray];
+//                    NSString *weekstr = [self appendStringWithArray:courseModel.weekArray];
+//                    [dbManger beginTransaction];
+//                    for (int m = 0; m < arr.count; m ++) {
+//                        NSMutableArray *section = arr[m];
+//                        NSString *timeStr = [self appendStringWithArray:section];
+//                        NSString *sql = [NSString stringWithFormat:@"INSERT INTO course_table (courseName,weeks,weekday,time,place) VALUES ('%@','%@','%@','%@','%@');",courseModel.courseName,weekstr,courseModel.weekday,timeStr,courseModel.place];//注意VALUES字符串赋值要有单引号
+//                        [dbManger executeNonQuery:sql];
+//                        
+//                    }
+//                    [dbManger commitTransaction];
+//                }
+//                dispatch_async(dispatch_get_main_queue(), ^{
+//                    [self.navigationController popViewControllerAnimated:YES];
+//                });
+//            });
+//        }
+    }
+}
+
+- (NSString *)appendStringWithArray:(NSMutableArray *)array{
+    NSMutableString *str = [[NSMutableString alloc] initWithCapacity:2];
+    [str appendString:@","];
+    for (int i = 0; i < array.count; i++) {
+        [str appendFormat:@"%@,",array[i]];
+    }
+    return str;
+}
+
+//检查_courseview_array里的课程是否有冲突（两两进行对比）
+- (BOOL)checkIfConflict
+{
+    if(_courseVc.courseview_array.count == 1) return NO;
+    for(int i = 0;i < _courseVc.courseview_array.count -1;i++){
+        CourseModel *firstCellModel = _courseVc.courseview_array[i];
+        for(int j = i + 1;j < _courseVc.courseview_array.count;j++){
+            CourseModel *secondCellModel = _courseVc.courseview_array[j];
+            if([firstCellModel checkIfConflictComparetoAnotherCourseModel:secondCellModel])
+                return YES;
         }
     }
+    return NO;
 }
 
 - (void)cancel{
@@ -190,17 +297,16 @@
             [self presentViewController:alert animated:YES completion:nil];
         }
     }else{//如果是课程界面
-        UIAlertController *alertController = [UIAlertController alertControllerWithTitle:@"确认退出？" message:@"一旦退出，编辑将不会保存" preferredStyle:UIAlertControllerStyleAlert];
-        UIAlertAction *okAction = [UIAlertAction actionWithTitle:@"确定" style:UIAlertActionStyleDefault handler:^(UIAlertAction * _Nonnull action) {
-            [self.navigationController popViewControllerAnimated:YES];
-        }];
-        [alertController addAction:okAction];
-        
-        UIAlertAction *cancelAction = [UIAlertAction actionWithTitle:@"取消" style:UIAlertActionStyleCancel handler:nil];
-        [alertController addAction:cancelAction];
-        
-        [self presentViewController:alertController animated:YES completion:nil];
-        
+//        if ([_bsVc.busDescription.text isEqualToString:@""]) {//如果描述没有输入就直接返回
+//            [self.navigationController popViewControllerAnimated:YES];//返回主界面
+//        }else{
+            void (^otherBlock)(UIAlertAction *action) = ^(UIAlertAction *action){
+                [self.navigationController popViewControllerAnimated:YES];
+            };
+            NSArray *otherBlocks = @[otherBlock];
+            UIAlertController *alert = [UIAlertController alertControllerWithTitle:@"确认退出？" message:@"一旦退出，编辑将不会保存" preferredStyle:UIAlertControllerStyleAlert cancelTitle:@"取消" cancelBlock:nil otherTitles:@[@"确定"] otherBlocks:otherBlocks];
+            [self presentViewController:alert animated:YES completion:nil];
+//        }
     }
 }
 

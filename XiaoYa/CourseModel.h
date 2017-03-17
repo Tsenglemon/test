@@ -10,15 +10,19 @@
 
 @interface CourseModel : NSObject
 
-@property (nonatomic, copy) NSString    *weeks;             //当前周
-@property (nonatomic, copy) NSString    *weekday;           //周几,1/2/3/4/5/6/7,代表周一、周二、周三..
-@property (nonatomic, copy) NSString    *courseStart;       //课程从第几节开始
-@property (nonatomic, copy) NSString    *numberOfCourse;    //课程有几节课
-@property (nonatomic, copy) NSString    *courseName;        //课程名称
-@property (nonatomic, copy) NSString    *place;             //上课地点
-@property (nonatomic, copy) NSString    *couresPeriod;      //周期，比如3-14周，则数据为3-14
-@property (nonatomic, copy) NSString    *capter;
-@property (nonatomic, assign) BOOL      haveLesson;
+//@property (nonatomic, copy)   NSString *dataid;
+@property (nonatomic, copy)   NSString *weeks;                //周数，字符串”0，1，2，3...“
+@property (nonatomic, copy)   NSString *weekday;              //周几,0-6,0为周一
+@property (nonatomic ,copy)   NSString *time;                 //时间，第几节 “1，2，3...”
+@property (nonatomic, copy)   NSString *courseName;           //课程名称
+@property (nonatomic, copy)   NSString *place;                //上课地点
+@property (nonatomic ,strong) NSMutableArray *timeArray;      //把time string转化成array
+@property (nonatomic ,strong) NSMutableArray *weekArray;//把weeks string转化成array
+
+@property (nonatomic ,assign) BOOL intersects;//是否和事务有交集
 
 - (id)initWithDict:(NSDictionary *)dic;
++ (instancetype)defaultModel;
+- (BOOL)checkIfConflictComparetoAnotherCourseModel:(CourseModel *)courseModel;
+
 @end

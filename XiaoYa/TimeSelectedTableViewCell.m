@@ -1,59 +1,32 @@
 //
-//  SectionSelectTableViewCell.m
+//  TimeSelectedTableViewCell.m
 //  XiaoYa
 //
-//  Created by commet on 16/11/28.
-//  Copyright © 2016年 commet. All rights reserved.
+//  Created by commet on 17/3/10.
+//  Copyright © 2017年 commet. All rights reserved.
 //
 
-#import "SectionSelectTableViewCell.h"
+#import "TimeSelectedTableViewCell.h"
 #import "Masonry.h"
 #import "Utils.h"
 
 #define kScreenWidth [[UIScreen mainScreen] bounds].size.width
 #define kScreenHeight [[UIScreen mainScreen] bounds].size.height
-
-@interface SectionSelectTableViewCell()
+@interface TimeSelectedTableViewCell()
 @property (nonatomic , weak)UILabel *time;
 @property (nonatomic , weak)UILabel *number;
 @property (nonatomic , weak)UILabel *event;
-//@property (nonatomic , assign)BOOL haveBusiness;//是否原有有事务
-@property (nonatomic , assign)BOOL isBusiness;//是否是事务（或事务+课程共同）
-
+@property (nonatomic , weak)UIButton *mutipleChoice;//复选按钮
+//@property (nonatomic , weak)UIButton *conflict;
 @end
 
-@implementation SectionSelectTableViewCell
-- (void)setModel:(NSMutableArray *)model{
-    self.time.text = model[0];
-    self.number.text = model[1];
-    if (model.count > 2) {
-        self.event.text = model[2];
-        if (model.count > 3) {
-            self.isBusiness = YES;
-        }else{
-            self.isBusiness = NO;
-        }
-    }else{//课程、事务都没有
-        self.event.text = @"";
-        self.isBusiness = NO;
-    }
-    __weak typeof(self)weakself = self;
-    if ([self.number.text isEqual: @""]) {
-        [_time mas_updateConstraints:^(MASConstraintMaker *make) {
-            make.centerY.equalTo(weakself.contentView.mas_centerY);
-        }];
-    }else{
-        [_time mas_updateConstraints:^(MASConstraintMaker *make) {
-            make.centerY.equalTo(weakself.contentView.mas_centerY).offset(-8);
-        }];
-    }
-}
+@implementation TimeSelectedTableViewCell
 
-+(instancetype)SectionCellWithTableView:(UITableView *)tableview{
++ (instancetype)TimeSelectCellWithTableView:(UITableView *)tableview {
     static NSString *ID = @"SectionSelectCell";
-    SectionSelectTableViewCell *cell = [tableview dequeueReusableCellWithIdentifier:ID];
+    TimeSelectedTableViewCell *cell = [tableview dequeueReusableCellWithIdentifier:ID];
     if (cell == nil) {
-        cell = [[SectionSelectTableViewCell alloc]initWithStyle:UITableViewCellStyleDefault reuseIdentifier:ID];
+        cell = [[TimeSelectedTableViewCell alloc]initWithStyle:UITableViewCellStyleDefault reuseIdentifier:ID];
     }
     return cell;
 }
@@ -62,7 +35,6 @@
     self = [super initWithStyle:style reuseIdentifier:reuseIdentifier];
     if (self) {
         [self initSubView];
-        self.isBusiness = NO;
     }
     return self;
 }
@@ -163,14 +135,56 @@
     UIView *view1 = [sender superview];
     UIView *view2 = [view1 superview];
     NSIndexPath *indexPath = [(UITableView *)[[view2 superview] superview] indexPathForCell:(UITableViewCell*)view2];
- 
+    
     if (sender.isSelected) {//已经选中了
         sender.selected = NO;//置为未选中
         _conflict.hidden = YES;
-        [self.delegate SectionSelectTableViewCell:self deSelectIndex:indexPath];
+        [self.delegate TimeSelectedTableViewCell:self deSelectIndex:indexPath];
     }else{
+        if (self.event.text.length > 0) {
+            _conflict.hidden = NO;
+        }else{
+            _conflict.hidden = YES;
+        }
         sender.selected = YES;
-        [self.delegate SectionSelectTableViewCell:self selectIndex:indexPath];
+        [self.delegate TimeSelectedTableViewCell:self selectIndex:indexPath];
+    }
+}
+
+- (void)itemData:(NSMutableArray *)timeData selectIndexs:(NSMutableArray* )selectIndexs selectedWeekday:(NSInteger)weekday originIndexs:(NSMutableArray*)originIndexs originWeekday:(NSInteger)originWeekday indexPathRow:(NSInteger)row{
+    self.time.text = timeData[0];
+    self.number.text = timeData[1];
+    if (timeData.count > 2) {
+        self.event.text = timeData[2];
+    }else{//没有课程
+        self.event.text = @"";
+    }
+    __weak typeof(self)weakself = self;
+    if ([self.number.text isEqual: @""]) {
+        [_time mas_updateConstraints:^(MASConstraintMaker *make) {
+            make.centerY.equalTo(weakself.contentView.mas_centerY);
+        }];
+    }else{
+        [_time mas_updateConstraints:^(MASConstraintMaker *make) {
+            make.centerY.equalTo(weakself.contentView.mas_centerY).offset(-8);
+        }];
+    }
+    
+    if ([selectIndexs containsObject:[NSString stringWithFormat:@"%ld",row]]) {//是否是现选择的行？
+        [self.mutipleChoice setSelected:YES];
+        if (self.event.text.length > 0) {
+            self.conflict.hidden = NO;
+        }else{
+            self.conflict.hidden = YES;
+        }
+        if (weekday == originWeekday){
+            if ([originIndexs containsObject:[NSString stringWithFormat:@"%ld",row]]) {
+                self.conflict.hidden = YES;
+            }
+        }
+    }else{
+        [self.mutipleChoice setSelected:NO];
+        self.conflict.hidden = YES;
     }
 }
 

@@ -7,29 +7,15 @@
 //
 
 #import <UIKit/UIKit.h>
-#import "CourseTimeCellModel.h"
-
+#import "CourseModel.h"
+@class timeselecteview;
 @protocol timeselectViewDelegate <NSObject>
-
--(void)setCourseTimeArray:(NSMutableArray *)courseTimeArray andtoDeleteID:(NSArray*) toDeleteID inSection:(NSInteger )section;
--(void)removeCover;
+- (void)timeSelectComfirm:(timeselecteview*)timeselect courseTimeArray:(NSMutableArray *)courseTimeArray inSection:(NSInteger)section;
+- (void)timeSelectCancel:(timeselecteview* )timeSelectView;
 
 @end
 
 @interface timeselecteview : UIView
-
-@property (nonatomic,strong) NSMutableArray *dayselected_array;
-@property (nonatomic,weak) UIButton *cancel_btn;
-@property (nonatomic,weak) UIButton *confirm_btn;
-@property (nonatomic,weak) UILabel *today;
-@property (nonatomic,strong) NSMutableArray *selectresult;
-@property (nonatomic,strong) NSString *whichSection;
-
-@property (nonatomic,strong) NSMutableSet *toDeleteID;//整理的要删除的课程ID,避免重复用set
-
-@property (nonatomic,weak) id delegate;
-
--(instancetype)initWithFrame:(CGRect)frame andCellModel:(CourseTimeCellModel *)cellMoedl;
-
-
+@property (nonatomic,weak) id<timeselectViewDelegate> delegate;
+- (instancetype)initWithFrame:(CGRect)frame andCellModel:(CourseModel *)cellMoedl indexSection:(NSInteger)section originIndexs:(NSMutableArray*)originIndexs originWeekday:(NSInteger)originWeekday;
 @end

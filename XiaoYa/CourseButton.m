@@ -12,7 +12,7 @@
 @implementation CourseButton
 - (instancetype)initWithFrame:(CGRect)frame{
     if (self = [super initWithFrame:frame]) {
-        self.isOverlap = 0;
+        self.isOverlap = NO;
         
         UILabel *event = [[UILabel alloc]init];
         _event = event;

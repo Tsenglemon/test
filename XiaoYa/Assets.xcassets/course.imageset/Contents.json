@@ -1,20 +1,6 @@
 {
   "images" : [
     {
-      "resizing" : {
-        "mode" : "9-part",
-        "center" : {
-          "mode" : "tile",
-          "width" : 8,
-          "height" : 30
-        },
-        "cap-insets" : {
-          "bottom" : 16,
-          "top" : 0,
-          "right" : 28,
-          "left" : 0
-        }
-      },
       "idiom" : "universal",
       "filename" : "course.png",
       "scale" : "1x"

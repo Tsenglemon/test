@@ -85,14 +85,16 @@
     self.commentInfo = [NSString string];
     self.repeatItem = @[@"每天",@"每两天",@"每周",@"每月",@"每年",@"工作日",@"不重复"];
     rowHeight = 80;
-    separateHeight = 30;
+    separateHeight = 24;
     
     if (self.busModel) {
         NSDateFormatter * dateFormatter = [[NSDateFormatter alloc] init];
         [dateFormatter setDateFormat:@"yyyyMMdd"];
         self.currentDate = [dateFormatter dateFromString:[NSString stringWithFormat:@"%@",self.busModel.date]];
         self.sectionArray = [self.busModel.timeArray mutableCopy];
+        self.sections = [[Utils subSectionArraysFromArray:self.busModel.timeArray] mutableCopy];
         self.repeatIndex = self.busModel.repeat.integerValue;
+        self.commentInfo = self.busModel.comment;
         
         self.navigationController.navigationBar.titleTextAttributes = @{NSForegroundColorAttributeName:[Utils colorWithHexString:@"#333333"],NSFontAttributeName:[UIFont systemFontOfSize:17]};//设置标题文字样式
         self.navigationItem.title = @"事务";
@@ -149,10 +151,9 @@
         //                找出将要被覆盖的事务
         NSMutableString *sqlTime = [NSMutableString string];
         for (int i = 0; i < self.sectionArray.count; i++) {
-            [sqlTime appendString:[NSString stringWithFormat:@"time LIKE '%%%d%%' or ",[self.sectionArray[i] intValue]]];
+            [sqlTime appendString:[NSString stringWithFormat:@"time LIKE '%%,%d,%%' or ",[self.sectionArray[i] intValue]]];
         }
         sqlTime = (NSMutableString*)[sqlTime substringToIndex:sqlTime.length - 3];
-//        [dbManger beginTransaction];
         //往后五年的每一条数据都要拿出来剔除覆盖
         for (int i = 0; i < dateString.count; i ++) {
             NSString *sql = [NSString stringWithFormat:@"SELECT * FROM t_201601 WHERE date = '%@' and (%@);",dateString[i],sqlTime];
@@ -176,11 +177,8 @@
                         [dbManger beginTransaction];
                         for (int k = 0; k < sections.count; k++) {
                             NSMutableArray *newSection = sections[k];
-                            NSMutableString *newTimeStr = [[NSMutableString alloc] initWithCapacity:5];
-                            for (int l = 0; l < newSection.count; l++) {
-                                [newTimeStr appendFormat:@"%@、",newSection[l]];
-                            }
-                            NSString *sql = [NSString stringWithFormat:@"INSERT INTO t_201601 (description,comment,week,weekday,date,time,repeat,overlap) VALUES ('%@','%@','','','%@','%@',6 ,0);",model.desc,model.comment,dateString[i],newTimeStr];//一律改成不重复
+                            NSString *newTimeStr = [self appendStringWithArray:newSection];
+                            NSString *sql = [NSString stringWithFormat:@"INSERT INTO t_201601 (description,comment,date,time,repeat,overlap) VALUES ('%@','%@','%@','%@',6 ,0);",model.desc,model.comment,dateString[i],newTimeStr];//一律改成不重复
                             [dbManger executeNonQuery:sql];
                         }
                         [dbManger commitTransaction];
@@ -191,19 +189,14 @@
                 [dbManger executeNonQuery:deleteSql];
             }
         }
-//        [dbManger commitTransaction];
-
         //插入新事务
         [dbManger beginTransaction];
         NSInteger timeArrCount = [self.sections count];
         for (int i = 0; i <timeArrCount; i ++) {
             NSMutableArray *section = self.sections[i];
-            NSMutableString *timeStr = [[NSMutableString alloc] initWithCapacity:5];
-            for (int j = 0; j < section.count; j++) {
-                [timeStr appendFormat:@"%@、",section[j]];
-            }
+            NSString *timeStr = [self appendStringWithArray:section];
             for (int k = 0; k < dateString.count; k ++) {
-                NSString *sql = [NSString stringWithFormat:@"INSERT INTO t_201601 (description,comment,week,weekday,date,time,repeat,overlap) VALUES ('%@','%@','','','%@','%@',%ld ,0);",self.busDescription.text,self.commentInfo,dateString[k],timeStr,self.repeatIndex];//注意VALUES字符串赋值要有单引号
+                NSString *sql = [NSString stringWithFormat:@"INSERT INTO t_201601 (description,comment,date,time,repeat,overlap) VALUES ('%@','%@','%@','%@',%ld ,0);",self.busDescription.text,self.commentInfo,dateString[k],timeStr,self.repeatIndex];//注意VALUES字符串赋值要有单引号
                 [dbManger executeNonQuery:sql];
             }
         }
@@ -214,8 +207,6 @@
             [self.navigationController popViewControllerAnimated:YES];
         });
     });
-    
-    [self.navigationController popViewControllerAnimated:YES];
 }
 
 - (void)cancel{
@@ -230,6 +221,15 @@
         UIAlertController *alert = [UIAlertController alertControllerWithTitle:@"确认退出？" message:@"一旦退出，编辑将不会保存" preferredStyle:UIAlertControllerStyleAlert cancelTitle:@"取消" cancelBlock:nil otherTitles:@[@"确定"] otherBlocks:otherBlocks];
         [self presentViewController:alert animated:YES completion:nil];
 //    }
+}
+
+- (NSString *)appendStringWithArray:(NSMutableArray *)array{
+    NSMutableString *str = [[NSMutableString alloc] initWithCapacity:2];
+    [str appendString:@","];
+    for (int i = 0; i < array.count; i++) {
+        [str appendFormat:@"%@,",array[i]];
+    }
+    return str;
 }
 
 - (void)didReceiveMemoryWarning {
@@ -569,7 +569,7 @@
     //文本框内的文字距离左边框的距离
     _commentfield.leftView = [[UIView alloc]initWithFrame:CGRectMake(0, 0, 8, 1)];
     _commentfield.leftViewMode = UITextFieldViewModeAlways;
-    _commentfield.text = self.busModel.comment;
+    _commentfield.text = self.commentInfo;
     [_commentsField_view addSubview:_commentfield];
     [_commentfield mas_makeConstraints:^(MASConstraintMaker *make) {
         make.centerX.equalTo(_commentsField_view.mas_centerX);
@@ -654,10 +654,10 @@
     if (_busModel.repeat.intValue == 6) {//不重复
         NSArray *otherTitles = @[@"确认"];
         void (^confirmBlock)(UIAlertAction *action) = ^(UIAlertAction *action){
-            NSString *sql = [NSString stringWithFormat:@"DELETE from t_201601 where description = '%@' and comment = '%@' and date = '%@' and time = '%@' and repeat = %@ and overlap = %@;",_busModel.desc,_busModel.comment,_busModel.date,_busModel.time,_busModel.repeat,_busModel.overlap];
+            NSString *sql = [NSString stringWithFormat:@"DELETE from t_201601 where description = '%@' and comment = '%@' and date = '%@' and time = '%@' and repeat = %@;",_busModel.desc,_busModel.comment,_busModel.date,_busModel.time,_busModel.repeat];
             [dbManger executeNonQuery:sql];
+            [self.delegate deleteBusiness:self];
             [self.navigationController popViewControllerAnimated:YES];
-            
         };
         NSArray *otherBlocks = @[confirmBlock];
         UIAlertController *alert = [UIAlertController alertControllerWithTitle:@"确认删除本次事务？" message:@"本次删除不可逆" preferredStyle:UIAlertControllerStyleAlert cancelTitle:@"取消" cancelBlock:nil otherTitles:otherTitles otherBlocks:otherBlocks];
@@ -665,23 +665,24 @@
     }else{
         NSArray *otherTitles = @[@"仅删除本次事件",@"删除将来所有事件"];
         void (^confirmBlock1)(UIAlertAction *action) = ^(UIAlertAction *action){
-            NSString *sql = [NSString stringWithFormat:@"DELETE from t_201601 where description = '%@' and comment = '%@' and date = '%@' and time = '%@' and repeat = %@ and overlap = %@;",_busModel.desc,_busModel.comment,_busModel.date,_busModel.time,_busModel.repeat,_busModel.overlap];
+            NSString *sql = [NSString stringWithFormat:@"DELETE from t_201601 where description = '%@' and comment = '%@' and date = '%@' and time = '%@' and repeat = %@;",_busModel.desc,_busModel.comment,_busModel.date,_busModel.time,_busModel.repeat];
             [dbManger executeNonQuery:sql];
             [self.navigationController popViewControllerAnimated:YES];
         };
         void (^confirmBlock2)(UIAlertAction *action) = ^(UIAlertAction *action){
             dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
                 [dbManger beginTransaction];
-                NSString *sql = [NSString stringWithFormat:@"DELETE from t_201601 where description = '%@' and comment = '%@'  and time = '%@' and repeat = %@ and overlap = %@;",_busModel.desc,_busModel.comment,_busModel.time,_busModel.repeat,_busModel.overlap];
+                NSString *sql = [NSString stringWithFormat:@"DELETE from t_201601 where description = '%@' and comment = '%@'  and time = '%@' and repeat = %@;",_busModel.desc,_busModel.comment,_busModel.time,_busModel.repeat];
                 [dbManger executeNonQuery:sql];
                 [dbManger commitTransaction];
                 dispatch_async(dispatch_get_main_queue(), ^{
+                    [self.delegate deleteBusiness:self];
                     [self.navigationController popViewControllerAnimated:YES];
                 });
             });
         };
         NSArray *otherBlocks = @[confirmBlock1,confirmBlock2];
-        UIAlertController *alert = [UIAlertController alertControllerWithTitle:@"此为重复事件" message:@"请选择您需要删除的类型" preferredStyle:UIAlertControllerStyleAlert cancelTitle:nil cancelBlock:nil otherTitles:otherTitles otherBlocks:otherBlocks];
+        UIAlertController *alert = [UIAlertController alertControllerWithTitle:@"此为重复事件" message:@"请选择您需要删除的类型" preferredStyle:UIAlertControllerStyleAlert cancelTitle:@"取消" cancelBlock:nil otherTitles:otherTitles otherBlocks:otherBlocks];
         [self presentViewController:alert animated:YES completion:nil];
     }
 }

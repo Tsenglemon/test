@@ -6,11 +6,16 @@
 //  Copyright © 2017年 commet. All rights reserved.
 //
 
-#import <UIKit/UIKit.h>
+#import "PublicTemplateCell.h"
+@class DaySelectCell;
+@protocol DaySelectCellDelegate <NSObject>
+//传回当前选中的indexpath
+- (void)DaySelectCell:(DaySelectCell*)cell selectIndex:(NSIndexPath *)indexPath;
+@end
 
-@interface DaySelectCell : UITableViewCell
+@interface DaySelectCell : PublicTemplateCell
+@property (nonatomic , weak) id <DaySelectCellDelegate> delegate;
 
-@property (nonatomic , weak)UIButton *choiceBtn;
-@property (nonatomic , strong)UILabel *item;
++ (instancetype)DaySelectCellWithTableView:(UITableView *)tableview;
 
 @end
