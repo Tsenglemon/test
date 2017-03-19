@@ -11,14 +11,6 @@
 #import "Masonry.h"
 
 #define kScreenWidth [UIApplication sharedApplication].keyWindow.bounds.size.width
-#define kScreenHeight [UIApplication sharedApplication].keyWindow.bounds.size.height
-
-#define scaleToHeight [UIApplication sharedApplication].keyWindow.bounds.size.height/1334.0
-#define scaleToWidth [UIApplication sharedApplication].keyWindow.bounds.size.width/750.0
-#define fontScale [UIApplication sharedApplication].keyWindow.bounds.size.width/375.0
-
-
-
 @implementation businessviewcell
 
 -(instancetype)initWithFrame:(CGRect)frame andNSArray:(NSArray *)array
@@ -36,7 +28,7 @@
                 make.height.mas_equalTo(0.5);
                 make.width.mas_equalTo(500.0 / 750.0 * kScreenWidth);
                 make.centerX.equalTo(weakself.mas_centerX);
-                make.top.equalTo(weakself.mas_top).offset(80.0 / 1334.0 * kScreenHeight * (i+1));
+                make.top.equalTo(weakself.mas_top).offset(40*(i+1));
             }];
             
             UIImageView *arrow = [[UIImageView alloc] init];
@@ -53,7 +45,7 @@
                 iconview.image = [UIImage imageNamed:array[i]];
                 [self addSubview:iconview];
                 [iconview mas_makeConstraints:^(MASConstraintMaker *make) {
-                    make.right.equalTo(horizonline.mas_left).offset(-24.0 * scaleToWidth);
+                    make.right.equalTo(horizonline.mas_left).offset(-12);
                     make.bottom.equalTo(horizonline.mas_bottom);
                 }];
             }
@@ -65,24 +57,23 @@
             [self addSubview:iconview];
             __weak typeof(self) weakself = self;
             [iconview mas_makeConstraints:^(MASConstraintMaker *make) {
-                make.right.equalTo(weakself.mas_centerX).offset(-(250.0 + 24.0) * scaleToWidth);
+                make.right.equalTo(weakself.mas_centerX).offset(-(250.0 + 24.0)/2);
                 make.centerY.equalTo(weakself.mas_centerY);
             }];
         }
         
         UIButton *button1 = [[UIButton alloc] init];
         _button1 = button1;
-        //title是随便设的，从coursetimecell拷贝过来的代码
-        [_button1 setTitle:@"选择时间" forState:UIControlStateNormal];//默认文案什么颜色呀
+        [_button1 setTitle:@"选择时间" forState:UIControlStateNormal];
         [_button1 setTitleColor:[Utils colorWithHexString:@"#333333"] forState:UIControlStateNormal];
-        _button1.titleLabel.font = [UIFont systemFontOfSize:14 * fontScale];
+        _button1.titleLabel.font = [UIFont systemFontOfSize:14];
         _button1.contentVerticalAlignment =UIControlContentVerticalAlignmentBottom;
         [self addSubview:_button1];
         __weak typeof(self) weakself = self;
         [_button1 mas_makeConstraints:^(MASConstraintMaker *make) {
             make.width.mas_equalTo(500.0 / 750.0 * kScreenWidth);
-            make.height.mas_equalTo(80.0 / 1334.0 * kScreenHeight);
-            make.bottom.equalTo(weakself.mas_top).offset(80.0 * scaleToHeight);
+            make.height.mas_equalTo(40);
+            make.bottom.equalTo(weakself.mas_top).offset(40);
             make.centerX.equalTo(weakself.mas_centerX);
         }];
         
@@ -92,13 +83,13 @@
          //title是随便设的，coursetimecell拷贝过来的代码
         [_button2 setTitle:@"第几节，选择时间" forState:UIControlStateNormal];
         [_button2 setTitleColor:[Utils colorWithHexString:@"#333333"] forState:UIControlStateNormal];
-        _button2.titleLabel.font = [UIFont systemFontOfSize:14 * fontScale];
+        _button2.titleLabel.font = [UIFont systemFontOfSize:14];
         _button2.contentVerticalAlignment =UIControlContentVerticalAlignmentBottom;
         [self addSubview:_button2];
         [_button2 mas_makeConstraints:^(MASConstraintMaker *make) {
             make.width.mas_equalTo(500.0 / 750.0 * kScreenWidth);
-            make.height.mas_equalTo(80.0 / 1334.0 * kScreenHeight);
-            make.bottom.equalTo(weakself.mas_top).offset(160.0 *scaleToHeight);
+            make.height.mas_equalTo(40);
+            make.bottom.equalTo(weakself.mas_top).offset(80);
             make.centerX.equalTo(weakself.mas_centerX);
         }];
         

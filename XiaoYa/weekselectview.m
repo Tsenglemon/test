@@ -13,14 +13,8 @@
 
 #define kScreenWidth [UIApplication sharedApplication].keyWindow.bounds.size.width
 #define kScreenHeight [UIApplication sharedApplication].keyWindow.bounds.size.height
-
-#define scaletoheight [UIApplication sharedApplication].keyWindow.bounds.size.height/1334.0
 #define scaletowidth [UIApplication sharedApplication].keyWindow.bounds.size.width/750.0
-#define fontscale [UIApplication sharedApplication].keyWindow.bounds.size.width/375.0
 
-#define marginX (95-60)/2*scaletowidth
-#define marginY 14*scaletoheight
-#define weeknumwidth 60*scaletowidth
 @interface weekselectview()
 @property (nonatomic,weak) UIButton *singleweek;
 @property (nonatomic,weak) UIButton *doubleweek;
@@ -33,11 +27,19 @@
 @end
 
 @implementation weekselectview
+{
+    CGFloat marginX;
+    CGFloat marginY;
+    CGFloat weeknumwidth;
+}
 - (instancetype)initWithFrame:(CGRect)frame andWeekSelect:(NSArray *)showweek indexSection:(NSInteger)section{
     if(self = [super initWithFrame:frame]){
         self.layer.cornerRadius = 10;
         self.backgroundColor = [Utils colorWithHexString:@"#FFFFFF"];
         self.whichSection = section;
+        marginX = 8.75;
+        marginY = 7;
+        weeknumwidth = 30;
         
         [self segmentSetting];
         [self setWeekBtn:showweek];
@@ -54,24 +56,24 @@
     [self addSubview:weekchoice];
     __weak typeof(self) weakself= self;
     [weekchoice mas_makeConstraints:^(MASConstraintMaker *make) {
-        make.edges.equalTo(weakself).with.insets(UIEdgeInsetsMake(78.0*scaletoheight, 40*scaletowidth, (601.0-78.0-66.0)*scaletoheight, 40*scaletowidth));
+        make.size.mas_equalTo(CGSizeMake(225, 33));
+        make.centerX.equalTo(weakself.mas_centerX);
+        make.top.equalTo(weakself).offset(39);
     }];
-    
     UIView *verticallin1 = [[UIView alloc]init];
     verticallin1.backgroundColor = [Utils colorWithHexString:@"#39B9F8"];
     [weekchoice addSubview:verticallin1];
     [verticallin1 mas_makeConstraints:^(MASConstraintMaker *make) {
-        make.size.mas_equalTo(CGSizeMake(1, 66.0*scaletoheight));
-        make.left.equalTo(weekchoice.mas_left).offset(150.0*scaletowidth);
+        make.size.mas_equalTo(CGSizeMake(1, 33));
+        make.left.equalTo(weekchoice.mas_left).offset(75);
         make.top.equalTo(weekchoice.mas_top);
     }];
-    
     UIView *verticallin2 = [[UIView alloc]init];
     verticallin2.backgroundColor = [Utils colorWithHexString:@"#39B9F8"];
     [weekchoice addSubview:verticallin2];
     [verticallin2 mas_makeConstraints:^(MASConstraintMaker *make) {
-        make.size.mas_equalTo(CGSizeMake(1, 66.0*scaletoheight));
-        make.left.equalTo(verticallin1.mas_left).offset(150.0*scaletowidth);
+        make.size.mas_equalTo(CGSizeMake(1, 33));
+        make.left.equalTo(verticallin1.mas_left).offset(75);
         make.top.equalTo(weekchoice.mas_top);
     }];
     
@@ -80,13 +82,13 @@
     [_singleweek setTitle:@"单周" forState:UIControlStateNormal];
     [_singleweek setTitleColor:[Utils colorWithHexString:@"#39B9F8"] forState:UIControlStateNormal];
     [_singleweek setTitleColor:[UIColor whiteColor] forState:UIControlStateSelected];
-    _singleweek.titleLabel.font = [UIFont systemFontOfSize:17.0*fontscale];
+    _singleweek.titleLabel.font = [UIFont systemFontOfSize:17.0];
     _singleweek.tag = 111;
     [_singleweek addTarget:self action:@selector(weekchoicebtnclick:) forControlEvents:UIControlEventTouchUpInside];
     [_singleweek setBackgroundImage:[UIImage imageNamed:@"单双周"] forState:UIControlStateSelected];
     [weekchoice addSubview:_singleweek];
     [_singleweek mas_makeConstraints:^(MASConstraintMaker *make) {
-        make.size.mas_equalTo(CGSizeMake(150.0*scaletowidth, 66.0*scaletoheight));
+        make.size.mas_equalTo(CGSizeMake(75, 33));
         make.left.equalTo(weekchoice.mas_left);
         make.top.equalTo(weekchoice.mas_top);
     }];
@@ -96,14 +98,14 @@
     [doubleweek setTitle:@"双周" forState:UIControlStateNormal];
     [doubleweek setTitleColor:[Utils colorWithHexString:@"#39B9F8"] forState:UIControlStateNormal];
     [doubleweek setTitleColor:[UIColor whiteColor] forState:UIControlStateSelected];
-    doubleweek.titleLabel.font = [UIFont systemFontOfSize:17.0*fontscale];
+    doubleweek.titleLabel.font = [UIFont systemFontOfSize:17.0];
     doubleweek.tag = 222;
     [doubleweek addTarget:self action:@selector(weekchoicebtnclick:) forControlEvents:UIControlEventTouchUpInside];
     [doubleweek setBackgroundImage:[UIImage imageNamed:@"单双周"] forState:UIControlStateSelected];
     [weekchoice addSubview:doubleweek];
     [doubleweek mas_makeConstraints:^(MASConstraintMaker *make) {
-        make.size.mas_equalTo(CGSizeMake(150.0*scaletowidth, 66.0*scaletoheight));
-        make.left.equalTo(singleweek.mas_left).offset(150.0*scaletowidth);
+        make.size.mas_equalTo(CGSizeMake(75, 33));
+        make.left.equalTo(singleweek.mas_right);
         make.top.equalTo(weekchoice.mas_top);
     }];
     
@@ -112,14 +114,14 @@
     [allweek setTitle:@"全选" forState:UIControlStateNormal];
     [allweek setTitleColor:[Utils colorWithHexString:@"#39B9F8"] forState:UIControlStateNormal];
     [allweek setTitleColor:[UIColor whiteColor] forState:UIControlStateSelected];
-    allweek.titleLabel.font = [UIFont systemFontOfSize:17.0*fontscale];
+    allweek.titleLabel.font = [UIFont systemFontOfSize:17.0];
     allweek.tag = 333;
     [allweek addTarget:self action:@selector(weekchoicebtnclick:) forControlEvents:UIControlEventTouchUpInside];
     [allweek setBackgroundImage:[UIImage imageNamed:@"单双周"] forState:UIControlStateSelected];
     [weekchoice addSubview:allweek];
     [allweek mas_makeConstraints:^(MASConstraintMaker *make) {
-        make.size.mas_equalTo(CGSizeMake(150.0*scaletowidth, 66.0*scaletoheight));
-        make.left.equalTo(doubleweek.mas_left).offset(150.0*scaletowidth);
+        make.size.mas_equalTo(CGSizeMake(75, 33));
+        make.left.equalTo(doubleweek.mas_right);
         make.top.equalTo(weekchoice.mas_top);
     }];
 }
@@ -132,7 +134,7 @@
     __weak typeof(self) weakself= self;
     [btnview mas_makeConstraints:^(MASConstraintMaker *make) {
         make.centerX.equalTo(weakself.mas_centerX);
-        make.centerY.equalTo(weakself.mas_centerY).offset(30*scaletoheight);
+        make.top.equalTo(_singleweek.mas_bottom).offset(25);
         make.width.mas_equalTo(marginX*5+weeknumwidth*6);
         make.height.mas_equalTo(marginY*3+weeknumwidth*4);
     }];
@@ -142,7 +144,7 @@
     for(int i=0 ; i< 4 ; i++){
         for(int j = 0; j<6 ;j++){
             UIButton *weekbtn = [[UIButton alloc] initWithFrame:CGRectMake(j*(marginX+weeknumwidth), i*(marginY+weeknumwidth), weeknumwidth, weeknumwidth)];
-            weekbtn.titleLabel.font = [UIFont systemFontOfSize:14*fontscale];
+            weekbtn.titleLabel.font = [UIFont systemFontOfSize:14];
             [weekbtn setTitle:[NSString stringWithFormat:@"%i",i*6+j+1] forState:UIControlStateNormal];
             [weekbtn setTitleColor:[Utils colorWithHexString:@"#666666"] forState:UIControlStateNormal];
             [weekbtn setTitleColor:[Utils colorWithHexString:@"#FFFFFF"] forState:UIControlStateSelected];
@@ -167,17 +169,17 @@
     __weak typeof(self) weakself= self;
     [line1 mas_makeConstraints:^(MASConstraintMaker *make) {
         make.width.equalTo(weakself.mas_width);
-        make.height.mas_equalTo(1);
+        make.height.mas_equalTo(0.5);
         make.centerX.equalTo(weakself.mas_centerX);
-        make.bottom.equalTo(weakself.mas_bottom).offset(-78*scaletoheight);
+        make.bottom.equalTo(weakself.mas_bottom).offset(-39);
     }];
     
     UIView *line2 = [[UIView alloc] init];//竖线
     line2.backgroundColor = [Utils colorWithHexString:@"#D9D9D9"];
     [self addSubview: line2];
     [line2 mas_makeConstraints:^(MASConstraintMaker *make) {
-        make.width.mas_equalTo(1);
-        make.height.mas_equalTo(78*scaletoheight);
+        make.width.mas_equalTo(0.5);
+        make.height.mas_equalTo(39);
         make.centerX.equalTo(weakself.mas_centerX);
         make.bottom.equalTo(weakself.mas_bottom);
     }];
@@ -187,10 +189,10 @@
     _cancel_btn=cancel_btn;
     [_cancel_btn setTitle:@"取消" forState:UIControlStateNormal];
     [_cancel_btn setTitleColor:[Utils colorWithHexString:@"#00A7FA"] forState:UIControlStateNormal];
-    _cancel_btn.titleLabel.font = [UIFont systemFontOfSize:13*fontscale];
+    _cancel_btn.titleLabel.font = [UIFont systemFontOfSize:13];
     [self addSubview:_cancel_btn];
     [_cancel_btn mas_makeConstraints:^(MASConstraintMaker *make) {
-        make.height.mas_equalTo(78*scaletoheight);
+        make.height.mas_equalTo(39);
         make.width.mas_equalTo(weakself.frame.size.width/2);
         make.right.equalTo(line2.mas_left);
         make.top.equalTo(line1.mas_bottom);
@@ -200,10 +202,10 @@
     _confirm_btn=confirm_btn;
     [_confirm_btn setTitle:@"确认" forState:UIControlStateNormal];
     [_confirm_btn setTitleColor:[Utils colorWithHexString:@"#00A7FA"] forState:UIControlStateNormal];
-    _confirm_btn.titleLabel.font = [UIFont systemFontOfSize:13*fontscale];
+    _confirm_btn.titleLabel.font = [UIFont systemFontOfSize:13];
     [self addSubview:_confirm_btn];
     [_confirm_btn mas_makeConstraints:^(MASConstraintMaker *make) {
-        make.height.mas_equalTo(78*scaletoheight);
+        make.height.mas_equalTo(39);
         make.width.mas_equalTo(weakself.frame.size.width/2);
         make.left.equalTo(line2.mas_right);
         make.top.equalTo(line1.mas_bottom);

@@ -9,7 +9,7 @@
 #import <Foundation/Foundation.h>
 
 @interface BusinessModel : NSObject
-@property (nonatomic, copy)   NSString *dataid;
+//@property (nonatomic, copy)   NSString *dataid;
 @property (nonatomic, copy)   NSString *desc;                 //描述
 @property (nonatomic, copy)   NSString *comment;              //备注
 @property (nonatomic, copy)   NSString *date;                 //日期yyyymmdd
@@ -20,4 +20,5 @@
 
 @property (nonatomic ,assign) BOOL intersects;//是否和课程有交集
 - (id)initWithDict:(NSDictionary *)dic;
++ (instancetype)defaultModel;
 @end

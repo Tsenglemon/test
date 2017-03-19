@@ -59,75 +59,76 @@
 //课程和事务公用这两个按钮
 - (void)confirm{
     if (_segCtrl.selectedSegmentIndex == 0) {//如果是事务界面。在这个类文件里面执行的，都是直接插入数据而不是修改原有数据的
-        dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
-            DbManager *dbManger = [DbManager shareInstance];
-            NSInteger dateDistance = [DateUtils dateDistanceFromDate:_bsVc.currentDate toDate:self.firstDateOfTerm];
-            NSInteger week = dateDistance / 7;//存入数据库的week从0-n；
-            //储存往后五年的时间
-            NSMutableArray *dateString = [Utils dateStringArrayFromDate:_bsVc.currentDate yearDuration:5 repeatIndex:_bsVc.repeatIndex];
-            //修改覆盖数据
-            if (_bsVc.sectionArray.count > 0) {
-//                找出将要被覆盖的事务
-                NSMutableString *sqlTime = [NSMutableString string];
-                for (int i = 0; i < _bsVc.sectionArray.count; i++) {
-                    [sqlTime appendString:[NSString stringWithFormat:@"time LIKE '%%,%d,%%' or ",[_bsVc.sectionArray[i] intValue]]];
-                }
-                sqlTime = (NSMutableString*)[sqlTime substringToIndex:sqlTime.length - 3];
-                //往后五年的每一条数据都要拿出来剔除覆盖
-                for (int i = 0; i < dateString.count; i ++) {
-                    NSString *sql = [NSString stringWithFormat:@"SELECT * FROM t_201601 WHERE date = '%@' and (%@);",dateString[i],sqlTime];
-                    NSArray *dataQuery = [dbManger executeQuery:sql];
-                    if (dataQuery.count > 0) {
-                        for (int j = 0; j < dataQuery.count ; j++) {
-                            //转换成模型
-                            NSMutableDictionary *busDict = [NSMutableDictionary dictionaryWithDictionary:dataQuery[j]];
-                            BusinessModel *model = [[BusinessModel alloc] initWithDict:busDict];
-                            //每条事务数据，删去重复的时间段（被覆盖掉了）得到新的事务时间段
-                            NSMutableArray *tempArray = [model.timeArray mutableCopy];
-                            for (int k = 0 ; k < _bsVc.sectionArray.count; k++) {
-                                if ([tempArray containsObject:_bsVc.sectionArray[k]]) {
-                                    [tempArray removeObject:_bsVc.sectionArray[k]];
-                                }
-                            }
-                            if (tempArray.count != 0) {//tempArray.count=0意味着现事务把原事务整个都覆盖掉了，所以原事务直接删
-                                //对新的事务节数时间段进行连续性分割
-                                NSMutableArray *sections = [Utils subSectionArraysFromArray:tempArray];
-                                //然后插入更新后的事务
-                                [dbManger beginTransaction];
-                                for (int k = 0; k < sections.count; k++) {
-                                    NSMutableArray *newSection = sections[k];
-                                    NSString *newTimeStr = [self appendStringWithArray:newSection];
-                                    NSString *sql = [NSString stringWithFormat:@"INSERT INTO t_201601 (description,comment,date,time,repeat,overlap) VALUES ('%@','%@','%@','%@',6 ,0);",model.desc,model.comment,dateString[i],newTimeStr];//一律改成不重复
-                                    [dbManger executeNonQuery:sql];
-                                }
-                                [dbManger commitTransaction];
-                            }
-                        }
-                        //删除旧的事务数据
-                        NSString *deleteSql = [NSString stringWithFormat:@"DELETE FROM t_201601 WHERE date = '%@' and (%@);",dateString[i],sqlTime];
-                        [dbManger executeNonQuery:deleteSql];
-                    }
-                }
-            }
-            
-            //插入新事务
-            [dbManger beginTransaction];
-            NSInteger timeArrCount = [_bsVc.sections count];
-            for (int i = 0; i <timeArrCount; i ++) {
-                NSMutableArray *section = _bsVc.sections[i];
-                NSString *timeStr = [self appendStringWithArray:section];
-                for (int k = 0; k < dateString.count; k ++) {
-                    NSString *sql = [NSString stringWithFormat:@"INSERT INTO t_201601 (description,comment,date,time,repeat,overlap) VALUES ('%@','%@','%@','%@',%ld ,0);",_bsVc.busDescription.text,_bsVc.commentInfo,dateString[k],timeStr,_bsVc.repeatIndex];//注意VALUES字符串赋值要有单引号
-                    [dbManger executeNonQuery:sql];
-                }
-            }
-            [dbManger commitTransaction];
-            
-            dispatch_async(dispatch_get_main_queue(), ^{
-                [self.delegate BusinessCourseManage:self week:week];
-                [self.navigationController popViewControllerAnimated:YES];
-            });
-        });
+        [_bsVc dataStore];
+//        dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
+//            DbManager *dbManger = [DbManager shareInstance];
+//            NSInteger dateDistance = [DateUtils dateDistanceFromDate:_bsVc.currentDate toDate:self.firstDateOfTerm];
+//            NSInteger week = dateDistance / 7;//存入数据库的week从0-n；
+//            //储存往后五年的时间
+//            NSMutableArray *dateString = [Utils dateStringArrayFromDate:_bsVc.currentDate yearDuration:5 repeatIndex:_bsVc.repeatIndex];
+//            //修改覆盖数据
+//            if (_bsVc.sectionArray.count > 0) {
+////                找出将要被覆盖的事务
+//                NSMutableString *sqlTime = [NSMutableString string];
+//                for (int i = 0; i < _bsVc.sectionArray.count; i++) {
+//                    [sqlTime appendString:[NSString stringWithFormat:@"time LIKE '%%,%d,%%' or ",[_bsVc.sectionArray[i] intValue]]];
+//                }
+//                sqlTime = (NSMutableString*)[sqlTime substringToIndex:sqlTime.length - 3];
+//                //往后五年的每一条数据都要拿出来剔除覆盖
+//                for (int i = 0; i < dateString.count; i ++) {
+//                    NSString *sql = [NSString stringWithFormat:@"SELECT * FROM t_201601 WHERE date = '%@' and (%@);",dateString[i],sqlTime];
+//                    NSArray *dataQuery = [dbManger executeQuery:sql];
+//                    if (dataQuery.count > 0) {
+//                        for (int j = 0; j < dataQuery.count ; j++) {
+//                            //转换成模型
+//                            NSMutableDictionary *busDict = [NSMutableDictionary dictionaryWithDictionary:dataQuery[j]];
+//                            BusinessModel *model = [[BusinessModel alloc] initWithDict:busDict];
+//                            //每条事务数据，删去重复的时间段（被覆盖掉了）得到新的事务时间段
+//                            NSMutableArray *tempArray = [model.timeArray mutableCopy];
+//                            for (int k = 0 ; k < _bsVc.sectionArray.count; k++) {
+//                                if ([tempArray containsObject:_bsVc.sectionArray[k]]) {
+//                                    [tempArray removeObject:_bsVc.sectionArray[k]];
+//                                }
+//                            }
+//                            if (tempArray.count != 0) {//tempArray.count=0意味着现事务把原事务整个都覆盖掉了，所以原事务直接删
+//                                //对新的事务节数时间段进行连续性分割
+//                                NSMutableArray *sections = [Utils subSectionArraysFromArray:tempArray];
+//                                //然后插入更新后的事务
+//                                [dbManger beginTransaction];
+//                                for (int k = 0; k < sections.count; k++) {
+//                                    NSMutableArray *newSection = sections[k];
+//                                    NSString *newTimeStr = [self appendStringWithArray:newSection];
+//                                    NSString *sql = [NSString stringWithFormat:@"INSERT INTO t_201601 (description,comment,date,time,repeat) VALUES ('%@','%@','%@','%@',6);",model.desc,model.comment,dateString[i],newTimeStr];//一律改成不重复
+//                                    [dbManger executeNonQuery:sql];
+//                                }
+//                                [dbManger commitTransaction];
+//                            }
+//                        }
+//                        //删除旧的事务数据
+//                        NSString *deleteSql = [NSString stringWithFormat:@"DELETE FROM t_201601 WHERE date = '%@' and (%@);",dateString[i],sqlTime];
+//                        [dbManger executeNonQuery:deleteSql];
+//                    }
+//                }
+//            }
+//            
+//            //插入新事务
+//            [dbManger beginTransaction];
+//            NSInteger timeArrCount = [_bsVc.sections count];
+//            for (int i = 0; i <timeArrCount; i ++) {
+//                NSMutableArray *section = _bsVc.sections[i];
+//                NSString *timeStr = [self appendStringWithArray:section];
+//                for (int k = 0; k < dateString.count; k ++) {
+//                    NSString *sql = [NSString stringWithFormat:@"INSERT INTO t_201601 (description,comment,date,time,repeat) VALUES ('%@','%@','%@','%@',%ld);",_bsVc.busDescription.text,_bsVc.commentInfo,dateString[k],timeStr,_bsVc.repeatIndex];//注意VALUES字符串赋值要有单引号
+//                    [dbManger executeNonQuery:sql];
+//                }
+//            }
+//            [dbManger commitTransaction];
+//            
+//            dispatch_async(dispatch_get_main_queue(), ^{
+//                [self.delegate BusinessCourseManage:self week:week];
+//                [self.navigationController popViewControllerAnimated:YES];
+//            });
+//        });
     }else{//如果是课程界面
         [_courseVc dataStore];
 //        if([self checkIfConflict]){
@@ -260,42 +261,18 @@
     }
 }
 
-- (NSString *)appendStringWithArray:(NSMutableArray *)array{
-    NSMutableString *str = [[NSMutableString alloc] initWithCapacity:2];
-    [str appendString:@","];
-    for (int i = 0; i < array.count; i++) {
-        [str appendFormat:@"%@,",array[i]];
-    }
-    return str;
-}
-
-//检查_courseview_array里的课程是否有冲突（两两进行对比）
-- (BOOL)checkIfConflict
-{
-    if(_courseVc.courseview_array.count == 1) return NO;
-    for(int i = 0;i < _courseVc.courseview_array.count -1;i++){
-        CourseModel *firstCellModel = _courseVc.courseview_array[i];
-        for(int j = i + 1;j < _courseVc.courseview_array.count;j++){
-            CourseModel *secondCellModel = _courseVc.courseview_array[j];
-            if([firstCellModel checkIfConflictComparetoAnotherCourseModel:secondCellModel])
-                return YES;
-        }
-    }
-    return NO;
-}
-
 - (void)cancel{
     if (_segCtrl.selectedSegmentIndex == 0) {//如果是事务界面
-        if ([_bsVc.busDescription.text isEqualToString:@""]) {//如果描述没有输入就直接返回
-            [self.navigationController popViewControllerAnimated:YES];//返回主界面
-        }else{
+//        if ([_bsVc.busDescription.text isEqualToString:@""]) {//如果描述没有输入就直接返回
+//            [self.navigationController popViewControllerAnimated:YES];//返回主界面
+//        }else{
             void (^otherBlock)(UIAlertAction *action) = ^(UIAlertAction *action){
                 [self.navigationController popViewControllerAnimated:YES];
             };
             NSArray *otherBlocks = @[otherBlock];
             UIAlertController *alert = [UIAlertController alertControllerWithTitle:@"确认退出？" message:@"一旦退出，编辑将不会保存" preferredStyle:UIAlertControllerStyleAlert cancelTitle:@"取消" cancelBlock:nil otherTitles:@[@"确定"] otherBlocks:otherBlocks];
             [self presentViewController:alert animated:YES completion:nil];
-        }
+//        }
     }else{//如果是课程界面
 //        if ([_bsVc.busDescription.text isEqualToString:@""]) {//如果描述没有输入就直接返回
 //            [self.navigationController popViewControllerAnimated:YES];//返回主界面

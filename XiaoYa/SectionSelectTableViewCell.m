@@ -11,31 +11,27 @@
 #import "Utils.h"
 
 #define kScreenWidth [[UIScreen mainScreen] bounds].size.width
-#define kScreenHeight [[UIScreen mainScreen] bounds].size.height
-
 @interface SectionSelectTableViewCell()
 @property (nonatomic , weak)UILabel *time;
 @property (nonatomic , weak)UILabel *number;
 @property (nonatomic , weak)UILabel *event;
-//@property (nonatomic , assign)BOOL haveBusiness;//是否原有有事务
-@property (nonatomic , assign)BOOL isBusiness;//是否是事务（或事务+课程共同）
-
+@property (nonatomic ,weak)UIImageView *fold;
 @end
 
 @implementation SectionSelectTableViewCell
-- (void)setModel:(NSMutableArray *)model{
-    self.time.text = model[0];
-    self.number.text = model[1];
-    if (model.count > 2) {
-        self.event.text = model[2];
-        if (model.count > 3) {
-            self.isBusiness = YES;
-        }else{
-            self.isBusiness = NO;
-        }
-    }else{//课程、事务都没有
+- (void)setModel:(NSMutableDictionary *)model{
+    self.time.text = [model objectForKey:@"time"];
+    self.number.text = [model objectForKey:@"number"];
+    NSMutableDictionary *eventDict = [model objectForKey:@"eventDict"];
+    if ([eventDict objectForKey:@"business"]) {
+        self.event.text = [eventDict objectForKey:@"business"];
+    }else if ([eventDict objectForKey:@"course"]){
+        self.event.text = [eventDict objectForKey:@"course"];
+    }else{
         self.event.text = @"";
-        self.isBusiness = NO;
+    }
+    if (eventDict.count == 2) {
+        self.fold.hidden = NO;
     }
     __weak typeof(self)weakself = self;
     if ([self.number.text isEqual: @""]) {
@@ -62,7 +58,6 @@
     self = [super initWithStyle:style reuseIdentifier:reuseIdentifier];
     if (self) {
         [self initSubView];
-        self.isBusiness = NO;
     }
     return self;
 }
@@ -127,7 +122,7 @@
     [_mutipleChoice setImage:[UIImage imageNamed:@"选择节"] forState:UIControlStateSelected];
     [self.contentView addSubview:_mutipleChoice];
     [_mutipleChoice mas_makeConstraints:^(MASConstraintMaker *make) {
-        make.width.height.mas_equalTo(22);
+        make.width.height.mas_equalTo(40);
         make.centerY.equalTo(weakself.contentView.mas_centerY);
         make.right.equalTo(weakself.contentView.mas_right).offset(-5);
     }];
@@ -150,11 +145,13 @@
     }];
     //折角
     UIImageView *fold = [[UIImageView alloc]initWithImage:[UIImage imageNamed:@"折角"]];
-    [_conflict addSubview:fold];
+    [self.contentView addSubview:fold];
     [fold mas_makeConstraints:^(MASConstraintMaker *make) {
         make.right.top.equalTo(_conflict);
         make.width.height.mas_equalTo(12);
     }];
+    _fold = fold;
+    _fold.hidden = YES;
     _conflict.hidden = YES;
 }
 

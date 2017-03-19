@@ -11,10 +11,6 @@
 #import "Masonry.h"
 #import "DaySelectCell.h"
 
-#define scaletoheight [UIApplication sharedApplication].keyWindow.bounds.size.height/1334.0
-#define scaletowidth [UIApplication sharedApplication].keyWindow.bounds.size.width/750.0
-#define fontscale [UIApplication sharedApplication].keyWindow.bounds.size.width/375.0
-
 @interface dayselectview()<UITableViewDelegate,UITableViewDataSource,DaySelectCellDelegate>
 @property (nonatomic,weak) UIButton *cancel_btn;
 @property (nonatomic,weak) UIButton *confirm_btn;
@@ -52,8 +48,8 @@
     [_dayselect_tableview mas_makeConstraints:^(MASConstraintMaker *make) {
         make.centerX.equalTo(weakself.mas_centerX);
         make.top.equalTo(weakself.mas_top);
-        make.width.mas_equalTo(530.0*scaletowidth);
-        make.height.mas_equalTo((80.0*7)*scaletoheight);
+        make.width.mas_equalTo(265);
+        make.height.mas_equalTo(40*7);
     }];
 
     UIView *line = [[UIView alloc] init];
@@ -61,19 +57,28 @@
     [self addSubview: line];
     [line mas_makeConstraints:^(MASConstraintMaker *make) {
         make.width.mas_equalTo(1);
-        make.height.mas_equalTo(76*scaletoheight);
+        make.height.mas_equalTo(39);
         make.centerX.equalTo(weakself.mas_centerX);
         make.bottom.equalTo(weakself.mas_bottom);
+    }];
+    UIView *line2 = [[UIView alloc] init];
+    line2.backgroundColor = [Utils colorWithHexString:@"#D9D9D9"];
+    [self addSubview: line2];
+    [line2 mas_makeConstraints:^(MASConstraintMaker *make) {
+        make.width.mas_equalTo(weakself.mas_width);
+        make.height.mas_equalTo(1);
+        make.centerX.equalTo(weakself.mas_centerX);
+        make.bottom.equalTo(weakself.mas_bottom).offset(-39);
     }];
     
     UIButton *cancel_btn = [[UIButton alloc] init];
     _cancel_btn = cancel_btn;
     [_cancel_btn setTitle:@"取消" forState:UIControlStateNormal];
     [_cancel_btn setTitleColor:[Utils colorWithHexString:@"#00A7FA"] forState:UIControlStateNormal];
-    _cancel_btn.titleLabel.font = [UIFont systemFontOfSize:13*fontscale];
+    _cancel_btn.titleLabel.font = [UIFont systemFontOfSize:13];
     [self addSubview:_cancel_btn];
     [_cancel_btn mas_makeConstraints:^(MASConstraintMaker *make) {
-        make.height.mas_equalTo(76.0*scaletoheight);
+        make.height.mas_equalTo(39);
         make.width.mas_equalTo(weakself.frame.size.width/2);
         make.right.equalTo(line.mas_left);
         make.bottom.equalTo(weakself.mas_bottom);
@@ -83,10 +88,10 @@
     _confirm_btn=confirm_btn;
     [_confirm_btn setTitle:@"确认" forState:UIControlStateNormal];
     [_confirm_btn setTitleColor:[Utils colorWithHexString:@"#00A7FA"] forState:UIControlStateNormal];
-    _confirm_btn.titleLabel.font = [UIFont systemFontOfSize:13*fontscale];
+    _confirm_btn.titleLabel.font = [UIFont systemFontOfSize:13];
     [self addSubview:_confirm_btn];
     [_confirm_btn mas_makeConstraints:^(MASConstraintMaker *make) {
-        make.height.mas_equalTo(76.0*scaletoheight);
+        make.height.mas_equalTo(39);
         make.width.mas_equalTo(weakself.frame.size.width/2);
         make.left.equalTo(line.mas_right);
         make.bottom.equalTo(weakself.mas_bottom);
@@ -111,7 +116,7 @@
 }
 
 -(CGFloat)tableView:(UITableView *)tableView heightForRowAtIndexPath:(NSIndexPath *)indexPath{
-    return 80.0*scaletoheight;
+    return 40;
 }
 
 - (void)DaySelectCell:(DaySelectCell *)cell selectIndex:(NSIndexPath *)indexPath{

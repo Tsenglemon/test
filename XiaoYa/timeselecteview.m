@@ -17,12 +17,6 @@
 
 #define scaletoheight [UIApplication sharedApplication].keyWindow.bounds.size.height/1334.0
 #define scaletowidth [UIApplication sharedApplication].keyWindow.bounds.size.width/750.0
-#define fontscale [UIApplication sharedApplication].keyWindow.bounds.size.width/375.0
-
-#define marginX (95-60)/2*scaletowidth
-#define marginY 14*scaletoheight
-#define weeknumwidth 60*scaletowidth
-
 @interface timeselecteview()<UITableViewDelegate,UITableViewDataSource,TimeSelectedTableViewCellDelegate>
 @property (nonatomic,weak) UIView* titleview; //顶部蓝色块和内部星期几的标签
 @property (nonatomic,weak) UIButton *cancel_btn;
@@ -30,8 +24,7 @@
 @property (nonatomic,weak) UILabel *today;
 @property (nonatomic,weak) UITableView *timetable;
 
-@property (nonatomic,strong) NSMutableArray *timeData;
-//@property (nonatomic,strong) NSMutableArray *busyTimeCourseName;//装数据库里查找的冲突的课程name标签(一维的，拼接好的了string)
+@property (nonatomic,strong) NSMutableArray *timeData;//这里后来想想改成储存字典比较好，而不是直接储存array
 @property (nonatomic,assign) NSInteger whichSection;
 @property (strong, nonatomic) NSMutableArray *selectIndexs;//现多选选中的行
 @property (nonatomic ,assign) NSInteger selectedWeekday;//现在选择的是星期几
@@ -152,15 +145,14 @@
     __weak typeof(self) weakself = self;
     [_titleview mas_makeConstraints:^(MASConstraintMaker *make) {
         make.top.and.width.centerX.equalTo(weakself);
-        make.height.mas_equalTo(134*scaletoheight);
+        make.height.mas_equalTo(67);
     }];
     
     UILabel *today = [[UILabel alloc] init];
     _today = today;
     [_today setTextColor:[Utils colorWithHexString:@"#FFFFFF"]];
     [_today setTextAlignment:NSTextAlignmentCenter];
-    [_today setFont:[UIFont systemFontOfSize:30*fontscale]];
-//    _today.text = @"星期几";
+    [_today setFont:[UIFont systemFontOfSize:30]];
     [_titleview addSubview:_today];
     [_today mas_makeConstraints:^(MASConstraintMaker *make) {
         make.centerX.and.centerY.equalTo(_titleview);
@@ -175,7 +167,7 @@
     [timetable mas_makeConstraints:^(MASConstraintMaker *make) {
         make.top.equalTo(_titleview.mas_bottom);
         make.width.and.centerX.equalTo(weakself);
-        make.height.mas_equalTo((716-134-76)*scaletoheight);
+        make.height.mas_equalTo((716-134-76)/2);
     }];
     
     UIView *line1 = [[UIView alloc] init];//横线
@@ -185,14 +177,14 @@
         make.width.equalTo(weakself.mas_width);
         make.height.mas_equalTo(0.5);
         make.centerX.equalTo(weakself.mas_centerX);
-        make.bottom.equalTo(weakself.mas_bottom).offset(-76*scaletoheight);
+        make.bottom.equalTo(weakself.mas_bottom).offset(-38);
     }];
     UIView *line2 = [[UIView alloc] init];//竖线
     line2.backgroundColor = [Utils colorWithHexString:@"#D9D9D9"];
     [self addSubview: line2];
     [line2 mas_makeConstraints:^(MASConstraintMaker *make) {
         make.width.mas_equalTo(0.5);
-        make.height.mas_equalTo(76*scaletoheight);
+        make.height.mas_equalTo(38);
         make.centerX.equalTo(weakself.mas_centerX);
         make.bottom.equalTo(weakself.mas_bottom);
     }];
@@ -201,10 +193,10 @@
     _cancel_btn=cancel_btn;
     [_cancel_btn setTitle:@"取消" forState:UIControlStateNormal];
     [_cancel_btn setTitleColor:[Utils colorWithHexString:@"#00A7FA"] forState:UIControlStateNormal];
-    _cancel_btn.titleLabel.font = [UIFont systemFontOfSize:13*fontscale];
+    _cancel_btn.titleLabel.font = [UIFont systemFontOfSize:13];
     [self addSubview:_cancel_btn];
     [_cancel_btn mas_makeConstraints:^(MASConstraintMaker *make) {
-        make.height.mas_equalTo(76*scaletoheight);
+        make.height.mas_equalTo(38);
         make.width.mas_equalTo(weakself.frame.size.width/2);
         make.right.equalTo(line2.mas_left);
         make.top.equalTo(line1.mas_bottom);
@@ -213,10 +205,10 @@
     _confirm_btn=confirm_btn;
     [_confirm_btn setTitle:@"确认" forState:UIControlStateNormal];
     [_confirm_btn setTitleColor:[Utils colorWithHexString:@"#00A7FA"] forState:UIControlStateNormal];
-    _confirm_btn.titleLabel.font = [UIFont systemFontOfSize:13*fontscale];
+    _confirm_btn.titleLabel.font = [UIFont systemFontOfSize:13];
     [self addSubview:_confirm_btn];
     [_confirm_btn mas_makeConstraints:^(MASConstraintMaker *make) {
-        make.height.mas_equalTo(76*scaletoheight);
+        make.height.mas_equalTo(38);
         make.width.mas_equalTo(weakself.frame.size.width/2);
         make.left.equalTo(line2.mas_right);
         make.top.equalTo(line1.mas_bottom);

@@ -110,7 +110,7 @@
     _conflict = conflict;
     _conflict.backgroundColor = [UIColor colorWithRed:0.78 green:0.78 blue:0.8 alpha:1.0];
     [_conflict setImage:[UIImage imageNamed:@"感叹号"] forState:UIControlStateNormal];
-    [_conflict setTitle:@"将会覆盖原有事务" forState:UIControlStateNormal];
+    [_conflict setTitle:@"将会覆盖原有课程" forState:UIControlStateNormal];
     [_conflict setTitleColor:[Utils colorWithHexString:@"#999999"] forState:UIControlStateNormal];
     _conflict.titleLabel.font = [UIFont systemFontOfSize:8];
     [self.contentView addSubview:_conflict];
@@ -119,13 +119,6 @@
         make.height.mas_equalTo(12);
         make.top.equalTo(weakself.contentView);
         make.left.equalTo(horSeparate.mas_right);
-    }];
-    //折角
-    UIImageView *fold = [[UIImageView alloc]initWithImage:[UIImage imageNamed:@"折角"]];
-    [_conflict addSubview:fold];
-    [fold mas_makeConstraints:^(MASConstraintMaker *make) {
-        make.right.top.equalTo(_conflict);
-        make.width.height.mas_equalTo(12);
     }];
     _conflict.hidden = YES;
 }

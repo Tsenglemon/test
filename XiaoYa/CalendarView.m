@@ -10,7 +10,6 @@
 #import "NSDate+Calendar.h"
 #import "DateUtils.h"
 
-#define kScreenWidth [[UIScreen mainScreen] bounds].size.width
 @interface CalendarView()
 //当前日期
 @property (nonatomic ,strong) NSDate *currentDate;
@@ -27,8 +26,8 @@
 - (instancetype)initWithFrame:(CGRect)frame date:(NSDate*)currentDate firstDateOfTerm:(NSDate *)firstDateOfTerm{
     if (self = [super initWithFrame:frame]) {
         self.backgroundColor = [UIColor whiteColor];
-        weekWidth = 120.0 / 750.0 * kScreenWidth;
-        cellWidth = 76.0 / 750.0 * kScreenWidth;
+        weekWidth = 60;
+        cellWidth = 38;
 
         _currentDate = currentDate;
         self.firstDateOfTerm = firstDateOfTerm;

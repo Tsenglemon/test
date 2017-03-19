@@ -46,6 +46,7 @@
 
 - (void)confirm{
     [self.navigationController popViewControllerAnimated:YES];
+    [_commentTv resignFirstResponder];
     [self.delegate commentVC:self infomation:_commentTv.text];
 }
 

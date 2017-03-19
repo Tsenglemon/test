@@ -9,8 +9,6 @@
 #import "MonthPicker.h"
 #import "DateUtils.h"
 
-#define kScreenWidth [[UIScreen mainScreen] bounds].size.width
-#define kScreenHeight [[UIScreen mainScreen] bounds].size.height
 @interface MonthPicker()<UIPickerViewDataSource,UIPickerViewDelegate>
 
 @property (nonatomic ,weak) UIPickerView *pickerview;

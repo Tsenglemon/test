@@ -27,43 +27,40 @@
 
 #define kScreenWidth [UIApplication sharedApplication].keyWindow.bounds.size.width
 #define kScreenHeight [UIApplication sharedApplication].keyWindow.bounds.size.height
-#define scaleToHeight [UIApplication sharedApplication].keyWindow.bounds.size.height/1334.0
 #define scaleToWidth [UIApplication sharedApplication].keyWindow.bounds.size.width/750.0
-#define fontScale [UIApplication sharedApplication].keyWindow.bounds.size.width/375.0
-
 @interface BusinessViewController ()<DatePickerDelegate,MonthPickerDelegate,SectionSelectDelegate,RemindSelectDelegate,RepeatSettingDelegate,CommentVCDelegate,UITextFieldDelegate>
 
 //事务的子view
 @property (nonatomic,weak) UIView *businessField_view;//第一行的描述父view
-//@property (nonatomic,weak) UITextField *busDescription;//事件描述textfield，描述+时间均有内容才允许保存事件，因此用属性声明
+@property (nonatomic,weak) UITextField *busDescription;//事件描述textfield，描述+时间均有内容才允许保存事件
 @property (nonatomic,weak) UIView *commentsField_view;//最后一行备注
+@property (nonatomic,weak) UITextField *commentfield;//备注栏
 @property (nonatomic,weak) businessviewcell *businessTime_view;//时间选择板块
 @property (nonatomic,weak) businessviewcell *clock_view;//提醒重复设置板块
-@property (nonatomic,weak) UIView *comments_view;
 @property (nonatomic,weak) UIButton *delete_btn;//删除按钮
 @property (nonatomic,weak) UIButton *remind_btn;//提醒按钮
-@property (nonatomic,weak) UITextField *commentfield;//备注栏
 @property (nonatomic,weak) UIView *coverLayer;//日历弹出时背后的半透明遮罩
 
-@property (nonatomic , weak) DatePicker *datePicker;//自定义的日期选择器
-//@property (nonatomic , strong) NSDate *currentDate;//当前日期
+@property (nonatomic , strong) NSDate *currentDate;//当前日期
 @property (nonatomic , strong) NSDate *lastSelectedDate;//上一次选择的日期
+@property (nonatomic , strong) NSDate *firstDateOfTerm;//传入本学期第一天的日期
+@property (nonatomic , weak) DatePicker *datePicker;//自定义的日期选择器
 @property (nonatomic , weak) SectionSelect *selectSection;//自定义时间段（节）选择器
 @property (nonatomic , weak) RemindSelect *settingRemind;//提醒
 @property (nonatomic , weak) RepeatSetting *settingRepeat;//重复
-@property (nonatomic , strong) NSDate *firstDateOfTerm;//传入本学期第一天的日期
-//@property (nonatomic , strong) NSMutableArray *sectionArray;//选择节数数组
+@property (nonatomic , strong) NSMutableArray *sectionArray;//选择节数数组
+@property (nonatomic , strong) NSMutableArray *sections;//二维数组，对不连续的节数分连续段储存
 @property (nonatomic , strong) BusinessModel *busModel;
-//@property (nonatomic , copy) NSString *commentInfo;//备注的内容
+@property (nonatomic , copy) NSString *commentInfo;//备注的内容
 @property (nonatomic , strong) NSArray *repeatItem;//“重复”项的内容
-//@property (nonatomic , assign) NSInteger repeatIndex;//“重复”中的哪一项
+@property (nonatomic , assign) NSInteger repeatIndex;//“重复”中的哪一项
 @property (nonatomic , strong) NSDate *originDate;//记录一点进来时初始的日期
 @property (nonatomic , strong) NSMutableArray *originArr;//初始节数数组
 @end
 
 @implementation BusinessViewController{
     CGFloat rowHeight;//每一行的高度80像素
-    CGFloat separateHeight;//分割行高度 30像素
+    CGFloat separateHeight;//分割行高度
     CGFloat weekWidth;//“第几周”label宽度
     CGFloat cellWidth;//“日期”btn高度、宽度
     CGFloat datePickerWidth;//日期选择器宽度
@@ -84,28 +81,25 @@
     self.sections = [NSMutableArray array];
     self.commentInfo = [NSString string];
     self.repeatItem = @[@"每天",@"每两天",@"每周",@"每月",@"每年",@"工作日",@"不重复"];
-    rowHeight = 80;
-    separateHeight = 24;
-    
-    if (self.busModel) {
-        NSDateFormatter * dateFormatter = [[NSDateFormatter alloc] init];
-        [dateFormatter setDateFormat:@"yyyyMMdd"];
-        self.currentDate = [dateFormatter dateFromString:[NSString stringWithFormat:@"%@",self.busModel.date]];
-        self.sectionArray = [self.busModel.timeArray mutableCopy];
-        self.sections = [[Utils subSectionArraysFromArray:self.busModel.timeArray] mutableCopy];
-        self.repeatIndex = self.busModel.repeat.integerValue;
-        self.commentInfo = self.busModel.comment;
-        
-        self.navigationController.navigationBar.titleTextAttributes = @{NSForegroundColorAttributeName:[Utils colorWithHexString:@"#333333"],NSFontAttributeName:[UIFont systemFontOfSize:17]};//设置标题文字样式
-        self.navigationItem.title = @"事务";
-        self.navigationItem.rightBarButtonItem = [[UIBarButtonItem alloc]initWithImage:[[UIImage imageNamed:@"confirm"]imageWithRenderingMode:UIImageRenderingModeAlwaysOriginal] style:UIBarButtonItemStyleDone target:self action:@selector(confirm)];
-        self.navigationItem.leftBarButtonItem = [[UIBarButtonItem alloc]initWithImage:[[UIImage imageNamed:@"cancel"]imageWithRenderingMode:UIImageRenderingModeAlwaysOriginal] style:UIBarButtonItemStyleDone target:self action:@selector(cancel)];
-    }else{
-        self.currentDate = [NSDate date];//当前时间
-        self.repeatIndex = 6;//如果是从“+”进来的，默认是最后一项，“不重复”
+    rowHeight = 40;
+    separateHeight = 12;
+    if (self.busModel == nil) {
+        self.busModel = [BusinessModel defaultModel];
     }
+    NSDateFormatter * dateFormatter = [[NSDateFormatter alloc] init];
+    [dateFormatter setDateFormat:@"yyyyMMdd"];
+    self.currentDate = [dateFormatter dateFromString:[NSString stringWithFormat:@"%@",self.busModel.date]];
+    self.sectionArray = [self.busModel.timeArray mutableCopy];
+    self.sections = [[Utils subSectionArraysFromArray:self.busModel.timeArray] mutableCopy];
+    self.repeatIndex = self.busModel.repeat.integerValue;
+    self.commentInfo = self.busModel.comment;
     self.originDate = self.currentDate;
     self.originArr = [self.sectionArray mutableCopy];
+    
+    self.navigationController.navigationBar.titleTextAttributes = @{NSForegroundColorAttributeName:[Utils colorWithHexString:@"#333333"],NSFontAttributeName:[UIFont systemFontOfSize:17]};//设置标题文字样式
+    self.navigationItem.title = @"事务";
+    self.navigationItem.rightBarButtonItem = [[UIBarButtonItem alloc]initWithImage:[[UIImage imageNamed:@"confirm"]imageWithRenderingMode:UIImageRenderingModeAlwaysOriginal] style:UIBarButtonItemStyleDone target:self action:@selector(confirm)];
+    self.navigationItem.leftBarButtonItem = [[UIBarButtonItem alloc]initWithImage:[[UIImage imageNamed:@"cancel"]imageWithRenderingMode:UIImageRenderingModeAlwaysOriginal] style:UIBarButtonItemStyleDone target:self action:@selector(cancel)];
     
     self.view.backgroundColor = [Utils colorWithHexString:@"#F0F0F6"];
     [self addBusinessField_view];
@@ -118,16 +112,23 @@
     _commentsField_view.hidden = YES;
     _delete_btn.hidden = YES;
     
-    if (self.busModel) {//如果模型有值，表明是从点击课程格子进来的
+    if (self.busModel.desc.length > 0) {//有值，表明是从点击课程格子进来的
         _remind_btn.hidden = YES;
         _clock_view.hidden = NO;
         _commentsField_view.hidden = NO;
         _delete_btn.hidden = NO;
     }
+    //点击空白处收回键盘
+    self.view.userInteractionEnabled = YES;
+    UITapGestureRecognizer *singleTap = [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(fingerTapped:)];
+    [self.view addGestureRecognizer:singleTap];
 }
 
-//事务界面自己的确认和取消按钮方法。从主界面点击格子跳转进事务界面的情况下，方法才会有效；如果是从“+”进来的就没用
 - (void)confirm{//这里需要完善->能否点击的条件
+    [self dataStore];
+}
+
+- (void)dataStore{
     dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
         DbManager *dbManger = [DbManager shareInstance];
         //删除原事务（就是从格子上的那个事务）（如果重复，所有重复都删除）
@@ -147,8 +148,7 @@
         NSInteger week = dateDistance / 7;//存入数据库的week从0-n；
         //储存往后五年的时间
         NSMutableArray *dateString = [Utils dateStringArrayFromDate:self.currentDate yearDuration:5 repeatIndex:self.repeatIndex];
-        //修改覆盖数据
-        //                找出将要被覆盖的事务
+        //修改覆盖数据    找出将要被覆盖的事务
         NSMutableString *sqlTime = [NSMutableString string];
         for (int i = 0; i < self.sectionArray.count; i++) {
             [sqlTime appendString:[NSString stringWithFormat:@"time LIKE '%%,%d,%%' or ",[self.sectionArray[i] intValue]]];
@@ -178,7 +178,7 @@
                         for (int k = 0; k < sections.count; k++) {
                             NSMutableArray *newSection = sections[k];
                             NSString *newTimeStr = [self appendStringWithArray:newSection];
-                            NSString *sql = [NSString stringWithFormat:@"INSERT INTO t_201601 (description,comment,date,time,repeat,overlap) VALUES ('%@','%@','%@','%@',6 ,0);",model.desc,model.comment,dateString[i],newTimeStr];//一律改成不重复
+                            NSString *sql = [NSString stringWithFormat:@"INSERT INTO t_201601 (description,comment,date,time,repeat) VALUES ('%@','%@','%@','%@',6);",model.desc,model.comment,dateString[i],newTimeStr];//一律改成不重复
                             [dbManger executeNonQuery:sql];
                         }
                         [dbManger commitTransaction];
@@ -196,7 +196,7 @@
             NSMutableArray *section = self.sections[i];
             NSString *timeStr = [self appendStringWithArray:section];
             for (int k = 0; k < dateString.count; k ++) {
-                NSString *sql = [NSString stringWithFormat:@"INSERT INTO t_201601 (description,comment,date,time,repeat,overlap) VALUES ('%@','%@','%@','%@',%ld ,0);",self.busDescription.text,self.commentInfo,dateString[k],timeStr,self.repeatIndex];//注意VALUES字符串赋值要有单引号
+                NSString *sql = [NSString stringWithFormat:@"INSERT INTO t_201601 (description,comment,date,time,repeat) VALUES ('%@','%@','%@','%@',%ld);",self.busDescription.text,self.commentInfo,dateString[k],timeStr,self.repeatIndex];//注意VALUES字符串赋值要有单引号
                 [dbManger executeNonQuery:sql];
             }
         }
@@ -232,15 +232,6 @@
     return str;
 }
 
-- (void)didReceiveMemoryWarning {
-    [super didReceiveMemoryWarning];
-    // Dispose of any resources that can be recreated.
-}
-
-- (void)dealloc{
-    [[NSNotificationCenter defaultCenter] removeObserver:self name:UITextFieldTextDidChangeNotification object:_busDescription];
-}
-
 //描述
 - (void)addBusinessField_view{
     UIView *businessfield_view = [[UIView alloc] init];
@@ -249,7 +240,7 @@
     [self.view addSubview:_businessField_view];
     __weak typeof(self) weakself = self;
     [_businessField_view mas_makeConstraints:^(MASConstraintMaker *make) {
-        make.height.mas_equalTo(rowHeight * scaleToHeight );
+        make.height.mas_equalTo(rowHeight);
         make.width.mas_equalTo(kScreenWidth);
         make.top.equalTo(weakself.view);
         make.centerX.equalTo(weakself.view.mas_centerX);
@@ -281,9 +272,12 @@
         make.centerX.equalTo(_businessField_view.mas_centerX);
         make.centerY.equalTo(_businessField_view.mas_centerY);
         make.width.mas_equalTo(500 * scaleToWidth);
-        make.height.mas_equalTo(54 * scaleToHeight);
+        make.height.mas_equalTo(30);
     }];
-    
+    _busDescription.tag = 100;
+    _busDescription.delegate = self;
+    //监听
+    [[NSNotificationCenter defaultCenter]addObserver:self selector:@selector(descChange:) name:UITextFieldTextDidChangeNotification object:_busDescription];
     [_busDescription addTarget:self action:@selector(textFiledDidChange:) forControlEvents:UIControlEventEditingChanged];
     
     UIImageView *pen = [[UIImageView alloc] init];
@@ -293,8 +287,6 @@
         make.centerY.equalTo(_busDescription.mas_centerY);
         make.right.equalTo(_busDescription.mas_left).offset(-24 * scaleToWidth);
     }];
-    //监听
-    [[NSNotificationCenter defaultCenter]addObserver:self selector:@selector(descChange:) name:UITextFieldTextDidChangeNotification object:_busDescription];
     //顶部底部两条灰线
     UIView *line1 = [[UIView alloc]init];
     line1.backgroundColor = [Utils colorWithHexString:@"d9d9d9"];
@@ -315,8 +307,7 @@
 }
 
 //留个坑，导航栏右按钮要在描述和时间都有才能点击
--(void)descChange:(NSNotification *)notification
-{
+-(void)descChange:(NSNotification *)notification{
     UIViewController *vc = self.view.superview.viewController;
     if (_busDescription.text.length > 0) {
         vc.navigationItem.rightBarButtonItem.enabled = YES;//设置导航栏右按钮可以点击
@@ -327,15 +318,13 @@
     
 }
 
-- (void)textFiledDidChange:(UITextField *)textField
-{
+- (void)textFiledDidChange:(UITextField *)textField{
     if ([self indexOfCharacter:textField.text] != -1) {
         textField.text = [textField.text substringToIndex:[self indexOfCharacter:textField.text]];//输入字数超过了就截断
     }
 }
 
-- (int)indexOfCharacter:(NSString *)strtemp//限制文本框输入最长20个字符
-{
+- (int)indexOfCharacter:(NSString *)strtemp{//限制文本框输入最长20个字符
     int strlength = 0;
     for (int i=0; i< [strtemp length]; i++) {
         int a = [strtemp characterAtIndex:i];
@@ -361,18 +350,18 @@
     __weak typeof(self) weakself = self;
     [businesstime_view mas_makeConstraints:^(MASConstraintMaker *make) {
         make.width.mas_equalTo(kScreenWidth);
-        make.height.mas_equalTo(rowHeight * 3 * scaleToHeight);
-        make.top.equalTo(_businessField_view.mas_bottom).offset(separateHeight * scaleToHeight);
+        make.height.mas_equalTo(rowHeight * 3);
+        make.top.equalTo(_businessField_view.mas_bottom).offset(separateHeight);
         make.centerX.equalTo(weakself.view.mas_centerX);
     }];
     [_businessTime_view.button1 addTarget:self action:@selector(dateSelected) forControlEvents:UIControlEventTouchUpInside];
     [businesstime_view.button2 addTarget:self action:@selector(sectionSelected) forControlEvents:UIControlEventTouchUpInside];
-    
-    if (self.busModel) {
-        [self bsTVBtnSetting:self.currentDate];
-        
+    [self bsTVBtnSetting:self.currentDate];
+    if (self.sectionArray.count > 0) {
         NSString *subTimeStr = [self appendSectionStringWithArray:self.sectionArray];
         [self.businessTime_view.button2 setTitle:[NSString stringWithFormat:@"第%@节",subTimeStr] forState:UIControlStateNormal];
+    }else{
+        [self.businessTime_view.button2 setTitle:@"选择时间" forState:UIControlStateNormal];
     }
 }
 
@@ -387,12 +376,12 @@
     [theWindow addSubview:_coverLayer];
     
     //生成自定义日期选择器
-    weekWidth = 120.0 / 750.0 * kScreenWidth;
-    cellWidth = 76.0 / 750.0 * kScreenWidth;
+    weekWidth = 60;
+    cellWidth = 38;
 
-    datePickerWidth = weekWidth +cellWidth *7;
+    datePickerWidth = weekWidth +cellWidth *7 +5;//5边界预留
     int weekRow = [DateUtils rowNumber:self.currentDate];//日历该有多少行
-    CGFloat datePickerHeight = cellWidth * (weekRow + 1 ) + (130 + 178) / 1334.0 * kScreenHeight;//+1:显示周几的一行，130：两个btn高度，178：顶部年月高度
+    CGFloat datePickerHeight = cellWidth * (weekRow+1) + (76 + 178)/2 + 10;//+1:显示周几的一行，76：两个btn高度，178：顶部年月高度 10:确认取消上的预留位
     DatePicker * picker = [[DatePicker alloc]initWithFrame:CGRectMake(0, 64, datePickerWidth, datePickerHeight) date:self.currentDate firstDateOfTerm:self.firstDateOfTerm];
     CGPoint center =  picker.center;
     center.x = self.view.frame.size.width/2;
@@ -415,9 +404,9 @@
     [theWindow addSubview:_coverLayer];
     
     CGFloat width = 650 / 750.0 * kScreenWidth;
-    CGFloat height = (178 + 130 ) / 1334.0 * kScreenHeight + 39 * 5;
+    CGFloat height = (178 + 76)/2 + 245;
     
-    SectionSelect *selectSection = [[SectionSelect alloc]initWithFrame:CGRectMake(0, 0, width, height) sectionArr:self.sectionArray selectedDate:self.currentDate originIndexs:self.originArr originDate:self.originDate];
+    SectionSelect *selectSection = [[SectionSelect alloc]initWithFrame:CGRectMake(0, 0, width, height) sectionArr:self.sectionArray selectedDate:self.currentDate originIndexs:self.originArr originDate:self.originDate termFirstDate:self.firstDateOfTerm];
     CGPoint center =  selectSection.center;
     center.x = self.view.frame.size.width/2;
     center.y = self.view.frame.size.height/2;
@@ -433,7 +422,7 @@
     _remind_btn = remind_btn;
     [_remind_btn setTitle:@"提醒、重复、备注" forState:UIControlStateNormal];
     [_remind_btn setTitleColor:[Utils colorWithHexString:@"#00A7FA"] forState:UIControlStateNormal];
-    _remind_btn.titleLabel.font = [UIFont systemFontOfSize:16 * fontScale];
+    _remind_btn.titleLabel.font = [UIFont systemFontOfSize:16];
     _remind_btn.backgroundColor = [UIColor whiteColor];
     [_remind_btn setImage:[UIImage imageNamed:@"pulldown"] forState:UIControlStateNormal];
     [_remind_btn addTarget:self action:@selector(remind_btn_click) forControlEvents:UIControlEventTouchUpInside];
@@ -441,8 +430,8 @@
     __weak typeof(self) weakself = self;
     [_remind_btn mas_makeConstraints:^(MASConstraintMaker *make) {
         make.width.mas_equalTo(kScreenWidth);
-        make.height.mas_equalTo(rowHeight * scaleToWidth);
-        make.top.equalTo(_businessTime_view.mas_bottom).offset(separateHeight * scaleToHeight);
+        make.height.mas_equalTo(rowHeight);
+        make.top.equalTo(_businessTime_view.mas_bottom).offset(separateHeight);
         make.centerX.equalTo(weakself.view.mas_centerX);
     }];
     
@@ -489,8 +478,8 @@
     __weak typeof(self) weakself = self;
     [_clock_view mas_makeConstraints:^(MASConstraintMaker *make) {
         make.width.mas_equalTo(kScreenWidth);
-        make.height.mas_equalTo(rowHeight * 3 * scaleToHeight);
-        make.top.equalTo(_businessTime_view.mas_bottom).offset(separateHeight * scaleToHeight);
+        make.height.mas_equalTo(rowHeight * 3);
+        make.top.equalTo(_businessTime_view.mas_bottom).offset(separateHeight);
         make.centerX.equalTo(weakself.view.mas_centerX);
     }];
     
@@ -506,7 +495,7 @@
     UIWindow *theWindow = app.window;//全屏遮罩要加到window上
     [theWindow addSubview:_coverLayer];
     
-    CGFloat width = 530 / 750.0 * kScreenWidth;
+    CGFloat width = 265;
     CGFloat height = 318;
     RemindSelect *settingRemind = [[RemindSelect alloc]initWithFrame:CGRectMake(0, 0, width, height)];
     CGPoint center =  settingRemind.center;
@@ -526,7 +515,7 @@
     UIWindow *theWindow = app.window;//全屏遮罩要加到window上
     [theWindow addSubview:_coverLayer];
     
-    CGFloat width = 530 / 750.0 * kScreenWidth;
+    CGFloat width = 265;
     CGFloat height = 318;
     RepeatSetting *setting = [[RepeatSetting alloc]initWithFrame:CGRectMake(0, 0, width, height) selectedIndex:self.repeatIndex];
     CGPoint center =  setting.center;
@@ -545,9 +534,9 @@
     _commentsField_view.backgroundColor = [Utils colorWithHexString:@"#FFFFFF"];
     [self.view  addSubview:_commentsField_view];
     [_commentsField_view mas_makeConstraints:^(MASConstraintMaker *make) {
-        make.height.mas_equalTo(rowHeight * scaleToHeight );
+        make.height.mas_equalTo(rowHeight);
         make.width.mas_equalTo(kScreenWidth);
-        make.top.equalTo(_clock_view.mas_bottom).offset(separateHeight * scaleToHeight);
+        make.top.equalTo(_clock_view.mas_bottom).offset(separateHeight);
         make.centerX.equalTo(_clock_view.mas_centerX);
     }];
     //备注文本框
@@ -575,8 +564,9 @@
         make.centerX.equalTo(_commentsField_view.mas_centerX);
         make.centerY.equalTo(_commentsField_view.mas_centerY);
         make.width.mas_equalTo(500 * scaleToWidth);
-        make.height.mas_equalTo(54 * scaleToHeight);
+        make.height.mas_equalTo(30);
     }];
+    _commentfield.tag = 101;
     _commentfield.delegate = self;
     
     UIImageView *comment = [[UIImageView alloc] init];
@@ -606,19 +596,12 @@
     }];
 }
 
-- (BOOL)textFieldShouldBeginEditing:(UITextField *)textField{
-    CommentViewController *commentVC = [[CommentViewController alloc]initWithTextStr:self.commentInfo];
-    commentVC.delegate = self;
-    [self.navigationController pushViewController:commentVC animated:YES];
-    return NO;
-}
-
 - (void)settingDeleteBtn{
     UIButton *delete_btn = [[UIButton alloc] init];
     _delete_btn = delete_btn;
     [_delete_btn setTitle:@"删除" forState:UIControlStateNormal];
     [_delete_btn setTitleColor:[Utils colorWithHexString:@"#FF0000"] forState:UIControlStateNormal];
-    _delete_btn.titleLabel.font = [UIFont systemFontOfSize:14 * fontScale];
+    _delete_btn.titleLabel.font = [UIFont systemFontOfSize:14];
     _delete_btn.backgroundColor = [UIColor whiteColor];
     [_delete_btn addTarget:self action:@selector(deleteAction) forControlEvents:UIControlEventTouchUpInside];
     
@@ -626,8 +609,8 @@
     [self.view addSubview:_delete_btn];
     [_delete_btn mas_makeConstraints:^(MASConstraintMaker *make) {
         make.width.mas_equalTo(kScreenWidth);
-        make.height.mas_equalTo(rowHeight * scaleToWidth);
-        make.top.equalTo(_commentsField_view.mas_bottom).offset(100.0 * scaleToHeight);
+        make.height.mas_equalTo(rowHeight);
+        make.top.equalTo(_commentsField_view.mas_bottom).offset(50);
         make.centerX.equalTo(_commentsField_view.mas_centerX);
     }];
     
@@ -685,6 +668,28 @@
         UIAlertController *alert = [UIAlertController alertControllerWithTitle:@"此为重复事件" message:@"请选择您需要删除的类型" preferredStyle:UIAlertControllerStyleAlert cancelTitle:@"取消" cancelBlock:nil otherTitles:otherTitles otherBlocks:otherBlocks];
         [self presentViewController:alert animated:YES completion:nil];
     }
+}
+
+#pragma mark UITextFieldDelegate
+- (BOOL)textFieldShouldBeginEditing:(UITextField *)textField{
+    if (textField.tag == 101) {
+        CommentViewController *commentVC = [[CommentViewController alloc]initWithTextStr:self.commentInfo];
+        commentVC.delegate = self;
+        [self.navigationController pushViewController:commentVC animated:YES];
+        return NO;
+    }else{
+        return YES;
+    }
+}
+
+- (BOOL)textFieldShouldReturn:(UITextField *)textField {
+    [textField resignFirstResponder];
+    return YES;
+}
+
+//点击空白处收回键盘
+-(void)fingerTapped:(UITapGestureRecognizer *)gestureRecognizer{
+    [self.view endEditing:YES];
 }
 
 #pragma mark DatePickerDelegate
@@ -745,7 +750,7 @@
     
     [self.datePicker removeFromSuperview];
     int weekRow = [DateUtils rowNumber:currentDate];//日历该有多少行
-    CGFloat datePickerHeight = cellWidth * (weekRow + 1 ) + (130 + 178) / 1334.0 * kScreenHeight;//130：两个btn高度，178：顶部年月高度
+    CGFloat datePickerHeight = cellWidth * (weekRow+1) + (76 + 178)/2 + 10;//76：两个btn高度，178：顶部年月高度
     DatePicker * picker = [[DatePicker alloc]initWithFrame:CGRectMake(0, 64, datePickerWidth, datePickerHeight) date:currentDate firstDateOfTerm:self.firstDateOfTerm];
     CGPoint center =  picker.center;
     center.x = self.view.frame.size.width/2;
@@ -767,19 +772,15 @@
     [_coverLayer removeFromSuperview];
     NSInteger count = sectionArray.count;
     if (count != 0) {
-        [sectionArray sortUsingComparator:^NSComparisonResult(id _Nonnull obj1, id _Nonnull obj2)
-        {
+        [sectionArray sortUsingComparator:^NSComparisonResult(id _Nonnull obj1, id _Nonnull obj2){
             //此处的规则含义为：若前一元素比后一元素小，则返回降序（即后一元素在前，为从大到小排列）
-            if ([obj1 integerValue] < [obj2 integerValue])
-            {
+            if ([obj1 integerValue] < [obj2 integerValue]){
                 return NSOrderedAscending;//将第一个元素放在第二个元素之前
-            }else
-            {
+            }else{
                 return NSOrderedDescending;//将第一个元素放在第二个元素之后
             }
         }];
-        
-//        //拼接字符串
+        //拼接字符串
         NSString *str = [self appendSectionStringWithArray:sectionArray];
         [self.businessTime_view.button2 setTitle:[NSString stringWithFormat:@"第%@节",str] forState:UIControlStateNormal];
         self.sectionArray = sectionArray;
@@ -787,6 +788,8 @@
         //分割连续段
         [self.sections removeAllObjects];
         self.sections = [[Utils subSectionArraysFromArray:sectionArray] mutableCopy];
+    }else{
+        [self.businessTime_view.button2 setTitle:@"选择时间" forState:UIControlStateNormal];
     }
 }
 
@@ -844,5 +847,14 @@
         tempStr = info;
     }
     _commentfield.text = tempStr;
+}
+
+- (void)didReceiveMemoryWarning {
+    [super didReceiveMemoryWarning];
+    // Dispose of any resources that can be recreated.
+}
+
+- (void)dealloc{
+    [[NSNotificationCenter defaultCenter] removeObserver:self name:UITextFieldTextDidChangeNotification object:_busDescription];
 }
 @end

@@ -9,10 +9,6 @@
 #import "PublicTemplateCell.h"
 #import "Masonry.h"
 #import "Utils.h"
-
-#define kScreenWidth [[UIScreen mainScreen] bounds].size.width
-#define kScreenHeight [[UIScreen mainScreen] bounds].size.height
-
 @interface PublicTemplateCell()
 @property (nonatomic , weak)UILabel *item;
 //@property (nonatomic , weak)UIButton *choiceBtn;
@@ -50,7 +46,7 @@
     __weak typeof(self)weakself = self;
     [bottomSeparate mas_makeConstraints:^(MASConstraintMaker *make) {
         make.height.mas_equalTo(0.5);
-        make.width.mas_equalTo(586 / 750.0 * kScreenWidth);
+        make.width.mas_equalTo(weakself.contentView.mas_width);
         make.left.bottom.equalTo(weakself.contentView);
     }];
     

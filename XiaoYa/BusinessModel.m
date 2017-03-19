@@ -13,7 +13,7 @@
 {
     if (self = [super init]) {
         if (dic != nil) {
-            self.dataid = [dic objectForKey:@"id"];
+//            self.dataid = [dic objectForKey:@"id"];
             self.desc = [dic objectForKey:@"description"];
             self.comment = [dic objectForKey:@"comment"];
             self.date = [dic objectForKey:@"date"];
@@ -31,5 +31,15 @@
         }
     }
     return self;
+}
+
++ (instancetype)defaultModel{
+    NSDateFormatter * dateFormatter = [[NSDateFormatter alloc] init];
+    [dateFormatter setDateFormat:@"yyyyMMdd"];
+    NSString *currentDateStr = [dateFormatter stringFromDate:[NSDate date]];
+    
+    NSMutableDictionary *modelDict = [NSMutableDictionary dictionaryWithObjectsAndKeys:@"",@"description",@"",@"comment",currentDateStr,@"date",@"",@"time",@"6",@"repeat",nil];
+    BusinessModel *defaultModel = [[BusinessModel alloc]initWithDict:modelDict];
+    return defaultModel;
 }
 @end

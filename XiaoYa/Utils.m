@@ -54,6 +54,9 @@
 
 //事务节数分割连续段，连续的分为一组
 + (NSMutableArray*)subSectionArraysFromArray:(NSMutableArray *)sectionArray{
+    if (sectionArray.count == 0) {
+        return [NSMutableArray array];
+    }
     NSMutableArray *sections = [NSMutableArray array];
     NSInteger count = sectionArray.count;
     int sectionCount = 1;

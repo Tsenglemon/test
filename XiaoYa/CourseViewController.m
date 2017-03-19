@@ -19,9 +19,7 @@
 
 #define kScreenWidth [UIApplication sharedApplication].keyWindow.bounds.size.width
 #define kScreenHeight [UIApplication sharedApplication].keyWindow.bounds.size.height
-#define scaletoheight [UIApplication sharedApplication].keyWindow.bounds.size.height/1334.0
 #define scaletowidth [UIApplication sharedApplication].keyWindow.bounds.size.width/750.0
-#define fontscale [UIApplication sharedApplication].keyWindow.bounds.size.width/375.0
 
 @interface CourseViewController ()<UITableViewDataSource,UITableViewDelegate,UITextFieldDelegate,weekselectViewDelegate,dayselsctViewDelegate,timeselectViewDelegate>
 //上课的子view
@@ -37,13 +35,18 @@
 @property (nonatomic,weak) dayselectview *dayselect_view;
 @property (nonatomic,weak) timeselecteview *timeselect_view;
 
-//@property (nonatomic,strong) NSMutableArray *courseview_array;//装coursetime_view里数据的array,里面都是Coursemodel
+@property (nonatomic,strong) NSMutableArray *courseview_array;//装coursetime_view里数据的array,里面都是Coursemodel
 @property (nonatomic ,strong) NSMutableArray *originTimeIndexArray;//原始节数选择数组
 @property (nonatomic ,strong) NSMutableArray *originWeekdayArray;//原始周几 选择数组
 @property (nonatomic ,strong) NSString *originCourseName;
 @end
 
-@implementation CourseViewController
+@implementation CourseViewController{
+    CGFloat separateHeight;//分割行高度
+    CGFloat rowHeight;//每一行的高度40
+    CGFloat sectionHeight;//160
+}
+
 - (instancetype)initWithCourseModel:(NSMutableArray *)modelArray{
     if(self = [super init]){
         self.courseview_array = [modelArray mutableCopy];
@@ -53,6 +56,10 @@
 
 - (void)viewDidLoad {
     [super viewDidLoad];
+    separateHeight = 12;
+    rowHeight = 40;
+    sectionHeight = 160;
+    
     self.originCourseName = [NSString string];
     if (self.courseview_array != nil && self.courseview_array.count != 0) {
         CourseModel * model =  self.courseview_array[0];
@@ -69,13 +76,17 @@
         [self.originTimeIndexArray addObject:model.timeArray];
         [self.originWeekdayArray addObject:model.weekday];
     }
-    
-    //点击标签载入时有用
+
+    self.navigationController.navigationBar.titleTextAttributes = @{NSForegroundColorAttributeName:[Utils colorWithHexString:@"#333333"],NSFontAttributeName:[UIFont systemFontOfSize:17]};
     self.navigationItem.title = @"课程";
     self.navigationItem.rightBarButtonItem = [[UIBarButtonItem alloc]initWithImage:[[UIImage imageNamed:@"confirm"]imageWithRenderingMode:UIImageRenderingModeAlwaysOriginal] style:UIBarButtonItemStyleDone target:self action:@selector(confirm)];
     self.navigationItem.leftBarButtonItem = [[UIBarButtonItem alloc]initWithImage:[[UIImage imageNamed:@"cancel"]imageWithRenderingMode:UIImageRenderingModeAlwaysOriginal] style:UIBarButtonItemStyleDone target:self action:@selector(cancel)];
     
     [self courseViewSetting];
+    //点击空白处收回键盘
+    self.view.userInteractionEnabled = YES;
+    UITapGestureRecognizer *singleTap = [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(fingerTapped:)];
+    [self.view addGestureRecognizer:singleTap];
 }
 
 - (void)didReceiveMemoryWarning {
@@ -90,6 +101,11 @@
     [self add_addcoursetime_btn];
 }
 
+//点击空白处收回键盘
+-(void)fingerTapped:(UITapGestureRecognizer *)gestureRecognizer{
+    [self.view endEditing:YES];
+}
+
 //输入课程名称的view
 -(void)addcoursefield_view{
     UIView *coursefield_view = [[UIView alloc] init];
@@ -98,7 +114,7 @@
     [self.view addSubview:_coursefield_view];
     __weak typeof(self) weakself = self;
     [_coursefield_view mas_makeConstraints:^(MASConstraintMaker *make) {
-        make.height.mas_equalTo(80.0 *scaletoheight );
+        make.height.mas_equalTo(rowHeight);
         make.width.mas_equalTo(kScreenWidth);
         make.top.equalTo(weakself.view);
         make.centerX.equalTo(weakself.view.mas_centerX);
@@ -123,14 +139,13 @@
     //文本框内的文字距离左边框的距离
     _courseNameField.leftView = [[UIView alloc]initWithFrame:CGRectMake(0, 0, 8, 1)];
     _courseNameField.leftViewMode = UITextFieldViewModeAlways;
-//    CourseModel *model = self.courseview_array[0];
     _courseNameField.text = self.originCourseName;
     [_coursefield_view addSubview:_courseNameField];
     [_courseNameField mas_makeConstraints:^(MASConstraintMaker *make) {
         make.centerX.equalTo(_coursefield_view.mas_centerX);
         make.centerY.equalTo(_coursefield_view.mas_centerY);
         make.width.mas_equalTo(500 * scaletowidth);
-        make.height.mas_equalTo(54 * scaletoheight);
+        make.height.mas_equalTo(30);
     }];
     _courseNameField.delegate = self;//修改namefield值要修改courseview array中的每个model的courseNAme
     //namefield文本框的tag是0，classroom文本框的tag是1
@@ -165,14 +180,14 @@
 
 -(void)addcoursetableview
 {
-    UITableView *course_tableview;
-    if (64 + (320.0+24)*scaletoheight*_courseview_array.count+(80 + 24 + 80)*scaletoheight<kScreenHeight) {
-        course_tableview = [[UITableView alloc] initWithFrame:CGRectMake(0, 80.0 *scaletoheight, kScreenWidth, 344.0*scaletoheight*_courseview_array.count) style:UITableViewStyleGrouped];
+    UITableView *course_tableview;//两个rowheight分别是课程名一栏和添加按钮一栏
+    if (64 + (sectionHeight+separateHeight)*_courseview_array.count+rowHeight+rowHeight+separateHeight< kScreenHeight) {
+        course_tableview = [[UITableView alloc] initWithFrame:CGRectMake(0, rowHeight, kScreenWidth, (sectionHeight+separateHeight)*_courseview_array.count) style:UITableViewStyleGrouped];
     }else{//最多不是两个section就是三个，plus机型可以显示三个
-        if (64 + (320.0+24)*scaletoheight*3+(80 + 24 + 80)*scaletoheight>kScreenHeight) {
-            course_tableview = [[UITableView alloc] initWithFrame:CGRectMake(0, 80.0 *scaletoheight, kScreenWidth, 344.0*scaletoheight*2) style:UITableViewStyleGrouped];
+        if (64 + (sectionHeight+separateHeight)*3+rowHeight+rowHeight+separateHeight>kScreenHeight) {
+            course_tableview = [[UITableView alloc] initWithFrame:CGRectMake(0, rowHeight, kScreenWidth, (sectionHeight+separateHeight)*2) style:UITableViewStyleGrouped];
         }else{
-            course_tableview = [[UITableView alloc] initWithFrame:CGRectMake(0, 80.0 *scaletoheight, kScreenWidth, 344.0*scaletoheight*3) style:UITableViewStyleGrouped];
+            course_tableview = [[UITableView alloc] initWithFrame:CGRectMake(0, rowHeight, kScreenWidth, (sectionHeight+separateHeight)*3) style:UITableViewStyleGrouped];
         }
     }
     _course_tableview = course_tableview;
@@ -191,7 +206,7 @@
 }
 
 - (CGFloat)tableView:(UITableView *)tableView heightForHeaderInSection:(NSInteger)section{
-    return 24.0*scaletoheight;
+    return separateHeight;
 }
 
 -(CGFloat)tableView:(UITableView *)tableView heightForFooterInSection:(NSInteger)section{
@@ -214,7 +229,7 @@
 
 - (CGFloat)tableView:(UITableView *)tableView heightForRowAtIndexPath:(NSIndexPath *)indexPath
 {
-    return 320.0*scaletoheight;
+    return sectionHeight;
 }
 
 //底部“增加上课时间段”的按钮
@@ -224,14 +239,14 @@
     _addcoursetime_btn.backgroundColor = [UIColor whiteColor];
     [_addcoursetime_btn setTitle:@"增加上课时间段" forState:UIControlStateNormal];
     [_addcoursetime_btn setTitleColor:[Utils colorWithHexString:@"#333333"] forState:UIControlStateNormal];
-    _addcoursetime_btn.titleLabel.font = [UIFont systemFontOfSize:14*fontscale];
+    _addcoursetime_btn.titleLabel.font = [UIFont systemFontOfSize:14];
     [_addcoursetime_btn setImage:[UIImage imageNamed:@"加圆"] forState:UIControlStateNormal];
     [_addcoursetime_btn addTarget:self action:@selector(addcoursetime) forControlEvents:UIControlEventTouchUpInside];
     [self.view addSubview:addcoursetime_btn];
     __weak typeof(self) weakself = self;
     [_addcoursetime_btn mas_makeConstraints:^(MASConstraintMaker *make) {
-        make.size.mas_equalTo(CGSizeMake(kScreenWidth,80.0 *scaletoheight));
-        make.top.equalTo(_course_tableview.mas_bottom).offset(24.0*scaletoheight);
+        make.size.mas_equalTo(CGSizeMake(kScreenWidth,rowHeight));
+        make.top.equalTo(_course_tableview.mas_bottom).offset(separateHeight);
         make.centerX.equalTo(weakself.view.mas_centerX);
     }];
     
@@ -257,19 +272,20 @@
 //---------------------------------------------按钮点击事件------------------------------------------
 //点击低端增加上课时间段按钮后
 -(void)addcoursetime{
-    CourseModel *defaultModel = [CourseModel defaultModel];//不太确定添加的默认显示是什么，是和上一个格子一样吗？先用默认model
-    defaultModel.courseName = self.courseNameField.text;
-    [_courseview_array addObject:defaultModel];
-    [self.originTimeIndexArray addObject:defaultModel.timeArray];
-    [self.originWeekdayArray addObject:defaultModel.weekday];
+    CourseModel *newModel = [self.courseview_array lastObject];
+//    CourseModel *defaultModel = [CourseModel defaultModel];//不太确定添加的默认显示是什么，是和上一个格子一样吗？先用默认model
+//    defaultModel.courseName = self.courseNameField.text;
+    [_courseview_array addObject:newModel];
+    [self.originTimeIndexArray addObject:newModel.timeArray];
+    [self.originWeekdayArray addObject:newModel.weekday];
     
     NSInteger addone = _courseview_array.count-1;
     NSIndexSet *index= [[NSIndexSet alloc] initWithIndex:addone];
     [_course_tableview insertSections:index withRowAnimation:UITableViewRowAnimationNone];
     [_course_tableview reloadData];
     CGFloat makesureY = _addcoursetime_btn.frame.origin.y;
-    if(64 + makesureY + (24 + 320.0 + 80)*scaletoheight < kScreenHeight){//80是底部按钮
-        _course_tableview.frame = CGRectMake(0, _course_tableview.frame.origin.y, kScreenWidth, _course_tableview.frame.size.height + ( 320.0+24 )*scaletoheight);
+    if(64 + makesureY + separateHeight+sectionHeight+rowHeight< kScreenHeight){
+        _course_tableview.frame = CGRectMake(0, rowHeight, kScreenWidth, _course_tableview.frame.size.height+separateHeight+sectionHeight);
     }
     NSIndexPath *scrollIndexPath = [NSIndexPath indexPathForRow:0 inSection:_courseview_array.count-1];
     [self.course_tableview scrollToRowAtIndexPath:scrollIndexPath
@@ -289,8 +305,8 @@
         NSIndexSet *index= [[NSIndexSet alloc] initWithIndex:deleteone];
         [_course_tableview deleteSections:index withRowAnimation:UITableViewRowAnimationNone];
         [_course_tableview reloadData];
-        if( 64 + (320.0+24)*scaletoheight*_courseview_array.count+(80 + 24 + 80)*scaletoheight<kScreenHeight){//80底部按钮，80课程描述，24底部按钮与tableview的间距，64状态栏+导航栏
-            _course_tableview.frame = CGRectMake(0, _course_tableview.frame.origin.y, kScreenWidth,(320.0+24)*scaletoheight*_courseview_array.count);
+        if( 64 + (sectionHeight+separateHeight)*_courseview_array.count+rowHeight+rowHeight+separateHeight<kScreenHeight){//80底部按钮，80课程描述，24底部按钮与tableview的间距，64状态栏+导航栏
+            _course_tableview.frame = CGRectMake(0, rowHeight, kScreenWidth,(sectionHeight+separateHeight)*_courseview_array.count);
         }
     }
 }
@@ -311,9 +327,9 @@
     CourseModel *loadModel = _courseview_array[btnindex.section];
     
     [self addcover];    
-    CGFloat X = kScreenWidth/2-(530.0/2*scaletowidth);
-    CGFloat Y = kScreenHeight/2-(601.0/2*scaletoheight);
-    weekselectview *weekselect_view = [[weekselectview alloc] initWithFrame:CGRectMake(X, Y, 530.0*scaletowidth, 601.0*scaletoheight) andWeekSelect:loadModel.weekArray indexSection:btnindex.section];
+    CGFloat X = (kScreenWidth-265)/2;
+    CGFloat Y = (kScreenHeight-302)/2;
+    weekselectview *weekselect_view = [[weekselectview alloc] initWithFrame:CGRectMake(X, Y, 265, 302) andWeekSelect:loadModel.weekArray indexSection:btnindex.section];
     _weekselect_view = weekselect_view;
     _weekselect_view.delegate = self;
     [self.view.window addSubview:_weekselect_view];
@@ -340,9 +356,9 @@
     CourseModel *loadModel = _courseview_array[btnindex.section];
     
     [self addcover];
-    CGFloat X = kScreenWidth/2-(530.0/2*scaletowidth);
-    CGFloat Y = kScreenHeight/2-(635.0/2*scaletoheight);
-    dayselectview *dayselect_view = [[dayselectview alloc] initWithFrame:CGRectMake(X, Y, 530.0*scaletowidth, 635.0*scaletoheight) andDayString:loadModel.weekday indexSection:btnindex.section];
+    CGFloat X = (kScreenWidth-265)/2;
+    CGFloat Y = (kScreenHeight-319)/2;
+    dayselectview *dayselect_view = [[dayselectview alloc] initWithFrame:CGRectMake(X, Y, 265, 319) andDayString:loadModel.weekday indexSection:btnindex.section];
     _dayselect_view = dayselect_view;    
     _dayselect_view.delegate = self;
     [self.view.window addSubview:_dayselect_view];
@@ -369,8 +385,8 @@
     [self addcover];
     
     CGFloat X = kScreenWidth/2-(650/2*scaletowidth);
-    CGFloat Y = kScreenHeight/2-(700/2*scaletoheight);
-    timeselecteview *timeselect_view = [[timeselecteview alloc]initWithFrame:CGRectMake(X, Y, 650*scaletowidth, 716*scaletoheight) andCellModel:loadModel indexSection:btnindex.section originIndexs:self.originTimeIndexArray[btnindex.section] originWeekday:[self.originWeekdayArray[btnindex.section]integerValue]];
+    CGFloat Y = (kScreenHeight-358)/2;
+    timeselecteview *timeselect_view = [[timeselecteview alloc]initWithFrame:CGRectMake(X, Y, 650*scaletowidth, 358) andCellModel:loadModel indexSection:btnindex.section originIndexs:self.originTimeIndexArray[btnindex.section] originWeekday:[self.originWeekdayArray[btnindex.section]integerValue]];
     _timeselect_view = timeselect_view;
     
     //用whichSection来传递是哪一个section
@@ -394,7 +410,6 @@
 //---------------------------------textfield代理方法-------------------------------
 -(BOOL)textFieldShouldReturn:(UITextField *)textField{
     //返回一个BOOL值，指明是否允许在按下回车键时结束编辑
-    //如果允许要调用resignFirstResponder 方法，这回导致结束编辑，而键盘会被收起
     [textField resignFirstResponder];
     return YES;
 }

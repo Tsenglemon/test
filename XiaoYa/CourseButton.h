@@ -7,8 +7,7 @@
 //
 
 #import <UIKit/UIKit.h>
-#import "CourseModel.h"
-#import "BusinessModel.h"
+
 @interface CourseButton : UIButton
 @property (nonatomic , weak)UILabel *event;//事件
 @property (nonatomic , weak)UILabel *place;//地点

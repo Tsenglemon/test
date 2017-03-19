@@ -11,8 +11,6 @@
 #import "RemindCell.h"
 #import "Utils.h"
 
-#define kScreenWidth [[UIScreen mainScreen] bounds].size.width
-#define kScreenHeight [[UIScreen mainScreen] bounds].size.height
 @interface RemindSelect()<UITableViewDelegate,UITableViewDataSource,RemindCellDelegate>
 @property (nonatomic , weak) UIButton *confirm;
 @property (nonatomic , weak) UIButton *cancel;

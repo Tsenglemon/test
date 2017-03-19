@@ -20,12 +20,12 @@
 #import "BusinessViewController.h"
 #import "CourseViewController.h"
 #import "BusinessCourseManage.h"
-
+#import "CollectView.h"
 #import "DbManager.h"
 
 #define kScreenWidth [UIApplication sharedApplication].keyWindow.bounds.size.width
 #define kScreenHeight [UIApplication sharedApplication].keyWindow.bounds.size.height
-@interface CourseTableViewController ()<UIScrollViewDelegate,WeekSheetDelegate,BusinessCourseManageDelegate,BusinessViewControllerDelegate,CourseViewControllerDelegate>
+@interface CourseTableViewController ()<UIScrollViewDelegate,WeekSheetDelegate,BusinessCourseManageDelegate,BusinessViewControllerDelegate,CourseViewControllerDelegate,CollectViewDelegate>
 @property (nonatomic ,weak) UIButton* navItemTitle;
 @property (nonatomic ,weak) WeekSheet* weeksheet;//标题按钮下拉列表
 @property (nonatomic ,weak) UIScrollView* timeView;//纵向表示时间段的scrollview
@@ -112,7 +112,8 @@ static BOOL flag = false ;
     DbManager *dbManger = [DbManager shareInstance];
     [dbManger openDb:@"eventData.sqlite"];
 //    [dbManger executeNonQuery:@"drop table if exists t_201601"];
-    NSString *sql = [NSString stringWithFormat:@"CREATE TABLE IF NOT EXISTS t_201601(                                                                                                         id INTEGER PRIMARY KEY AUTOINCREMENT,                                                                        description TEXT NOT NULL,                                                                                                comment TEXT,                                                                                                                                                                                                                                                date TEXT NOT NULL,                                                                                                                        time TEXT NOT NULL,                                                                                                                        repeat INTEGER NOT NULL,                                                                                                overlap INTEGER);"];
+//    [dbManger executeNonQuery:@"drop table if exists course_table"];
+    NSString *sql = [NSString stringWithFormat:@"CREATE TABLE IF NOT EXISTS t_201601(                                                                                                         id INTEGER PRIMARY KEY AUTOINCREMENT,                                                                        description TEXT NOT NULL,                                                                                                comment TEXT,                                                                                                                                                                                                                                                date TEXT NOT NULL,                                                                                                                        time TEXT NOT NULL,                                                                                                                        repeat INTEGER NOT NULL);"];
     [dbManger executeNonQuery:sql];
     NSString *sql2 = [NSString stringWithFormat:@"create table IF NOT EXISTS  course_table(                                                                                                                id integer primary key autoincrement,                                                                       courseName text not null,                                                                                                                                        weeks text not null,                                                                                                                                                            weekday text not null,                                                                                                                                                              time text not null,                                                                                                                                                               place text not null);"];
     [dbManger executeNonQuery:sql2];
@@ -161,16 +162,7 @@ static BOOL flag = false ;
     NSCalendar *gregorian = [[NSCalendar alloc] initWithCalendarIdentifier:NSCalendarIdentifierGregorian];
     NSDateFormatter * dateFormatter = [[NSDateFormatter alloc] init];
     [dateFormatter setDateFormat:@"yyyyMMdd"];
-    NSDateComponents *compt = [[NSDateComponents alloc] init];
-//    NSMutableArray * dateArray = [NSMutableArray arrayWithCapacity:7];
-//    for (int i = 0; i < 7; i ++) {
-//        [compt setYear:[data[i][0] integerValue]];
-//        [compt setMonth:[data[i][1] integerValue]];
-//        [compt setDay:[data[i][2] integerValue]];
-//        NSDate * tempDate = [gregorian dateFromComponents:compt];
-//        NSString *tempDateString = [dateFormatter stringFromDate:tempDate];
-//        [dateArray addObject:tempDateString];
-//    }    
+    NSDateComponents *compt = [[NSDateComponents alloc] init];   
     DbManager *dbManger = [DbManager shareInstance];
     for (int m = 0; m < 7; m++) {//按天添加格子
         [compt setYear:[data[m][0] integerValue]];
@@ -241,11 +233,11 @@ static BOOL flag = false ;
             //如果当前天相对今天是未来的时间
             else{
                 //事务优先显示，先添加事务格子，再添加课程格子，课程格子是被覆盖的要剔除被覆盖的部分
-                for (int i = 0; i < self.allCourses.count; i ++) {
+                for (int i = 0; i < self.allBusiness.count; i ++) {
                     BusinessModel *busMDL = self.allBusiness[i];
                     NSMutableSet *businessTimeSet = [NSMutableSet setWithArray:busMDL.timeArray];
                     NSMutableArray *busCourseArray = [NSMutableArray array];
-                    for (int j = 0; j < self.allBusiness.count; j++) {
+                    for (int j = 0; j < self.allCourses.count; j++) {
                         CourseModel *courseMDL = self.allCourses[j];
                         NSMutableSet *courseTimeSet = [NSMutableSet setWithArray:courseMDL.timeArray];
                         if ([businessTimeSet intersectsSet:courseTimeSet]) {
@@ -298,11 +290,6 @@ static BOOL flag = false ;
             }
         }
     }
-//    NSString *sql = [NSString stringWithFormat:@"SELECT * FROM t_201601 WHERE date = '%@' or date = '%@' or date = '%@' or date = '%@' or date = '%@' or date = '%@' or date = '%@' ;",dateArray[0],dateArray[1],dateArray[2],dateArray[3],dateArray[4],dateArray[5],dateArray[6]];
-//    NSArray *dataQuery = [dbManger executeQuery:sql];
-//    //课程
-//    NSString *courseSql = [NSString stringWithFormat:@"SELECT * FROM course_table WHERE weeks like '%%,%ld,%%';",week];
-//    NSArray *courseDataQuery = [dbManger executeQuery:courseSql];
 }
 
 //添加单个事务格子
@@ -355,38 +342,6 @@ static BOOL flag = false ;
     }];
 }
 
-- (void)courseClick:(id)sender{
-    CourseButton *courseBtn = (CourseButton *)sender;
-    if (courseBtn.isOverlap) {
-        //生成遮罩层
-        UIView *coverLayer = [[UIView alloc]initWithFrame:CGRectMake(0, 0, kScreenWidth, kScreenHeight)];
-        coverLayer.backgroundColor = [UIColor colorWithRed:88/255.0 green:88/255.0  blue:88/255.0  alpha:0.5];
-        _coverLayer = coverLayer;
-        UIWindow *theWindow = [[UIApplication  sharedApplication] delegate].window;//全屏遮罩要加到window上
-        [theWindow addSubview:_coverLayer];
-    }else if (courseBtn.courseArray == nil || courseBtn.courseArray.count==0){//如果只有事务
-        BusinessViewController *businessManage = [[BusinessViewController alloc]initWithfirstDateOfTerm:self.firstDateOfTerm businessModel:courseBtn.businessArray.firstObject];
-        businessManage.delegate = self;
-        businessManage.hidesBottomBarWhenPushed = YES;//从下级vc开始，tabbar都隐藏掉
-        [self.navigationController pushViewController:businessManage animated:YES];
-    }else if (courseBtn.businessArray == nil || courseBtn.businessArray.count == 0){
-//        [self pushAddViewController];
-        NSString *courseName = courseBtn.event.text;
-        DbManager *dbManger = [DbManager shareInstance];
-        NSString *sql = [NSString stringWithFormat:@"SELECT * FROM course_table WHERE courseName = '%@';",courseName];
-        NSArray *courseDataQuery = [dbManger executeQuery:sql];
-        NSMutableArray *courseModelArr = [NSMutableArray array];
-        for (int i  = 0; i < courseDataQuery.count; i++) {
-            CourseModel *courseModel = [[CourseModel alloc]initWithDict:courseDataQuery[i]];
-            [courseModelArr addObject:courseModel];
-        }
-        CourseViewController *courseVC = [[CourseViewController alloc]initWithCourseModel:courseModelArr];
-        courseVC.delegate = self;
-        courseVC.hidesBottomBarWhenPushed = YES;
-        [self.navigationController pushViewController:courseVC animated:YES];
-    }
-}
-
 //添加单个课程格子
 - (void)addCourseBtn:(CourseModel *)courseModel businessArray:(NSMutableArray *)busArray tempTimeArray:(NSMutableArray*)tempTimearray{
     int rowNum = [tempTimearray.firstObject intValue];//开始时第几节
@@ -431,8 +386,57 @@ static BOOL flag = false ;
     }];
 }
 
-- (void)didReceiveMemoryWarning {
-    [super didReceiveMemoryWarning];
+- (void)courseClick:(id)sender{
+    CourseButton *courseBtn = (CourseButton *)sender;
+    if (courseBtn.isOverlap) {
+        UIView *coverLayer = [[UIView alloc]initWithFrame:CGRectMake(0, 0, kScreenWidth, kScreenHeight)];
+        coverLayer.backgroundColor = [UIColor colorWithRed:88/255.0 green:88/255.0  blue:88/255.0  alpha:0.5];
+        _coverLayer = coverLayer;
+        UIWindow *theWindow = [[UIApplication  sharedApplication] delegate].window;
+        [theWindow addSubview:_coverLayer];
+        
+        NSArray *combineArray = [courseBtn.businessArray arrayByAddingObjectsFromArray:courseBtn.courseArray];
+        CollectView *collectView = [[CollectView alloc]initWithFrame:CGRectMake((kScreenWidth-230)/2, (kScreenHeight-340)/2, 230, 340) modelArray:combineArray];
+        [_coverLayer addSubview:collectView];
+        collectView.delegate = self;
+    }else if (courseBtn.courseArray == nil || courseBtn.courseArray.count==0){//如果只有事务
+        [self pushToBusinessDetailPageWithModel:courseBtn.businessArray.firstObject];
+    }else if (courseBtn.businessArray == nil || courseBtn.businessArray.count == 0){//只有课程
+        [self pushToCourseDetailPageWithModel:courseBtn.courseArray.firstObject];
+    }
+}
+
+- (void)pushToCourseDetailPageWithModel:(CourseModel*)model{
+    NSString *courseName = model.courseName;
+    DbManager *dbManger = [DbManager shareInstance];
+    NSString *sql = [NSString stringWithFormat:@"SELECT * FROM course_table WHERE courseName = '%@';",courseName];
+    NSArray *courseDataQuery = [dbManger executeQuery:sql];
+    NSMutableArray *courseModelArr = [NSMutableArray array];
+    for (int i  = 0; i < courseDataQuery.count; i++) {
+        CourseModel *courseModel = [[CourseModel alloc]initWithDict:courseDataQuery[i]];
+        [courseModelArr addObject:courseModel];
+    }
+    CourseViewController *courseVC = [[CourseViewController alloc]initWithCourseModel:courseModelArr];
+    courseVC.delegate = self;
+    courseVC.hidesBottomBarWhenPushed = YES;
+    [self.navigationController pushViewController:courseVC animated:YES];
+}
+
+- (void)pushToBusinessDetailPageWithModel:(BusinessModel*)model{
+    BusinessViewController *businessManage = [[BusinessViewController alloc]initWithfirstDateOfTerm:self.firstDateOfTerm businessModel:model];
+    businessManage.delegate = self;
+    businessManage.hidesBottomBarWhenPushed = YES;
+    [self.navigationController pushViewController:businessManage animated:YES];
+}
+
+#pragma mark CollectViewDelegate
+- (void)pushToDetailPage:(CollectView*)collectionView cellModel:(id)model{
+    [_coverLayer removeFromSuperview];
+    if ([model isKindOfClass:[BusinessModel class]]) {
+        [self pushToBusinessDetailPageWithModel:model];
+    }else if([model isKindOfClass:[CourseModel class]]){
+        [self pushToCourseDetailPageWithModel:model];
+    }
 }
 
 #pragma mark BusinessCourseMangerDelegate
@@ -825,4 +829,7 @@ static BOOL flag = false ;
     }];
 }
 
+- (void)didReceiveMemoryWarning {
+    [super didReceiveMemoryWarning];
+}
 @end

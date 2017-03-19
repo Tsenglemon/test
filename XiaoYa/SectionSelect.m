@@ -11,57 +11,42 @@
 #import "NSDate+Calendar.h"
 #import "DbManager.h"
 #import "BusinessModel.h"
+#import "CourseModel.h"
+#import "DateUtils.h"
+#import "Utils.h"
 
-#define kScreenWidth [[UIScreen mainScreen] bounds].size.width
-#define kScreenHeight [[UIScreen mainScreen] bounds].size.height
 @interface SectionSelect()<UITableViewDelegate,UITableViewDataSource,SectionSelectTableViewCellDelegate>
 @property (nonatomic , weak) UIButton *confirm;
 @property (nonatomic , weak) UIButton *cancel;
 @property (nonatomic , weak) UILabel *weekdayLab;
 @property (nonatomic , weak) UILabel *dateLab;
 @property (nonatomic , weak) UITableView *multipleChoiceTable;
+@property (nonatomic , weak) UIView *line1;//横灰线
+@property (nonatomic , weak) UIView *line2;//竖灰线
 
 @property (nonatomic ,strong) NSMutableArray *timeData;//时间数据
+//timeData结构：储存可变字典，可变字典组成：key value:{time,时间}，{number,节数}，{eventDict,事件描述字典}
 @property (strong, nonatomic) NSMutableArray *selectIndexs;//多选选中的行
 @property (nonatomic ,strong) NSDate *selectedDate;//现在选择的日期
 @property (nonatomic ,strong) NSMutableArray *originIndexs;//原选中的行
 @property (nonatomic ,strong) NSDate *originDate;//原日期
+@property (nonatomic , strong) NSDate *firstDateOfTerm;//传入本学期第一天的日期
 @end
 
 @implementation SectionSelect
-- (instancetype)initWithFrame:(CGRect)frame sectionArr:(NSMutableArray* )sectionArray selectedDate:(NSDate*)date originIndexs:(NSMutableArray*)originIndexs originDate:(NSDate* )originDate
+- (instancetype)initWithFrame:(CGRect)frame sectionArr:(NSMutableArray* )sectionArray selectedDate:(NSDate*)date originIndexs:(NSMutableArray*)originIndexs originDate:(NSDate* )originDate termFirstDate:(NSDate*)firstDate
 {
     if (self = [super initWithFrame:frame]) {
         self.backgroundColor = [UIColor whiteColor];
         self.layer.cornerRadius = 10.0;
         self.layer.masksToBounds = YES;
-        
-        //timeData数组的说明：元素1：“时间段”，元素2“第几节”，元素三“事务描述”或“课程信息”（为空代表没课程也没事务），元素四“是否有事务”
-        [self timeDataInit];
+
         _selectIndexs = [sectionArray mutableCopy];
         _selectedDate = date;
         _originDate = originDate;
         _originIndexs = [originIndexs mutableCopy];
-
-        NSDateFormatter * dateFormatter = [[NSDateFormatter alloc] init];
-        [dateFormatter setDateFormat:@"yyyyMMdd"];
-        NSString *dateString = [dateFormatter stringFromDate:_selectedDate];
-
-        DbManager *dbManger = [DbManager shareInstance];
-        NSString *sql = [NSString stringWithFormat:@"SELECT * FROM t_201601 WHERE date = '%@';",dateString];
-        NSArray *dataQuery = [dbManger executeQuery:sql];
-        if (dataQuery.count > 0) {
-            for (int j = 0; j < dataQuery.count ; j++) {
-                NSMutableDictionary *businessDict = [NSMutableDictionary dictionaryWithDictionary:dataQuery[j]];
-                BusinessModel *busModel = [[BusinessModel alloc] initWithDict:businessDict];//转数据模型
-                for (int k = 0; k < busModel.timeArray.count; k ++) {
-                    int index = [busModel.timeArray[k] intValue];
-                    [self.timeData[index] addObject:busModel.desc];//元素三
-                    [self.timeData[index] addObject:@1];//元素四
-                }
-            }
-        }
-        
+        self.firstDateOfTerm = firstDate;
+        [self timeDataInit];
         [self commonInit];
     }
     return self;
@@ -71,22 +56,30 @@
     UIButton *confirm = [[UIButton alloc]init];
     _confirm = confirm;
     [_confirm setTitle:@"确认" forState:UIControlStateNormal];
-    [_confirm setTitleColor:[UIColor whiteColor] forState:UIControlStateNormal];
+    [_confirm setTitleColor:[Utils colorWithHexString:@"#39b9f8"] forState:UIControlStateNormal];
     _confirm.titleLabel.font = [UIFont systemFontOfSize:13.0];
-    _confirm.backgroundColor = [UIColor colorWithRed:57/255.0 green:185/255.0 blue:248/255.0 alpha:1.0];//39b9f8
-    _confirm.layer.cornerRadius = 10.0;
+    _confirm.backgroundColor = [UIColor whiteColor];
     [_confirm addTarget:self action:@selector(confirmAction) forControlEvents:UIControlEventTouchUpInside];
     [self addSubview:_confirm];
     
     UIButton *cancel = [[UIButton alloc]init];
     _cancel = cancel;
     [_cancel setTitle:@"取消" forState:UIControlStateNormal];
-    [_cancel setTitleColor:[UIColor whiteColor] forState:UIControlStateNormal];
+    [_cancel setTitleColor:[Utils colorWithHexString:@"#39b9f8"] forState:UIControlStateNormal];
     _cancel.titleLabel.font = [UIFont systemFontOfSize:13.0];
-    _cancel.backgroundColor = [UIColor colorWithRed:57/255.0 green:185/255.0 blue:248/255.0 alpha:1.0];//39b9f8
-    _cancel.layer.cornerRadius = 10.0;
+    _cancel.backgroundColor = [UIColor whiteColor];
     [_cancel addTarget:self action:@selector(cancelAction) forControlEvents:UIControlEventTouchUpInside];
     [self addSubview:_cancel];
+    
+    UIView *line1 = [[UIView alloc]init];
+    _line1 = line1;
+    _line1.backgroundColor = [Utils colorWithHexString:@"#d9d9d9"];
+    [self addSubview:_line1];
+    
+    UIView *line2 = [[UIView alloc]init];
+    _line2 = line2;
+    _line2.backgroundColor = [Utils colorWithHexString:@"#d9d9d9"];
+    [self addSubview:_line2];
     
     NSString *daystr = [self.selectedDate dayOfCHNWeek];
     UILabel *weekdayLab = [[UILabel alloc]init];
@@ -119,7 +112,7 @@
 }
 
 - (CGFloat)tableView:(UITableView *)tableView heightForRowAtIndexPath:(NSIndexPath *)indexPath{
-    return 39;
+    return 40;
 }
 
 - (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section{
@@ -133,7 +126,9 @@
     cell.delegate = self;
     if ([_selectIndexs containsObject:[NSString stringWithFormat:@"%ld",indexPath.row]]) {//是否是现选择的行？
         [cell.mutipleChoice setSelected:YES];
-        if ([self.timeData[indexPath.row] count] == 4) {
+        NSMutableDictionary *dict = self.timeData[indexPath.row];
+        NSMutableDictionary *eventDict = [dict objectForKey:@"eventDict"];
+        if ([eventDict objectForKey:@"business"] != nil) {
             cell.conflict.hidden = NO;
         }else{
             cell.conflict.hidden = YES;
@@ -156,8 +151,9 @@
 #pragma mark SectionSelectTableViewCellDelegate
 - (void)SectionSelectTableViewCell:(SectionSelectTableViewCell *)cell selectIndex:(NSIndexPath *)indexPath{
     [self.selectIndexs addObject:[NSString stringWithFormat:@"%ld",indexPath.row]];
-    
-    if ([self.timeData[indexPath.row] count] == 4) {
+    NSMutableDictionary *dict = self.timeData[indexPath.row];
+    NSMutableDictionary *eventDict = [dict objectForKey:@"eventDict"];
+    if ([eventDict objectForKey:@"business"] != nil) {
         cell.conflict.hidden = NO;
     }else{
         cell.conflict.hidden = YES;
@@ -179,14 +175,6 @@
 //确定
 - (void)confirmAction{
     [self removeFromSuperview];
-    //现selectedindex-原originindex-(timedata.count!=4) = 标记覆盖的index,即现selectindex中不是origin又是有事务的
-//    NSMutableArray *coverIndexs = [NSMutableArray array];
-//    for (int i = 0 ; i < self.selectIndexs.count; i++) {
-//        //有事务                                                                      不是origin
-//        if ([self.timeData[[self.selectIndexs[i] intValue]] count] == 4 && [_originIndexs containsObject:self.selectIndexs[i]] == NO) {
-//            [coverIndexs addObject:self.selectIndexs[i]];
-//        }
-//    }
     [self.delegate SectionSelectComfirmAction:self sectionArr:self.selectIndexs];
 }
 
@@ -198,30 +186,23 @@
 
 - (void)layoutSubviews{
     [super layoutSubviews];
-    
-    _confirm.frame = CGRectMake(0, 0, 180 / 750.0 * kScreenWidth, 78 / 1334.0 * kScreenHeight);
+    _confirm.frame = CGRectMake(self.frame.size.width/2, self.frame.size.height-38, self.frame.size.width/2, 38);
+    _cancel.frame = CGRectMake(0, self.frame.size.height-38, self.frame.size.width/2, 38);
+    _line1.frame = CGRectMake(0, self.frame.size.height-38, self.frame.size.width, 0.5);
+    _line2.frame = CGRectMake(self.frame.size.width/2, self.frame.size.height-38, 0.5, 38);
     CGPoint center =  _confirm.center;
-    center.x = self.frame.size.width/2 + 60;
-    center.y = self.frame.size.height - 130 / 1334.0 * kScreenHeight * 0.5;
-    _confirm.center = center;
     
-    _cancel.frame = CGRectMake(0, 0, 180 / 750.0 * kScreenWidth, 78 / 1334.0 * kScreenHeight);
-    center =  _cancel.center;
-    center.x = self.frame.size.width/2 - 60;
-    center.y = self.frame.size.height - 130 / 1334.0 * kScreenHeight * 0.5;
-    _cancel.center = center;
-    
-    _weekdayLab.frame = CGRectMake(0, 60/1334.0 *kScreenHeight + 18 , 150, 30);
+    _weekdayLab.frame = CGRectMake(0, 30 + 18 , 150, 30);
     center =  _weekdayLab.center;
     center.x = self.frame.size.width/2;
     _weekdayLab.center = center;
     
-    _dateLab.frame = CGRectMake(0, 40/1334.0 *kScreenHeight, 150, 18);
+    _dateLab.frame = CGRectMake(0, 20, 150, 18);
     center =  _dateLab.center;
     center.x = self.frame.size.width/2;
     _dateLab.center = center;
     
-    _multipleChoiceTable.frame = CGRectMake(0, 178 / 1334.0 * kScreenHeight, self.frame.size.width, 39 *5);
+    _multipleChoiceTable.frame = CGRectMake(0, 178/2, self.frame.size.width,245);
 }
 
 - (void)drawRect:(CGRect)rect{
@@ -232,8 +213,8 @@
     [path moveToPoint:CGPointMake(radius, 0)];
     [path addLineToPoint:CGPointMake(width - radius, 0)];
     [path addArcWithCenter:CGPointMake(width - radius , radius) radius:radius startAngle:M_PI*3/2 endAngle:M_PI*2 clockwise:1];
-    [path addLineToPoint:CGPointMake(width, 178 / 750.0 * kScreenWidth)];
-    [path addLineToPoint:CGPointMake(0 , 178 / 750.0 * kScreenWidth)];
+    [path addLineToPoint:CGPointMake(width, 178/2)];
+    [path addLineToPoint:CGPointMake(0 , 178/2)];
     [path addLineToPoint:CGPointMake(0, radius)];
     [path closePath];
     UIColor *fillColor = [UIColor colorWithRed:57/255.0 green:185/255.0 blue:248/255.0 alpha:1.0];//39b9f8
@@ -242,22 +223,56 @@
 }
 
 - (void)timeDataInit{
+    NSArray *timeData = @[@[@"早间",@""],@[@"8:00",@"1"],@[@"8:55",@"2"],@[@"10:00",@"3"],@[@"10:55",@"4"],@[@"午间",@""],@[@"14:30",@"5"],@[@"15:25",@"6"],@[@"16:20",@"7"],@[@"17:15",@"8"],@[@"19:00",@"9"],@[@"19:55",@"10"],@[@"20:50",@"11"],@[@"21:45",@"12"],@[@"晚间",@""]];
     self.timeData = [NSMutableArray arrayWithCapacity:15];
-    [self.timeData addObject:[NSMutableArray arrayWithObjects:@"早间",@"", nil]];
-    [self.timeData addObject:[NSMutableArray arrayWithObjects:@"8:00",@"1", nil]];
-    [self.timeData addObject:[NSMutableArray arrayWithObjects:@"8:55",@"2", nil]];
-    [self.timeData addObject:[NSMutableArray arrayWithObjects:@"10:00",@"3", nil]];
-    [self.timeData addObject:[NSMutableArray arrayWithObjects:@"10:55",@"4", nil]];
-    [self.timeData addObject:[NSMutableArray arrayWithObjects:@"午间",@"", nil]];
-    [self.timeData addObject:[NSMutableArray arrayWithObjects:@"14:30",@"5", nil]];
-    [self.timeData addObject:[NSMutableArray arrayWithObjects:@"15:25",@"6", nil]];
-    [self.timeData addObject:[NSMutableArray arrayWithObjects:@"16:20",@"7", nil]];
-    [self.timeData addObject:[NSMutableArray arrayWithObjects:@"17:15",@"8", nil]];
-    [self.timeData addObject:[NSMutableArray arrayWithObjects:@"19:00",@"9", nil]];
-    [self.timeData addObject:[NSMutableArray arrayWithObjects:@"19:55",@"10", nil]];
-    [self.timeData addObject:[NSMutableArray arrayWithObjects:@"20:50",@"11", nil]];
-    [self.timeData addObject:[NSMutableArray arrayWithObjects:@"21:45",@"12", nil]];
-    [self.timeData addObject:[NSMutableArray arrayWithObjects:@"晚间",@"", nil]];
+    for (int i =0; i < 15; i ++) {
+        NSMutableDictionary *dict = [NSMutableDictionary dictionaryWithCapacity:3];
+        [dict setObject:timeData[i][0] forKey:@"time"];
+        [dict setObject:timeData[i][1] forKey:@"number"];
+        [dict setObject:[NSMutableDictionary dictionary] forKey:@"eventDict"];
+        [self.timeData addObject:dict];
+    }
+    
+    NSDateFormatter * dateFormatter = [[NSDateFormatter alloc] init];
+    [dateFormatter setDateFormat:@"yyyyMMdd"];
+    NSString *dateString = [dateFormatter stringFromDate:_selectedDate];
+    DbManager *dbManger = [DbManager shareInstance];
+    NSString *sql = [NSString stringWithFormat:@"SELECT * FROM t_201601 WHERE date = '%@';",dateString];
+    NSArray *dataQuery = [dbManger executeQuery:sql];
+    if (dataQuery.count > 0) {
+        for (int j = 0; j < dataQuery.count ; j++) {
+            BusinessModel *busModel = [[BusinessModel alloc] initWithDict:dataQuery[j]];//转数据模型
+            for (int k = 0; k < busModel.timeArray.count; k ++) {
+                int index = [busModel.timeArray[k] intValue];
+                NSMutableDictionary *dict = self.timeData[index];
+                NSMutableDictionary *eventDict = [dict objectForKey:@"eventDict"];
+                [eventDict setObject:busModel.desc forKey:@"business"];
+            }
+        }
+    }
+    
+    NSInteger curDateDistance = [DateUtils dateDistanceFromDate:self.selectedDate toDate:self.firstDateOfTerm];//当前日期距离学期第一天的天数
+    NSInteger curWeek = curDateDistance / 7;//当前周
+    int weekday = [self.selectedDate dayOfWeek];
+    if (weekday == 1) {
+        weekday = 6;
+    }else{
+        weekday = weekday - 2;
+    }
+    NSString *sql2 =[NSString stringWithFormat:@"SELECT * FROM course_table WHERE weeks LIKE '%%,%ld,%%' and weekday = '%d';",curWeek,weekday];
+    NSArray *courseDataQuery = [dbManger executeQuery:sql2];
+    if (courseDataQuery.count > 0) {
+        for (int j = 0; j < courseDataQuery.count; j++) {
+            CourseModel *courseMDL = [[CourseModel alloc]initWithDict:courseDataQuery[j]];
+            for (int k = 0; k < courseMDL.timeArray.count; k++) {
+                int index = [courseMDL.timeArray[k] intValue];
+                NSMutableDictionary *dict = self.timeData[index];
+                NSMutableDictionary *courseDict = [dict objectForKey:@"eventDict"];
+                [courseDict setObject:courseMDL.courseName forKey:@"course"];
+            }
+        }
+    }
+
 }
 
 @end

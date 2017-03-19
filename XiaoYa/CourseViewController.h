@@ -15,7 +15,6 @@
 
 @interface CourseViewController : UIViewController
 @property (nonatomic,weak) id <CourseViewControllerDelegate> delegate;
-@property (nonatomic,strong) NSMutableArray *courseview_array;//装coursetime_view里数据的array,里面都是Coursemodel
 
 - (instancetype)initWithCourseModel:(NSMutableArray *)modelArray;
 - (void)dataStore;

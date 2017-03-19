@@ -218,7 +218,7 @@
 - (NSString*)courseTimeArraytoCourseTimeString:(NSMutableArray *)timeArray
 {
     if (timeArray.count == 0) {
-        return @"";
+        return @"选择时间";
     }else{
         //分割节数连续段
         NSMutableArray *sections = [[Utils subSectionArraysFromArray:timeArray] mutableCopy];

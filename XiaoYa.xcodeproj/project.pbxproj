@@ -40,6 +40,8 @@
 		57BDFA1E1E4CCB5E00C0E254 /* UIView+Extend.m in Sources */ = {isa = PBXBuildFile; fileRef = 57BDFA1D1E4CCB5E00C0E254 /* UIView+Extend.m */; };
 		57BDFA211E52EF1300C0E254 /* CommentViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 57BDFA201E52EF1300C0E254 /* CommentViewController.m */; };
 		57BDFA241E52F06A00C0E254 /* UIAlertController+Appearance.m in Sources */ = {isa = PBXBuildFile; fileRef = 57BDFA231E52F06A00C0E254 /* UIAlertController+Appearance.m */; };
+		57C761241E7D9EBC0002FA77 /* CollectView.m in Sources */ = {isa = PBXBuildFile; fileRef = 57C761231E7D9EBC0002FA77 /* CollectView.m */; };
+		57C761271E7E57320002FA77 /* CollectionViewCell.m in Sources */ = {isa = PBXBuildFile; fileRef = 57C761261E7E57320002FA77 /* CollectionViewCell.m */; };
 		57D69A221DC77040005E73EA /* courses.json in Resources */ = {isa = PBXBuildFile; fileRef = 57D69A211DC77040005E73EA /* courses.json */; };
 		57D69A241DC77278005E73EA /* courses-1.json in Resources */ = {isa = PBXBuildFile; fileRef = 57D69A231DC77278005E73EA /* courses-1.json */; };
 		57D69A2A1DC7832F005E73EA /* CourseModel.m in Sources */ = {isa = PBXBuildFile; fileRef = 57D69A291DC7832F005E73EA /* CourseModel.m */; };
@@ -141,6 +143,10 @@
 		57BDFA201E52EF1300C0E254 /* CommentViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CommentViewController.m; sourceTree = "<group>"; };
 		57BDFA221E52F06A00C0E254 /* UIAlertController+Appearance.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "UIAlertController+Appearance.h"; sourceTree = "<group>"; };
 		57BDFA231E52F06A00C0E254 /* UIAlertController+Appearance.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "UIAlertController+Appearance.m"; sourceTree = "<group>"; };
+		57C761221E7D9EBC0002FA77 /* CollectView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CollectView.h; sourceTree = "<group>"; };
+		57C761231E7D9EBC0002FA77 /* CollectView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CollectView.m; sourceTree = "<group>"; };
+		57C761251E7E57320002FA77 /* CollectionViewCell.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CollectionViewCell.h; sourceTree = "<group>"; };
+		57C761261E7E57320002FA77 /* CollectionViewCell.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CollectionViewCell.m; sourceTree = "<group>"; };
 		57D69A211DC77040005E73EA /* courses.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = courses.json; sourceTree = "<group>"; };
 		57D69A231DC77278005E73EA /* courses-1.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = "courses-1.json"; sourceTree = "<group>"; };
 		57D69A281DC7832F005E73EA /* CourseModel.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CourseModel.h; sourceTree = "<group>"; };
@@ -379,6 +385,10 @@
 				571B82081DB465D4001171EE /* WeekCell.m */,
 				571B82581DB8AD6C001171EE /* TimeViewCell.h */,
 				571B82591DB8AD6C001171EE /* TimeViewCell.m */,
+				57C761221E7D9EBC0002FA77 /* CollectView.h */,
+				57C761231E7D9EBC0002FA77 /* CollectView.m */,
+				57C761251E7E57320002FA77 /* CollectionViewCell.h */,
+				57C761261E7E57320002FA77 /* CollectionViewCell.m */,
 			);
 			name = "主界面";
 			sourceTree = "<group>";
@@ -601,6 +611,7 @@
 				579C2FF41DAD02EF00E4EE54 /* CourseTableViewController.m in Sources */,
 				571A3B331DE0D07C009042BC /* MonthPicker.m in Sources */,
 				57BDFA1E1E4CCB5E00C0E254 /* UIView+Extend.m in Sources */,
+				57C761271E7E57320002FA77 /* CollectionViewCell.m in Sources */,
 				571B82091DB465D4001171EE /* WeekCell.m in Sources */,
 				57D69A2A1DC7832F005E73EA /* CourseModel.m in Sources */,
 				571A3B301DE0D071009042BC /* DatePicker.m in Sources */,
@@ -614,6 +625,7 @@
 				577FA5DD1DEEA9F000A0AEF7 /* RepeatSetting.m in Sources */,
 				577FA5CB1DEC2AF800A0AEF7 /* SectionSelectTableViewCell.m in Sources */,
 				57BDFA131E2E038D00C0E254 /* DbManager.m in Sources */,
+				57C761241E7D9EBC0002FA77 /* CollectView.m in Sources */,
 				579C2FBE1DAD000E00E4EE54 /* main.m in Sources */,
 				57D69A2D1DC83734005E73EA /* CourseButton.m in Sources */,
 				57BDFA1B1E4CB98100C0E254 /* BusinessModel.m in Sources */,
