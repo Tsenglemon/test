@@ -35,11 +35,11 @@
         __weak typeof(self) weakself = self;
         [_time mas_makeConstraints:^(MASConstraintMaker *make) {
             make.centerX.equalTo(weakself.mas_centerX);
-            make.bottom.equalTo(weakself.mas_centerY).offset(-5);
+            make.bottom.equalTo(weakself.mas_centerY).offset(-3);
         }];
         [_number mas_makeConstraints:^(MASConstraintMaker *make) {
             make.centerX.equalTo(weakself.mas_centerX);
-            make.top.equalTo(weakself.mas_centerY).offset(5);
+            make.top.equalTo(weakself.mas_centerY).offset(3);
         }];
     }
     return self;

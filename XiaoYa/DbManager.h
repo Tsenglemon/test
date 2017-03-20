@@ -11,7 +11,7 @@
 //#import "DbSingleton.h"
 
 @interface DbManager : NSObject
-@property (nonatomic) sqlite3 *database;
+@property (nonatomic,assign) sqlite3 *database;
 
 +(instancetype) shareInstance ;
 

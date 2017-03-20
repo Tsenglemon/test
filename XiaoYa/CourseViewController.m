@@ -35,10 +35,10 @@
 @property (nonatomic,weak) dayselectview *dayselect_view;
 @property (nonatomic,weak) timeselecteview *timeselect_view;
 
-@property (nonatomic,strong) NSMutableArray *courseview_array;//装coursetime_view里数据的array,里面都是Coursemodel
+@property (nonatomic ,strong) NSMutableArray *courseview_array;//装coursetime_view里数据的array,里面都是Coursemodel
 @property (nonatomic ,strong) NSMutableArray *originTimeIndexArray;//原始节数选择数组
 @property (nonatomic ,strong) NSMutableArray *originWeekdayArray;//原始周几 选择数组
-@property (nonatomic ,strong) NSString *originCourseName;
+@property (nonatomic ,copy) NSString *originCourseName;
 @end
 
 @implementation CourseViewController{
@@ -145,7 +145,7 @@
         make.centerX.equalTo(_coursefield_view.mas_centerX);
         make.centerY.equalTo(_coursefield_view.mas_centerY);
         make.width.mas_equalTo(500 * scaletowidth);
-        make.height.mas_equalTo(30);
+        make.height.mas_equalTo(32);
     }];
     _courseNameField.delegate = self;//修改namefield值要修改courseview array中的每个model的courseNAme
     //namefield文本框的tag是0，classroom文本框的tag是1
@@ -272,9 +272,7 @@
 //---------------------------------------------按钮点击事件------------------------------------------
 //点击低端增加上课时间段按钮后
 -(void)addcoursetime{
-    CourseModel *newModel = [self.courseview_array lastObject];
-//    CourseModel *defaultModel = [CourseModel defaultModel];//不太确定添加的默认显示是什么，是和上一个格子一样吗？先用默认model
-//    defaultModel.courseName = self.courseNameField.text;
+    CourseModel *newModel = [[self.courseview_array lastObject]copy];
     [_courseview_array addObject:newModel];
     [self.originTimeIndexArray addObject:newModel.timeArray];
     [self.originWeekdayArray addObject:newModel.weekday];

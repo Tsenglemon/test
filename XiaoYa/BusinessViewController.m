@@ -150,10 +150,12 @@
         NSMutableArray *dateString = [Utils dateStringArrayFromDate:self.currentDate yearDuration:5 repeatIndex:self.repeatIndex];
         //修改覆盖数据    找出将要被覆盖的事务
         NSMutableString *sqlTime = [NSMutableString string];
-        for (int i = 0; i < self.sectionArray.count; i++) {
-            [sqlTime appendString:[NSString stringWithFormat:@"time LIKE '%%,%d,%%' or ",[self.sectionArray[i] intValue]]];
+        if (self.sectionArray.count > 0) {
+            for (int i = 0; i < self.sectionArray.count; i++) {
+                [sqlTime appendString:[NSString stringWithFormat:@"time LIKE '%%,%d,%%' or ",[self.sectionArray[i] intValue]]];
+            }
+            sqlTime = (NSMutableString*)[sqlTime substringToIndex:sqlTime.length - 3];
         }
-        sqlTime = (NSMutableString*)[sqlTime substringToIndex:sqlTime.length - 3];
         //往后五年的每一条数据都要拿出来剔除覆盖
         for (int i = 0; i < dateString.count; i ++) {
             NSString *sql = [NSString stringWithFormat:@"SELECT * FROM t_201601 WHERE date = '%@' and (%@);",dateString[i],sqlTime];
@@ -272,7 +274,7 @@
         make.centerX.equalTo(_businessField_view.mas_centerX);
         make.centerY.equalTo(_businessField_view.mas_centerY);
         make.width.mas_equalTo(500 * scaleToWidth);
-        make.height.mas_equalTo(30);
+        make.height.mas_equalTo(32);
     }];
     _busDescription.tag = 100;
     _busDescription.delegate = self;

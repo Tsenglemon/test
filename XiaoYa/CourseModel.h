@@ -8,7 +8,7 @@
 
 #import <Foundation/Foundation.h>
 
-@interface CourseModel : NSObject
+@interface CourseModel : NSObject<NSCopying>
 
 //@property (nonatomic, copy)   NSString *dataid;
 @property (nonatomic, copy)   NSString *weeks;                //周数，字符串”0，1，2，3...“

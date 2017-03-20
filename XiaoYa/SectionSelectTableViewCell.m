@@ -32,6 +32,8 @@
     }
     if (eventDict.count == 2) {
         self.fold.hidden = NO;
+    }else{
+        self.fold.hidden = YES;
     }
     __weak typeof(self)weakself = self;
     if ([self.number.text isEqual: @""]) {

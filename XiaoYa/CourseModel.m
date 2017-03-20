@@ -34,6 +34,18 @@
     return self;
 }
 
+- (id)copyWithZone:(NSZone *)zone{
+    CourseModel *model = [[CourseModel alloc]init];
+    model.weeks = self.weeks;
+    model.weekday = self.weekday;
+    model.time = self.time;
+    model.courseName = self.courseName;
+    model.place = self.place;
+    model.weekArray = self.weekArray;
+    model.timeArray = self.timeArray;
+    return model;
+}
+
 + (instancetype)defaultModel{//是否用instanceType?
     NSMutableDictionary *modelDict = [NSMutableDictionary dictionaryWithObjectsAndKeys:@"",@"time",@",0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,",@"weeks",@"0",@"weekday",@"",@"courseName",@"",@"place",nil];
     CourseModel *defaultModel = [[CourseModel alloc]initWithDict:modelDict];
