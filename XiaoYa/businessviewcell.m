@@ -57,7 +57,7 @@
             [self addSubview:iconview];
             __weak typeof(self) weakself = self;
             [iconview mas_makeConstraints:^(MASConstraintMaker *make) {
-                make.right.equalTo(weakself.mas_centerX).offset(-(250.0 + 24.0)/2);
+                make.right.equalTo(weakself.mas_centerX).offset(-250/750.0*kScreenWidth-12);
                 make.centerY.equalTo(weakself.mas_centerY);
             }];
         }

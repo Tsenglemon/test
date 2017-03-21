@@ -32,7 +32,7 @@
 
 //事务的子view
 @property (nonatomic,weak) UIView *businessField_view;//第一行的描述父view
-@property (nonatomic,weak) UITextField *busDescription;//事件描述textfield，描述+时间均有内容才允许保存事件
+//@property (nonatomic,weak) UITextField *busDescription;//事件描述textfield，描述+时间均有内容才允许保存事件
 @property (nonatomic,weak) UIView *commentsField_view;//最后一行备注
 @property (nonatomic,weak) UITextField *commentfield;//备注栏
 @property (nonatomic,weak) businessviewcell *businessTime_view;//时间选择板块
@@ -48,7 +48,7 @@
 @property (nonatomic , weak) SectionSelect *selectSection;//自定义时间段（节）选择器
 @property (nonatomic , weak) RemindSelect *settingRemind;//提醒
 @property (nonatomic , weak) RepeatSetting *settingRepeat;//重复
-@property (nonatomic , strong) NSMutableArray *sectionArray;//选择节数数组
+//@property (nonatomic , strong) NSMutableArray *sectionArray;//选择节数数组
 @property (nonatomic , strong) NSMutableArray *sections;//二维数组，对不连续的节数分连续段储存
 @property (nonatomic , strong) BusinessModel *busModel;
 @property (nonatomic , copy) NSString *commentInfo;//备注的内容
@@ -99,6 +99,7 @@
     self.navigationController.navigationBar.titleTextAttributes = @{NSForegroundColorAttributeName:[Utils colorWithHexString:@"#333333"],NSFontAttributeName:[UIFont systemFontOfSize:17]};//设置标题文字样式
     self.navigationItem.title = @"事务";
     self.navigationItem.rightBarButtonItem = [[UIBarButtonItem alloc]initWithImage:[[UIImage imageNamed:@"confirm"]imageWithRenderingMode:UIImageRenderingModeAlwaysOriginal] style:UIBarButtonItemStyleDone target:self action:@selector(confirm)];
+    self.navigationItem.rightBarButtonItem.enabled = NO;
     self.navigationItem.leftBarButtonItem = [[UIBarButtonItem alloc]initWithImage:[[UIImage imageNamed:@"cancel"]imageWithRenderingMode:UIImageRenderingModeAlwaysOriginal] style:UIBarButtonItemStyleDone target:self action:@selector(cancel)];
     
     self.view.backgroundColor = [Utils colorWithHexString:@"#F0F0F6"];
@@ -212,17 +213,12 @@
 }
 
 - (void)cancel{
-    //如果全部没输入就直接返回，但日期是一定会有的（所以不存在直接返回的情况）
-//    if ([_busDescription.text isEqualToString:@""] && self.sectionArray.count == 0) {
-//        [self.navigationController popViewControllerAnimated:YES];//返回主界面
-//    }else{
-        void (^otherBlock)(UIAlertAction *action) = ^(UIAlertAction *action){
-            [self.navigationController popViewControllerAnimated:YES];
-        };
-        NSArray *otherBlocks = @[otherBlock];
-        UIAlertController *alert = [UIAlertController alertControllerWithTitle:@"确认退出？" message:@"一旦退出，编辑将不会保存" preferredStyle:UIAlertControllerStyleAlert cancelTitle:@"取消" cancelBlock:nil otherTitles:@[@"确定"] otherBlocks:otherBlocks];
-        [self presentViewController:alert animated:YES completion:nil];
-//    }
+    void (^otherBlock)(UIAlertAction *action) = ^(UIAlertAction *action){
+        [self.navigationController popViewControllerAnimated:YES];
+    };
+    NSArray *otherBlocks = @[otherBlock];
+    UIAlertController *alert = [UIAlertController alertControllerWithTitle:@"确认退出？" message:@"一旦退出，编辑将不会保存" preferredStyle:UIAlertControllerStyleAlert cancelTitle:@"取消" cancelBlock:nil otherTitles:@[@"确定"] otherBlocks:otherBlocks];
+    [self presentViewController:alert animated:YES completion:nil];
 }
 
 - (NSString *)appendStringWithArray:(NSMutableArray *)array{
@@ -308,16 +304,20 @@
     }];
 }
 
-//留个坑，导航栏右按钮要在描述和时间都有才能点击
 -(void)descChange:(NSNotification *)notification{
+    [self rightBarBtnCanBeSelect];
+}
+
+//导航栏右按钮要在描述和时间都有才能点击
+- (void)rightBarBtnCanBeSelect{
     UIViewController *vc = self.view.superview.viewController;
-    if (_busDescription.text.length > 0) {
+    if (_busDescription.text.length > 0 && self.sectionArray.count > 0) {
         vc.navigationItem.rightBarButtonItem.enabled = YES;//设置导航栏右按钮可以点击
-    }else
-    {
+        self.navigationItem.rightBarButtonItem.enabled = YES;
+    }else{
         vc.navigationItem.rightBarButtonItem.enabled = NO;
+        self.navigationItem.rightBarButtonItem.enabled = NO;
     }
-    
 }
 
 - (void)textFiledDidChange:(UITextField *)textField{
@@ -369,6 +369,7 @@
 
 //日期选择
 - (void)dateSelected{
+    [self.view endEditing:YES];
     //生成遮罩层
     UIView *coverLayer = [[UIView alloc]initWithFrame:CGRectMake(0, 0, kScreenWidth, kScreenHeight)];
     coverLayer.backgroundColor = [UIColor colorWithRed:88/255.0 green:88/255.0  blue:88/255.0  alpha:0.5];
@@ -398,6 +399,8 @@
 
 //时间段（节）选择
 - (void)sectionSelected{
+    [self.view endEditing:YES];
+    
     UIView *coverLayer = [[UIView alloc]initWithFrame:CGRectMake(0, 0, kScreenWidth, kScreenHeight)];
     coverLayer.backgroundColor = [UIColor colorWithRed:88/255.0 green:88/255.0  blue:88/255.0  alpha:0.5];
     _coverLayer = coverLayer;
@@ -464,6 +467,7 @@
 }
 
 - (void)remind_btn_click{
+    [self.view endEditing:YES];
     _remind_btn.hidden = YES;
     _clock_view.hidden = NO;
     _commentsField_view.hidden = NO;
@@ -490,6 +494,8 @@
 }
 
 - (void)remindSetting{
+    [self.view endEditing:YES];
+    
     UIView *coverLayer = [[UIView alloc]initWithFrame:CGRectMake(0, 0, kScreenWidth, kScreenHeight)];
     coverLayer.backgroundColor = [UIColor colorWithRed:88/255.0 green:88/255.0  blue:88/255.0  alpha:0.5];
     _coverLayer = coverLayer;
@@ -510,6 +516,8 @@
 }
 
 - (void)repeatSetting{
+    [self.view endEditing:YES];
+    
     UIView *coverLayer = [[UIView alloc]initWithFrame:CGRectMake(0, 0, kScreenWidth, kScreenHeight)];
     coverLayer.backgroundColor = [UIColor colorWithRed:88/255.0 green:88/255.0  blue:88/255.0  alpha:0.5];
     _coverLayer = coverLayer;
@@ -791,8 +799,10 @@
         [self.sections removeAllObjects];
         self.sections = [[Utils subSectionArraysFromArray:sectionArray] mutableCopy];
     }else{
+        self.sectionArray = sectionArray;
         [self.businessTime_view.button2 setTitle:@"选择时间" forState:UIControlStateNormal];
     }
+    [self rightBarBtnCanBeSelect];
 }
 
 //拼接节数字符串

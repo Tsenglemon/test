@@ -108,6 +108,7 @@
     _multipleChoiceTable.delegate = self;
     _multipleChoiceTable.dataSource = self;
     _multipleChoiceTable.separatorStyle = UITableViewCellSeparatorStyleNone;//去掉原生分割线
+    _multipleChoiceTable.bounces = NO;
     [self addSubview:_multipleChoiceTable];
 }
 

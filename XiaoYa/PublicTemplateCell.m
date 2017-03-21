@@ -68,7 +68,7 @@
     [_choiceBtn setImage:[UIImage imageNamed:@"选择星期"] forState:UIControlStateSelected];
     [self.contentView addSubview:_choiceBtn];
     [_choiceBtn mas_makeConstraints:^(MASConstraintMaker *make) {
-        make.width.height.mas_equalTo(22);
+        make.width.height.mas_equalTo(40);
         make.centerY.equalTo(weakself.contentView.mas_centerY);
         make.right.equalTo(weakself.contentView.mas_right).offset(-16);
     }];

@@ -51,7 +51,7 @@
     _courseVc = self.controllersArray[1];
     
     self.navigationItem.rightBarButtonItem = [[UIBarButtonItem alloc]initWithImage:[[UIImage imageNamed:@"confirm"]imageWithRenderingMode:UIImageRenderingModeAlwaysOriginal] style:UIBarButtonItemStyleDone target:self action:@selector(confirm)];
-    //self.navigationItem.rightBarButtonItem.enabled = NO;//在编辑框有输入时才允许点击
+    self.navigationItem.rightBarButtonItem.enabled = NO;//在编辑框有输入时才允许点击
     
     self.navigationItem.leftBarButtonItem = [[UIBarButtonItem alloc]initWithImage:[[UIImage imageNamed:@"cancel"]imageWithRenderingMode:UIImageRenderingModeAlwaysOriginal] style:UIBarButtonItemStyleDone target:self action:@selector(cancel)];
 }
@@ -263,27 +263,23 @@
 
 - (void)cancel{
     if (_segCtrl.selectedSegmentIndex == 0) {//如果是事务界面
-//        if ([_bsVc.busDescription.text isEqualToString:@""]) {//如果描述没有输入就直接返回
-//            [self.navigationController popViewControllerAnimated:YES];//返回主界面
-//        }else{
+        if ([_bsVc.busDescription.text isEqualToString:@""] && _bsVc.sectionArray.count == 0) {
+            [self.navigationController popViewControllerAnimated:YES];//返回主界面
+        }else{
             void (^otherBlock)(UIAlertAction *action) = ^(UIAlertAction *action){
                 [self.navigationController popViewControllerAnimated:YES];
             };
             NSArray *otherBlocks = @[otherBlock];
             UIAlertController *alert = [UIAlertController alertControllerWithTitle:@"确认退出？" message:@"一旦退出，编辑将不会保存" preferredStyle:UIAlertControllerStyleAlert cancelTitle:@"取消" cancelBlock:nil otherTitles:@[@"确定"] otherBlocks:otherBlocks];
             [self presentViewController:alert animated:YES completion:nil];
-//        }
+        }
     }else{//如果是课程界面
-//        if ([_bsVc.busDescription.text isEqualToString:@""]) {//如果描述没有输入就直接返回
-//            [self.navigationController popViewControllerAnimated:YES];//返回主界面
-//        }else{
-            void (^otherBlock)(UIAlertAction *action) = ^(UIAlertAction *action){
-                [self.navigationController popViewControllerAnimated:YES];
-            };
-            NSArray *otherBlocks = @[otherBlock];
-            UIAlertController *alert = [UIAlertController alertControllerWithTitle:@"确认退出？" message:@"一旦退出，编辑将不会保存" preferredStyle:UIAlertControllerStyleAlert cancelTitle:@"取消" cancelBlock:nil otherTitles:@[@"确定"] otherBlocks:otherBlocks];
-            [self presentViewController:alert animated:YES completion:nil];
-//        }
+        void (^otherBlock)(UIAlertAction *action) = ^(UIAlertAction *action){
+            [self.navigationController popViewControllerAnimated:YES];
+        };
+        NSArray *otherBlocks = @[otherBlock];
+        UIAlertController *alert = [UIAlertController alertControllerWithTitle:@"确认退出？" message:@"一旦退出，编辑将不会保存" preferredStyle:UIAlertControllerStyleAlert cancelTitle:@"取消" cancelBlock:nil otherTitles:@[@"确定"] otherBlocks:otherBlocks];
+        [self presentViewController:alert animated:YES completion:nil];
     }
 }
 

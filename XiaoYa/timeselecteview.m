@@ -163,6 +163,7 @@
     _timetable.dataSource = self;
     _timetable.delegate = self;
     _timetable.separatorStyle = UITableViewCellSeparatorStyleNone;
+    _timetable.bounces = NO;
     [self addSubview:_timetable];
     [timetable mas_makeConstraints:^(MASConstraintMaker *make) {
         make.top.equalTo(_titleview.mas_bottom);

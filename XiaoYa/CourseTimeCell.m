@@ -11,9 +11,6 @@
 #import "Masonry.h"
 
 #define kScreenWidth [UIApplication sharedApplication].keyWindow.bounds.size.width
-#define kScreenHeight [UIApplication sharedApplication].keyWindow.bounds.size.height
-
-#define scaletoheight [UIApplication sharedApplication].keyWindow.bounds.size.height/1334.0
 #define scaletowidth [UIApplication sharedApplication].keyWindow.bounds.size.width/750.0
 //用在添加课程的页面
 @implementation CourseTimeCell
@@ -52,7 +49,7 @@
         [verticalline mas_makeConstraints:^(MASConstraintMaker *make) {
             make.height.mas_equalTo(160);
             make.width.mas_equalTo(0.5);
-            make.left.equalTo(weakself.contentView.mas_left).offset((60  + 65 * i)/ 750.0 * kScreenWidth);
+            make.left.equalTo(weakself.contentView.mas_left).offset((60  + 65 * i)/2);
             make.centerY.equalTo(weakself.contentView.mas_centerY);
         }];
     }
@@ -63,8 +60,8 @@
         [self addSubview:horizonline];
         [horizonline mas_makeConstraints:^(MASConstraintMaker *make) {
             make.height.mas_equalTo(0.5);
-            make.width.mas_equalTo(500.0 / 750.0 * kScreenWidth);
-            make.left.equalTo(weakself.contentView.mas_left).offset(125.0 / 750.0 * kScreenWidth);
+            make.width.mas_equalTo(500.0 *scaletowidth);
+            make.left.equalTo(weakself.contentView.mas_left).offset(125.0 /2);
             make.top.equalTo(weakself.contentView.mas_top).offset(40 * (i+1));
         }];
         
@@ -79,12 +76,14 @@
 
     UIButton *deletebtn = [[UIButton alloc] init];
     _delete_btn = deletebtn;
-    [_delete_btn setBackgroundImage:[UIImage imageNamed:@"删除圆"] forState:UIControlStateNormal];
+    [_delete_btn setImage:[UIImage imageNamed:@"删除圆"] forState:UIControlStateNormal];
     _delete_btn.backgroundColor = [UIColor whiteColor];
     [self addSubview:_delete_btn];
     [_delete_btn mas_makeConstraints:^(MASConstraintMaker *make) {
         make.centerY.equalTo(weakself.mas_centerY);
-        make.centerX.equalTo(weakself.mas_left).offset(30.0*scaletowidth);
+        make.centerX.equalTo(weakself.mas_left).offset(30.0/2);
+        make.width.mas_equalTo(30);
+        make.height.mas_equalTo(60);
     }];
     
     UILabel *coursetime = [[UILabel alloc] init];
@@ -96,8 +95,8 @@
     [self addSubview:coursetime];
     [coursetime mas_makeConstraints:^(MASConstraintMaker *make) {
         make.height.equalTo(weakself.contentView.mas_height);
-        make.width.mas_equalTo(65.0 / 750.0 * kScreenWidth);
-        make.left.mas_equalTo(60.0 / 750.0 *kScreenWidth);
+        make.width.mas_equalTo(65.0 /2);
+        make.left.mas_equalTo(60.0 /2);
         make.centerY.equalTo(weakself.contentView.mas_centerY);
     }];
     
@@ -136,25 +135,25 @@
     
     [_weeks mas_makeConstraints:^(MASConstraintMaker *make) {
         make.centerX.equalTo(weakself.contentView.mas_centerX);
-        make.width.mas_equalTo(500.0 / 750.0 *kScreenWidth);
+        make.width.mas_equalTo(500.0 /2);
         make.height.mas_equalTo(40);
         make.top.equalTo(weakself.contentView.mas_top);
     }];
     [_weekDay mas_makeConstraints:^(MASConstraintMaker *make) {
         make.centerX.equalTo(weakself.contentView.mas_centerX);
-        make.width.mas_equalTo(500.0 / 750.0 *kScreenWidth);
+        make.width.mas_equalTo(500.0 /2);
         make.height.mas_equalTo(40);
         make.top.equalTo(_weeks.mas_bottom);
     }];
     [courseTime mas_makeConstraints:^(MASConstraintMaker *make) {
         make.centerX.equalTo(weakself.contentView.mas_centerX);
-        make.width.mas_equalTo(500.0 / 750.0 *kScreenWidth);
+        make.width.mas_equalTo(500.0 /2);
         make.height.mas_equalTo(40);
         make.top.equalTo(_weekDay.mas_bottom);
     }];
     [_place mas_makeConstraints:^(MASConstraintMaker *make) {
         make.centerX.equalTo(weakself.mas_centerX);
-        make.width.mas_equalTo(500.0 / 750.0 *kScreenWidth);
+        make.width.mas_equalTo(500.0 /2);
         make.height.mas_equalTo(40);
         make.top.equalTo(courseTime.mas_bottom);
     }];

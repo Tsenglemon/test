@@ -17,6 +17,8 @@
 @end
 
 @interface BusinessViewController : UIViewController
+@property (nonatomic,weak) UITextField *busDescription;//事件描述textfield，描述+时间均有内容才允许保存事件
+@property (nonatomic , strong) NSMutableArray *sectionArray;//选择节数数组
 @property (nonatomic , weak) id <BusinessViewControllerDelegate> delegate;
 
 - (instancetype)initWithfirstDateOfTerm:(NSDate *)firstDateOfTerm businessModel:(BusinessModel *)busModel;

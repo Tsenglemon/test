@@ -317,7 +317,7 @@ static BOOL flag = false ;
         courseBtn.event.font = [UIFont systemFontOfSize:13];
         courseBtn.place.font = [UIFont systemFontOfSize:13];
         if (busModel.intersects) {//如果有重复
-            UIImage *curUnderlap = [[UIImage imageNamed:@"currentcourse"]resizableImageWithCapInsets:UIEdgeInsetsMake(5, 5, 5, 5) resizingMode:UIImageResizingModeStretch];
+            UIImage *curUnderlap = [[UIImage imageNamed:@"currentcourse"]resizableImageWithCapInsets:UIEdgeInsetsMake(15, 5, 0, 15) resizingMode:UIImageResizingModeStretch];
             [courseBtn setBackgroundImage:curUnderlap forState:UIControlStateNormal];
         }else{
             UIImage *curUnderlap = [[UIImage imageNamed:@"当前未重叠"]resizableImageWithCapInsets:UIEdgeInsetsMake(2, 2, 2, 2) resizingMode:UIImageResizingModeStretch];
@@ -325,7 +325,7 @@ static BOOL flag = false ;
         }
     }else{
         if (busModel.intersects) {
-            UIImage *curUnderlap = [[UIImage imageNamed:@"course"]resizableImageWithCapInsets:UIEdgeInsetsMake(5, 5, 5, 5) resizingMode:UIImageResizingModeStretch];
+            UIImage *curUnderlap = [[UIImage imageNamed:@"course"]resizableImageWithCapInsets:UIEdgeInsetsMake(15, 5, 0, 15) resizingMode:UIImageResizingModeStretch];
             [courseBtn setBackgroundImage:curUnderlap forState:UIControlStateNormal];
         }else{
             UIImage *underlap = [[UIImage imageNamed:@"未重叠"]resizableImageWithCapInsets:UIEdgeInsetsMake(2, 2, 2, 2) resizingMode:UIImageResizingModeStretch];
@@ -337,8 +337,8 @@ static BOOL flag = false ;
     [courseBtn mas_makeConstraints:^(MASConstraintMaker *make) {
         make.left.equalTo(btnSuperView.mas_left);
         make.width.equalTo(btnSuperView.mas_width);
-        make.height.mas_equalTo(timeViewCellHeight * lessonsNum);
-        make.top.mas_equalTo(rowNum * timeViewCellHeight);
+        make.height.mas_equalTo(timeViewCellHeight * lessonsNum-1);
+        make.top.mas_equalTo(rowNum * timeViewCellHeight+1);
     }];
 }
 
@@ -360,7 +360,7 @@ static BOOL flag = false ;
         courseBtn.event.font = [UIFont systemFontOfSize:13];
         courseBtn.place.font = [UIFont systemFontOfSize:13];
         if (courseModel.intersects) {//如果有重复
-            UIImage *curUnderlap = [[UIImage imageNamed:@"currentcourse"]resizableImageWithCapInsets:UIEdgeInsetsMake(5, 5, 5, 5) resizingMode:UIImageResizingModeStretch];
+            UIImage *curUnderlap = [[UIImage imageNamed:@"currentcourse"]resizableImageWithCapInsets:UIEdgeInsetsMake(15, 5, 0, 15) resizingMode:UIImageResizingModeStretch];
             [courseBtn setBackgroundImage:curUnderlap forState:UIControlStateNormal];
         }else{
             UIImage *curUnderlap = [[UIImage imageNamed:@"当前未重叠"]resizableImageWithCapInsets:UIEdgeInsetsMake(2, 2, 2, 2) resizingMode:UIImageResizingModeStretch];
@@ -368,7 +368,7 @@ static BOOL flag = false ;
         }
     }else{
         if (courseModel.intersects) {//如果有重复
-            UIImage *curUnderlap = [[UIImage imageNamed:@"course"]resizableImageWithCapInsets:UIEdgeInsetsMake(5, 5, 5, 5) resizingMode:UIImageResizingModeStretch];
+            UIImage *curUnderlap = [[UIImage imageNamed:@"course"]resizableImageWithCapInsets:UIEdgeInsetsMake(15, 5, 0, 15) resizingMode:UIImageResizingModeStretch];
             [courseBtn setBackgroundImage:curUnderlap forState:UIControlStateNormal];
         }else{
             UIImage *curUnderlap = [[UIImage imageNamed:@"未重叠"]resizableImageWithCapInsets:UIEdgeInsetsMake(2, 2, 2, 2) resizingMode:UIImageResizingModeStretch];
@@ -381,8 +381,8 @@ static BOOL flag = false ;
     [courseBtn mas_makeConstraints:^(MASConstraintMaker *make) {
         make.left.equalTo(btnSuperView.mas_left);
         make.width.equalTo(btnSuperView.mas_width);
-        make.height.mas_equalTo(timeViewCellHeight * lessonsNum);
-        make.top.mas_equalTo(rowNum * timeViewCellHeight);
+        make.height.mas_equalTo(timeViewCellHeight * lessonsNum-1);
+        make.top.mas_equalTo(rowNum * timeViewCellHeight+1);
     }];
 }
 
@@ -768,7 +768,7 @@ static BOOL flag = false ;
             CourseButton *subview = (CourseButton *) colView;
             if ([[subview.courseArray firstObject]intersects] || [[subview.businessArray firstObject]intersects]) {
                 UIImage *curUnderlap = [UIImage imageNamed:@"currentcourse"];
-                curUnderlap = [curUnderlap resizableImageWithCapInsets:UIEdgeInsetsMake(5, 5, 5, 5) resizingMode:UIImageResizingModeStretch];
+                curUnderlap = [curUnderlap resizableImageWithCapInsets:UIEdgeInsetsMake(15, 5, 0, 15) resizingMode:UIImageResizingModeStretch];
                 [subview setBackgroundImage:curUnderlap forState:UIControlStateNormal];
             }else{
                 UIImage *curUnderlap = [UIImage imageNamed:@"当前未重叠"];
@@ -792,7 +792,7 @@ static BOOL flag = false ;
             CourseButton *subview = (CourseButton *) colView;
             if ([[subview.courseArray firstObject]intersects] || [[subview.businessArray firstObject]intersects]) {
                 UIImage *curUnderlap = [UIImage imageNamed:@"course"];
-                curUnderlap = [curUnderlap resizableImageWithCapInsets:UIEdgeInsetsMake(5, 5, 5, 5) resizingMode:UIImageResizingModeStretch];
+                curUnderlap = [curUnderlap resizableImageWithCapInsets:UIEdgeInsetsMake(15, 5, 0, 15) resizingMode:UIImageResizingModeStretch];
                 [subview setBackgroundImage:curUnderlap forState:UIControlStateNormal];
             }else{
                 UIImage *underlap = [UIImage imageNamed:@"未重叠"];

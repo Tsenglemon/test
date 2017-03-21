@@ -16,6 +16,7 @@
 #import "DbManager.h"
 #import "CourseModel.h"
 #import "UIAlertController+Appearance.h"
+#import "UIView+Extend.h"
 
 #define kScreenWidth [UIApplication sharedApplication].keyWindow.bounds.size.width
 #define kScreenHeight [UIApplication sharedApplication].keyWindow.bounds.size.height
@@ -39,6 +40,7 @@
 @property (nonatomic ,strong) NSMutableArray *originTimeIndexArray;//原始节数选择数组
 @property (nonatomic ,strong) NSMutableArray *originWeekdayArray;//原始周几 选择数组
 @property (nonatomic ,copy) NSString *originCourseName;
+@property (nonatomic ,assign)BOOL isFirstDeleteBtnHidden;
 @end
 
 @implementation CourseViewController{
@@ -64,10 +66,12 @@
     if (self.courseview_array != nil && self.courseview_array.count != 0) {
         CourseModel * model =  self.courseview_array[0];
         self.originCourseName = model.courseName;
+        _isFirstDeleteBtnHidden = NO;
     }else{
         _courseview_array = [NSMutableArray array];
         CourseModel *defaultModel = [CourseModel defaultModel];
         [self.courseview_array addObject:defaultModel];
+        _isFirstDeleteBtnHidden = YES;
     }
     self.originWeekdayArray = [NSMutableArray array];
     self.originTimeIndexArray = [NSMutableArray array];
@@ -148,6 +152,7 @@
         make.height.mas_equalTo(32);
     }];
     _courseNameField.delegate = self;//修改namefield值要修改courseview array中的每个model的courseNAme
+    [_courseNameField addTarget:self action:@selector(textFiledDidChange:) forControlEvents:UIControlEventEditingChanged];
     //namefield文本框的tag是0，classroom文本框的tag是1
     _courseNameField.tag = 0;
     
@@ -194,6 +199,7 @@
     _course_tableview.delegate = self;
     _course_tableview.dataSource = self;    
     _course_tableview.backgroundColor = [UIColor clearColor];
+    _course_tableview.bounces = NO;
     [self.view addSubview:_course_tableview];
 }
 
@@ -224,6 +230,12 @@
     [cell.courseTime addTarget:self action:@selector(choosetime:) forControlEvents:UIControlEventTouchUpInside];
     cell.place.delegate = self;
     cell.place.tag = 1;
+    [cell.place addTarget:self action:@selector(textFiledDidChange:) forControlEvents:UIControlEventEditingChanged];
+    if (_isFirstDeleteBtnHidden && indexPath.section == 0) {
+        cell.delete_btn.hidden = YES;
+    }else{
+        cell.delete_btn.hidden = NO;
+    }
     return cell;
 }
 
@@ -272,6 +284,7 @@
 //---------------------------------------------按钮点击事件------------------------------------------
 //点击低端增加上课时间段按钮后
 -(void)addcoursetime{
+    [self.view endEditing:YES];
     CourseModel *newModel = [[self.courseview_array lastObject]copy];
     [_courseview_array addObject:newModel];
     [self.originTimeIndexArray addObject:newModel.timeArray];
@@ -288,25 +301,39 @@
     NSIndexPath *scrollIndexPath = [NSIndexPath indexPathForRow:0 inSection:_courseview_array.count-1];
     [self.course_tableview scrollToRowAtIndexPath:scrollIndexPath
                             atScrollPosition:UITableViewScrollPositionBottom animated:YES];
+    [self rightBarBtnCanBeSelected];
 }
 
 //点击上课时间coursetime_view里的删除按钮
 -(void)deletecoursetime:(id)sender{
-    CourseTimeCell *cell = (CourseTimeCell *)[sender superview];//获取被点击的button所在的cell
-    NSIndexPath *indexPathselect = [_course_tableview indexPathForCell:cell];
-    NSUInteger deleteone =(long)indexPathselect.section;
-
-    if(_courseview_array.count >= 1){
-        [_courseview_array removeObjectAtIndex:deleteone];
-        [self.originTimeIndexArray removeObjectAtIndex:deleteone];
-        [self.originWeekdayArray removeObjectAtIndex:deleteone];
-        NSIndexSet *index= [[NSIndexSet alloc] initWithIndex:deleteone];
-        [_course_tableview deleteSections:index withRowAnimation:UITableViewRowAnimationNone];
-        [_course_tableview reloadData];
-        if( 64 + (sectionHeight+separateHeight)*_courseview_array.count+rowHeight+rowHeight+separateHeight<kScreenHeight){//80底部按钮，80课程描述，24底部按钮与tableview的间距，64状态栏+导航栏
-            _course_tableview.frame = CGRectMake(0, rowHeight, kScreenWidth,(sectionHeight+separateHeight)*_courseview_array.count);
+    [self.view endEditing:YES];
+    void (^otherBlock)(UIAlertAction *action) = ^(UIAlertAction *action){
+        CourseTimeCell *cell = (CourseTimeCell *)[sender superview];//获取被点击的button所在的cell
+        NSIndexPath *indexPathselect = [_course_tableview indexPathForCell:cell];
+        NSUInteger deleteone =(long)indexPathselect.section;
+        if(_courseview_array.count > 1){
+            [_courseview_array removeObjectAtIndex:deleteone];
+            [self.originTimeIndexArray removeObjectAtIndex:deleteone];
+            [self.originWeekdayArray removeObjectAtIndex:deleteone];
+            NSIndexSet *index= [[NSIndexSet alloc] initWithIndex:deleteone];
+            [_course_tableview deleteSections:index withRowAnimation:UITableViewRowAnimationNone];
+            [_course_tableview reloadData];
+            if( 64 + (sectionHeight+separateHeight)*_courseview_array.count+rowHeight+rowHeight+separateHeight<kScreenHeight){//80底部按钮，80课程描述，24底部按钮与tableview的间距，64状态栏+导航栏
+                _course_tableview.frame = CGRectMake(0, rowHeight, kScreenWidth,(sectionHeight+separateHeight)*_courseview_array.count);
+            }
+        }else{//只剩一个
+            DbManager *dbManger = [DbManager shareInstance];
+            //删除所有原课程（所有同名课程数据）
+            NSString *deleteOrigin = [NSString stringWithFormat:@"DELETE FROM course_table WHERE courseName = '%@';",self.originCourseName];
+            [dbManger executeNonQuery:deleteOrigin];
+            [self.delegate CourseViewControllerConfirm:self];
+            [self.navigationController popViewControllerAnimated:YES];
         }
-    }
+    };
+    NSArray *otherBlocks = @[otherBlock];
+    UIAlertController *alert = [UIAlertController alertControllerWithTitle:@"警告" message:@"确定删除上课时间？" preferredStyle:UIAlertControllerStyleAlert cancelTitle:@"取消" cancelBlock:nil otherTitles:@[@"确定"] otherBlocks:otherBlocks];
+    [self presentViewController:alert animated:YES completion:nil];
+    [self rightBarBtnCanBeSelected];
 }
 
 -(void)addcover{
@@ -320,6 +347,7 @@
 //---------------------------点击cell里的第一个按钮，周数选择按钮 系列事件--------------------------------
 -(void)chooseweek:(id)sender
 {
+    [self.view endEditing:YES];
     CourseTimeCell *btnfromcell = (CourseTimeCell *)[sender superview];
     NSIndexPath *btnindex = [_course_tableview indexPathForCell:btnfromcell];
     CourseModel *loadModel = _courseview_array[btnindex.section];
@@ -349,6 +377,7 @@
 //-----------------------------点击cell里的第二个按钮，星期几选择系列事件----------------------------------
 -(void)chooseday:(id)sender
 {
+    [self.view endEditing:YES];
     CourseTimeCell *btnfromcell = (CourseTimeCell *)[sender superview];
     NSIndexPath *btnindex = [_course_tableview indexPathForCell:btnfromcell];
     CourseModel *loadModel = _courseview_array[btnindex.section];
@@ -377,6 +406,7 @@
 //-----------------------------点击cell里的第三个按钮，时间选择系列事件----------------------------------
 -(void)choosetime:(id)sender
 {
+    [self.view endEditing:YES];
     CourseTimeCell *btnfromcell = (CourseTimeCell *)[sender superview];
     NSIndexPath *btnindex = [_course_tableview indexPathForCell:btnfromcell];
     CourseModel *loadModel = _courseview_array[btnindex.section];
@@ -386,9 +416,8 @@
     CGFloat Y = (kScreenHeight-358)/2;
     timeselecteview *timeselect_view = [[timeselecteview alloc]initWithFrame:CGRectMake(X, Y, 650*scaletowidth, 358) andCellModel:loadModel indexSection:btnindex.section originIndexs:self.originTimeIndexArray[btnindex.section] originWeekday:[self.originWeekdayArray[btnindex.section]integerValue]];
     _timeselect_view = timeselect_view;
-    
-    //用whichSection来传递是哪一个section
     _timeselect_view.delegate = self;
+    [self rightBarBtnCanBeSelected];
     [self.view.window addSubview:_timeselect_view];
 }
 
@@ -412,8 +441,7 @@
     return YES;
 }
 
--(void)textFieldDidEndEditing:(UITextField *)textField
-{
+- (void)textFiledDidChange:(UITextField *)textField{
     if(textField.tag == 0){//课程名称
         for(int i = 0 ; i<_courseview_array.count ;i ++){
             CourseModel *courseCellModel = _courseview_array[i];
@@ -425,6 +453,7 @@
         CourseModel *loadModel = _courseview_array[index.section];
         loadModel.place = textField.text;
     }
+    [self rightBarBtnCanBeSelected];
 }
 
 //---------------------------------保存当前页数据的方法-------------------------------
@@ -579,5 +608,29 @@
         }
     }
     return NO;
+}
+
+- (void)rightBarBtnCanBeSelected{
+    UIViewController *vc = self.view.superview.viewController;
+    BOOL isAllPlaceWritten = YES;
+    BOOL isAllSectionSelected = YES;
+    for (int i = 0; i < self.courseview_array.count; i++) {
+        CourseModel *model = self.courseview_array[i];
+        if (model.place.length == 0) {
+            isAllPlaceWritten = NO;
+            break;
+        }
+        if (model.timeArray.count == 0) {
+            isAllSectionSelected = NO;
+            break;
+        }
+    }
+    if (_courseNameField.text.length > 0 && isAllSectionSelected && isAllPlaceWritten) {
+        vc.navigationItem.rightBarButtonItem.enabled = YES;//设置导航栏右按钮可以点击
+        self.navigationItem.rightBarButtonItem.enabled = YES;
+    }else{
+        vc.navigationItem.rightBarButtonItem.enabled = NO;
+        self.navigationItem.rightBarButtonItem.enabled = NO;
+    }
 }
 @end
